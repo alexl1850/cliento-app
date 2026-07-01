@@ -8,3 +8,4 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseKey || '')
+export const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_KEY || ''
