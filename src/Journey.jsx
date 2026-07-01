@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ANTHROPIC_KEY } from "./supabase.js";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -36,22 +35,16 @@ const btnSecondary = {
   cursor:"pointer", fontFamily:ff,
 };
 
-// ─── Anthropic API call ───────────────────────────────────────────────────────
+// ─── Anthropic API call via serverless function ───────────────────────────────
 async function callClaude(system, user, maxTokens=1000) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/generate", {
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      ...(ANTHROPIC_KEY ? {"x-api-key": ANTHROPIC_KEY} : {}),
-    },
-    body: JSON.stringify({
-      model:"claude-sonnet-4-6", max_tokens:maxTokens,
-      system, messages:[{role:"user",content:user}]
-    })
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ system, user, max_tokens: maxTokens })
   });
   const d = await res.json();
-  if (d.error) throw new Error(d.error.message);
-  return d.content[0].text;
+  if (d.error) throw new Error(d.error);
+  return d.text;
 }
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
