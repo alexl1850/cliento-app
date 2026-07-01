@@ -587,7 +587,7 @@ function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, s
             <div style={{fontWeight:700,color:C.purple,marginBottom:"2px"}}>{groupLabels[activeTab]||group.label}</div>
             <div style={{fontSize:"0.83em",color:"#4C1D95",lineHeight:1.6}}>{groupDescs[activeTab]||""}</div>
           </div>
-          {activeTab==="products" && (
+          {activeTab==="products" && biz.bizType==="shopify" && (
             <button onClick={()=>setActiveTool("connect-shopify")} style={{
               width:"100%",marginBottom:"16px",padding:"16px 18px",borderRadius:"12px",border:"none",cursor:"pointer",textAlign:"left",
               background:"linear-gradient(135deg,#0D1117 0%,#1A2235 100%)",
@@ -1340,13 +1340,38 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave}) {
               <div style={{background:C.light,borderRadius:"9px",padding:"14px",fontSize:"0.84em",color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",maxHeight:"380px",overflowY:"auto",border:`1px solid ${C.border}`,marginBottom:"10px"}}>
                 {output}
               </div>
-              <div style={{display:"flex",gap:"7px"}}>
-                <button onClick={copy} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid ${C.brand}`,background:copied?C.green:C.brandLt,color:copied?"#fff":C.brand,fontWeight:700,cursor:"pointer",fontSize:"0.88em",transition:"all 0.2s"}}>
+              <div style={{display:"flex",gap:"7px",flexWrap:"wrap",marginBottom:"8px"}}>
+                <button onClick={copy} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid ${C.brand}`,background:copied?C.green:C.brandLt,color:copied?"#fff":C.brand,fontWeight:700,cursor:"pointer",fontSize:"0.88em",transition:"all 0.2s",minWidth:"90px"}}>
                   {copied?"✓ Copied!":"📋 Copy"}
                 </button>
+                {["emails","sh_abandoned_cart","sh_post_purchase","sh_winback","sh_product_launch","sh_flash_sale","sh_review_request"].includes(toolId) && (
+                  <>
+                    <button onClick={()=>{
+                      const subjectMatch = output.match(/(?:Subject(?:\s*Line)?(?:\s*Options?)?:?\s*(?:\n|$)|1\.\s*)([^\n]+)/i);
+                      const subject = subjectMatch ? subjectMatch[1].trim().replace(/^["']|["']$/g,"") : "Message from "+biz.name;
+                      const body = output.replace(/^#+\s*/gm,"").replace(/\*\*([^*]+)\*\*/g,"$1").replace(/\*([^*]+)\*/g,"$1").trim().substring(0,1800);
+                      window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,"_blank");
+                    }} style={{flex:1,padding:"11px",borderRadius:"8px",border:"2px solid #FECACA",background:"#FFF5F5",color:"#EA4335",fontWeight:700,cursor:"pointer",fontSize:"0.85em",minWidth:"90px",display:"flex",alignItems:"center",justifyContent:"center",gap:"5px"}}>
+                      ✉️ Gmail
+                    </button>
+                    <button onClick={()=>{
+                      const subjectMatch = output.match(/(?:Subject(?:\s*Line)?(?:\s*Options?)?:?\s*(?:\n|$)|1\.\s*)([^\n]+)/i);
+                      const subject = subjectMatch ? subjectMatch[1].trim().replace(/^["']|["']$/g,"") : "Message from "+biz.name;
+                      const body = output.replace(/^#+\s*/gm,"").replace(/\*\*([^*]+)\*\*/g,"$1").replace(/\*([^*]+)\*/g,"$1").trim().substring(0,1800);
+                      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    }} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid #BFDBFE`,background:C.brandLt,color:C.brand,fontWeight:700,cursor:"pointer",fontSize:"0.85em",minWidth:"90px",display:"flex",alignItems:"center",justifyContent:"center",gap:"5px"}}>
+                      📨 Mail app
+                    </button>
+                  </>
+                )}
                 <button onClick={()=>setPhase("form")} style={{padding:"11px 14px",borderRadius:"8px",border:`1px solid ${C.border}`,background:"#fff",color:C.muted,cursor:"pointer",fontSize:"0.85em"}}>🔄 Redo</button>
                 <button onClick={()=>onSave(toolId,output)} style={{padding:"11px 14px",borderRadius:"8px",border:"none",background:C.green,color:"#fff",cursor:"pointer",fontSize:"0.85em",fontWeight:600}}>✓ Save</button>
               </div>
+              {["emails","sh_abandoned_cart","sh_post_purchase","sh_winback","sh_product_launch","sh_flash_sale","sh_review_request"].includes(toolId) && (
+                <div style={{fontSize:"0.75em",color:C.muted,lineHeight:1.5}}>
+                  💡 Gmail and Mail app open with the email pre-filled — just add your customer list and hit send.
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1802,9 +1827,24 @@ function GrowPanel({biz, industry, customers}) {
           {output&&(
             <div style={{marginTop:"16px"}}>
               <div style={{background:"#F0FDF4",border:"1px solid #BBF7D0",borderRadius:"9px",padding:"14px",fontSize:"0.83em",color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",maxHeight:"400px",overflowY:"auto",marginBottom:"10px"}}>{output}</div>
-              <button onClick={copy} style={{width:"100%",padding:"11px",borderRadius:"8px",border:`2px solid ${C.green}`,background:copied?C.green:C.greenLt,color:copied?"#fff":C.green,fontWeight:700,cursor:"pointer",fontSize:"0.88em",transition:"all 0.2s"}}>
-                {copied?"✓ Copied!":"📋 Copy Campaign"}
-              </button>
+              <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"6px"}}>
+                <button onClick={copy} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid ${C.green}`,background:copied?C.green:C.greenLt,color:copied?"#fff":C.green,fontWeight:700,cursor:"pointer",fontSize:"0.88em",transition:"all 0.2s",minWidth:"90px"}}>
+                  {copied?"✓ Copied!":"📋 Copy Campaign"}
+                </button>
+                <button onClick={()=>{
+                  const body = output.replace(/^#+\s*/gm,"").replace(/\*\*([^*]+)\*\*/g,"$1").trim().substring(0,1800);
+                  window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("We miss you — come back soon")}&body=${encodeURIComponent(body)}`,"_blank");
+                }} style={{flex:1,padding:"11px",borderRadius:"8px",border:"2px solid #FECACA",background:"#FFF5F5",color:"#EA4335",fontWeight:700,cursor:"pointer",fontSize:"0.85em",minWidth:"90px"}}>
+                  ✉️ Gmail
+                </button>
+                <button onClick={()=>{
+                  const body = output.replace(/^#+\s*/gm,"").replace(/\*\*([^*]+)\*\*/g,"$1").trim().substring(0,1800);
+                  window.location.href = `mailto:?subject=${encodeURIComponent("We miss you — come back soon")}&body=${encodeURIComponent(body)}`;
+                }} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid #BFDBFE`,background:C.brandLt,color:C.brand,fontWeight:700,cursor:"pointer",fontSize:"0.85em",minWidth:"90px"}}>
+                  📨 Mail app
+                </button>
+              </div>
+              <div style={{fontSize:"0.74em",color:C.muted}}>💡 Gmail and Mail app open with the SMS/email pre-filled — add your customer's details and send.</div>
             </div>
           )}
         </div>
@@ -1837,9 +1877,24 @@ function GrowPanel({biz, industry, customers}) {
           {output&&(
             <div style={{marginTop:"16px"}}>
               <div style={{background:"#F0FDF4",border:"1px solid #BBF7D0",borderRadius:"9px",padding:"14px",fontSize:"0.83em",color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",maxHeight:"400px",overflowY:"auto",marginBottom:"10px"}}>{output}</div>
-              <button onClick={copy} style={{width:"100%",padding:"11px",borderRadius:"8px",border:`2px solid ${C.green}`,background:copied?C.green:C.greenLt,color:copied?"#fff":C.green,fontWeight:700,cursor:"pointer",fontSize:"0.88em",transition:"all 0.2s"}}>
-                {copied?"✓ Copied!":"📋 Copy Program"}
-              </button>
+              <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"6px"}}>
+                <button onClick={copy} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid ${C.green}`,background:copied?C.green:C.greenLt,color:copied?"#fff":C.green,fontWeight:700,cursor:"pointer",fontSize:"0.88em",transition:"all 0.2s",minWidth:"90px"}}>
+                  {copied?"✓ Copied!":"📋 Copy Program"}
+                </button>
+                <button onClick={()=>{
+                  const body = output.replace(/^#+\s*/gm,"").replace(/\*\*([^*]+)\*\*/g,"$1").trim().substring(0,1800);
+                  window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("Tell a friend and you both win!")}&body=${encodeURIComponent(body)}`,"_blank");
+                }} style={{flex:1,padding:"11px",borderRadius:"8px",border:"2px solid #FECACA",background:"#FFF5F5",color:"#EA4335",fontWeight:700,cursor:"pointer",fontSize:"0.85em",minWidth:"90px"}}>
+                  ✉️ Gmail
+                </button>
+                <button onClick={()=>{
+                  const body = output.replace(/^#+\s*/gm,"").replace(/\*\*([^*]+)\*\*/g,"$1").trim().substring(0,1800);
+                  window.location.href = `mailto:?subject=${encodeURIComponent("Tell a friend and you both win!")}&body=${encodeURIComponent(body)}`;
+                }} style={{flex:1,padding:"11px",borderRadius:"8px",border:`2px solid #BFDBFE`,background:C.brandLt,color:C.brand,fontWeight:700,cursor:"pointer",fontSize:"0.85em",minWidth:"90px"}}>
+                  📨 Mail app
+                </button>
+              </div>
+              <div style={{fontSize:"0.74em",color:C.muted}}>💡 Gmail and Mail app open with the referral email pre-filled — personalise and send to your customers.</div>
             </div>
           )}
         </div>
