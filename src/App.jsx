@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase.js'
 import AuthScreen from './AuthScreen.jsx'
-import Dashboard from './Dashboard.jsx'
+import Dashboard from './DashboardA.jsx'
 import Journey from './Journey.jsx'
 
 export default function App() {
@@ -104,7 +104,7 @@ export default function App() {
 
   // New user — show the guided journey
   if (!journeyComplete) return (
-    <Journey onComplete={handleJourneyComplete}/>
+    <Journey onComplete={handleJourneyComplete} session={session}/>
   )
 
   // Returning user — show the full dashboard
