@@ -125,7 +125,8 @@ Return this exact JSON structure — be specific, warm, and locally relevant thr
 
     const liveUrl = `https://${deployData.alias?.[0] || deployData.url}`;
 
-    return res.status(200).json({ success: true, url: liveUrl, deployId: deployData.id, slug });
+    // Return the HTML so the client can cache it for future edits
+    return res.status(200).json({ success: true, url: liveUrl, deployId: deployData.id, slug, html });
 
   } catch (err) {
     console.error('Build website error:', err);
