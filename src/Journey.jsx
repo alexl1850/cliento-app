@@ -1,4 +1,5 @@
 import { useState } from "react";
+import WebsiteIntake from "./WebsiteIntake.jsx";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -292,310 +293,105 @@ function Step0_Welcome({ onNext }) {
     </Screen>
   );
 }
-
 // ═════════════════════════════════════════════════════════════════════════════
-// STEP 1 — Website audit + content generator
+// STEP 1 — Website builder (15-question intake + deploy)
 // ═════════════════════════════════════════════════════════════════════════════
-function Step1_Website({ data, onNext }) {
-  const [hasWebsite, setHasWebsite] = useState(null);
-  const [url, setUrl] = useState("");
-  const [phase, setPhase] = useState("ask"); // ask | scraping | audit | offer | generating | done | nosite
-  const [audit, setAudit] = useState("");
-  const [websiteContent, setWebsiteContent] = useState("");
-  const [buildChoice, setBuildChoice] = useState("");
-  const [bizInfo, setBizInfo] = useState({name:"",suburb:"",industry:"",description:""});
-  const [copied, setCopied] = useState(false);
+function Step1_Website({ data, session, onNext }) {
+  const [phase, setPhase] = useState("intake"); // intake | building | done
+  const [liveUrl, setLiveUrl] = useState("");
+  const [error, setError] = useState("");
 
-  const scrapeAndAudit = async () => {
-    setPhase("scraping");
+  const handleIntakeComplete = async (intake) => {
+    setPhase("building");
+    setError("");
     try {
-      // Use Claude to fetch and audit the site
-      const auditText = await callClaude(
-        `You are a website auditor for local Australian businesses. Fetch and analyse the provided website URL. Be direct, specific, and helpful — not harsh. Write for a non-technical business owner.`,
-        `Please fetch and audit this website for a local business owner: ${url}
-
-Analyse it and write a plain English audit using these sections:
-
-## What We Found
-[2-3 sentences summarising what the site does and its overall quality]
-
-## ✅ What's Working
-[2-3 specific things that are actually good about the site]
-
-## ⚠️ What's Holding You Back
-[3-5 specific, concrete issues — each explained in plain English. E.g. "There's no suburb mentioned anywhere — Google doesn't know you're in Wollongong, so you're not showing up when locals search for you." Be specific and helpful, not harsh.]
-
-## 💡 The Opportunity
-[1-2 sentences on what a properly fixed website could do for this business — more calls, more bookings, showing up on Google, etc.]
-
-Write warmly and honestly — like a knowledgeable friend, not a consultant.`,
-        800
-      );
-      setAudit(auditText);
-      setPhase("audit");
+      const res = await fetch("/api/build-website", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ intake })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      setLiveUrl(d.url);
+      setPhase("done");
     } catch(e) {
-      setAudit("We couldn't fetch that URL automatically. Let's build you new content instead.");
-      setPhase("offer");
+      setError(e.message || "Something went wrong — please try again.");
+      setPhase("intake");
     }
   };
 
-  const generateFromUrl = async (choice) => {
-    setBuildChoice(choice);
-    setPhase("generating");
-    try {
-      const content = await callClaude(
-        `You are an expert website copywriter for local Australian businesses. Write compelling, conversion-focused website copy that is warm, specific to the business, mentions their location naturally, and is immediately usable.`,
-        `Write complete website copy for the business at: ${url}
+  if (phase==="intake") return (
+    <WebsiteIntake
+      data={data}
+      session={session}
+      onComplete={handleIntakeComplete}
+    />
+  );
 
-Based on the website audit, write fresh, improved copy for all key pages.
-
-## HOME PAGE
-### Headline (powerful, local, benefit-focused — not just the business name)
-### Subheading (1-2 sentences expanding on the headline)
-### About Us paragraph (2-3 sentences — warm, human, mentions location)
-### Why Choose Us (3-4 bullet points — specific benefits, not generic)
-### Call to Action button text
-
-## ABOUT US PAGE
-[3-4 paragraphs — the story, the team, the values, why they do what they do. Warm and genuine.]
-
-## SERVICES/WHAT WE OFFER
-[List each service with a 1-2 sentence description that focuses on the benefit to the customer]
-
-## CONTACT & LOCATION
-[Warm invitation to get in touch, mention the suburb prominently]
-
-## META DESCRIPTION (for Google — under 155 chars, includes location and main service)
-
-Make everything sound genuine and locally specific. Australian spelling throughout.`,
-        1000
-      );
-      setWebsiteContent(content);
-      setPhase("done");
-    } catch(e) {
-      setWebsiteContent("Something went wrong. Please try again.");
-      setPhase("done");
-    }
-  };
-
-  const generateFromScratch = async () => {
-    setPhase("generating");
-    try {
-      const content = await callClaude(
-        `You are an expert website copywriter for local Australian businesses. Write compelling, warm, conversion-focused website copy based on the business details provided.`,
-        `Write complete website copy for this business:
-
-Business name: ${bizInfo.name}
-Location: ${bizInfo.suburb}
-Industry: ${bizInfo.industry}
-What they do: ${bizInfo.description}
-
-## HOME PAGE
-### Headline (powerful, local, benefit-focused)
-### Subheading (1-2 sentences)
-### About Us paragraph (2-3 sentences — warm, mentions location)
-### Why Choose Us (3-4 specific bullet points)
-### Call to Action button text
-
-## ABOUT US PAGE
-[3-4 paragraphs — warm, genuine, locally specific]
-
-## SERVICES/WHAT WE OFFER
-[Each service with a 1-2 sentence customer-benefit description]
-
-## CONTACT & LOCATION
-[Warm invitation, suburb mentioned prominently]
-
-## META DESCRIPTION (under 155 chars, includes location and main service)
-
-Australian spelling. Sound genuine and locally specific.`,
-        1000
-      );
-      setWebsiteContent(content);
-      setPhase("done");
-    } catch(e) {
-      setWebsiteContent("Something went wrong. Please try again.");
-      setPhase("done");
-    }
-  };
-
-  const copy = () => {
-    navigator.clipboard.writeText(websiteContent).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>{});
-  };
-
-  return (
+  if (phase==="building") return (
     <Screen step={0}>
       <Card accent={C.brand}>
-        {phase==="ask" && (
-          <>
-            <Heading
-              emoji="🌐"
-              title={`Let's start with your website, ${data.name}.`}
-              sub="Your website is the foundation of everything. Let's see what you've got — or build you something from scratch."
-            />
-            {hasWebsite===null && (
-              <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
-                <button onClick={()=>setHasWebsite(true)} style={{
-                  padding:"20px", borderRadius:"12px", textAlign:"left", cursor:"pointer",
-                  border:`2px solid ${C.border}`, background:"#fff",
-                  display:"flex", alignItems:"center", gap:"14px",
-                }}>
-                  <span style={{fontSize:"1.8em"}}>🔍</span>
-                  <div>
-                    <div style={{fontWeight:800,fontSize:"0.95em",color:C.text,marginBottom:"2px"}}>Yes, I have a website</div>
-                    <div style={{fontSize:"0.8em",color:C.muted}}>Paste your URL and we'll analyse it and rewrite it properly</div>
-                  </div>
-                </button>
-                <button onClick={()=>setHasWebsite(false)} style={{
-                  padding:"20px", borderRadius:"12px", textAlign:"left", cursor:"pointer",
-                  border:`2px solid ${C.brand}`, background:C.brandLt,
-                  display:"flex", alignItems:"center", gap:"14px",
-                }}>
-                  <span style={{fontSize:"1.8em"}}>✨</span>
-                  <div>
-                    <div style={{fontWeight:800,fontSize:"0.95em",color:C.brand,marginBottom:"2px"}}>No website yet</div>
-                    <div style={{fontSize:"0.8em",color:"#1E40AF"}}>No problem — let's build you one right now. Takes about 5 minutes.</div>
-                  </div>
-                </button>
-              </div>
-            )}
-
-            {hasWebsite===true && (
-              <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
-                <label style={{fontWeight:700,fontSize:"0.9em",color:C.muted}}>Paste your website URL</label>
-                <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://yourbusiness.com.au" style={inp}/>
-                <button onClick={scrapeAndAudit} disabled={!url} style={{...btnPrimary(C.brand),opacity:url?1:0.4}}>
-                  🔍 Analyse my website →
-                </button>
-                <button onClick={()=>setHasWebsite(null)} style={btnSecondary}>← Back</button>
-              </div>
-            )}
-
-            {hasWebsite===false && (
-              <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
-                <div style={{background:C.brandLt,border:`1px solid #BFDBFE`,borderRadius:"10px",padding:"14px 16px",fontSize:"0.85em",color:"#1E40AF",lineHeight:1.65}}>
-                  💡 Answer a few quick questions and we'll write every page of your new website — home, about us, services, contact — in about 60 seconds.
-                </div>
-                {[
-                  {key:"name", label:"Business name", placeholder:"e.g. Sandy's Café"},
-                  {key:"suburb", label:"Your suburb / location", placeholder:"e.g. Wollongong NSW"},
-                  {key:"industry", label:"What kind of business?", placeholder:"e.g. Café, Plumber, Hair Salon, Gym"},
-                  {key:"description", label:"Tell us what you do", placeholder:"e.g. Family café open 7 days, great coffee, breakfast and lunch. Known for our friendly staff and the best eggs benny in town."},
-                ].map(f=>(
-                  <div key={f.key}>
-                    <label style={{fontWeight:700,fontSize:"0.85em",color:C.muted,display:"block",marginBottom:"6px"}}>{f.label}</label>
-                    {f.key==="description"
-                      ? <textarea value={bizInfo[f.key]} onChange={e=>setBizInfo(b=>({...b,[f.key]:e.target.value}))} placeholder={f.placeholder} rows={3} style={{...inp,resize:"vertical"}}/>
-                      : <input value={bizInfo[f.key]} onChange={e=>setBizInfo(b=>({...b,[f.key]:e.target.value}))} placeholder={f.placeholder} style={inp}/>
-                    }
-                  </div>
-                ))}
-                <button onClick={generateFromScratch} disabled={!bizInfo.name||!bizInfo.suburb||!bizInfo.description} style={{...btnPrimary(C.brand),opacity:(bizInfo.name&&bizInfo.suburb&&bizInfo.description)?1:0.4}}>
-                  ✨ Write my website →
-                </button>
-                <button onClick={()=>setHasWebsite(null)} style={btnSecondary}>← Back</button>
-              </div>
-            )}
-          </>
-        )}
-
-        {phase==="scraping" && (
-          <div style={{textAlign:"center",padding:"40px 20px"}}>
-            <div style={{fontSize:"2.5em",marginBottom:"14px"}}>🔍</div>
-            <div style={{fontWeight:800,fontSize:"1.1em",color:C.text,marginBottom:"8px"}}>Analysing your website...</div>
-            <div style={{fontSize:"0.85em",color:C.muted,lineHeight:1.6}}>We're reading your site and looking for things that could be improved. This takes about 20 seconds.</div>
+        <div style={{textAlign:"center",padding:"40px 20px"}}>
+          <div style={{fontSize:"3em",marginBottom:"16px"}}>🔨</div>
+          <h2 style={{fontSize:"1.4em",fontWeight:900,color:C.text,marginBottom:"10px",letterSpacing:"-0.02em"}}>
+            Building your website...
+          </h2>
+          <p style={{fontSize:"0.9em",color:C.muted,lineHeight:1.7,marginBottom:"28px",maxWidth:"400px",margin:"0 auto 28px"}}>
+            We're designing your site, writing all the copy, and publishing it live right now. This takes about 30–60 seconds.
+          </p>
+          <div style={{background:C.light,borderRadius:"99px",height:"6px",overflow:"hidden",maxWidth:"320px",margin:"0 auto"}}>
+            <div style={{
+              height:"100%",
+              background:`linear-gradient(90deg,${C.brand},${C.green})`,
+              borderRadius:"99px",
+              animation:"shimmer 1.5s ease-in-out infinite",
+            }}/>
           </div>
-        )}
-
-        {phase==="audit" && (
-          <>
-            <Heading emoji="📋" title="Here's what we found" sub={`We've analysed ${url} — here's an honest breakdown.`}/>
-            <div style={{background:C.light,borderRadius:"12px",padding:"20px",fontSize:"0.88em",color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",marginBottom:"24px",maxHeight:"320px",overflowY:"auto"}}>
-              {audit}
-            </div>
-            <div style={{background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"12px",padding:"18px",marginBottom:"20px"}}>
-              <div style={{fontWeight:800,color:C.amber,marginBottom:"8px"}}>🛠️ Here's what we can do for you</div>
-              <div style={{fontSize:"0.88em",color:"#78350F",lineHeight:1.7}}>
-                We can't edit your existing website directly — we don't have access to your server. But we have two options:
-              </div>
-              <div style={{display:"flex",flexDirection:"column",gap:"8px",marginTop:"12px"}}>
-                <div style={{fontSize:"0.84em",color:"#78350F",display:"flex",gap:"8px"}}>
-                  <span>📝</span>
-                  <span><strong>Option A:</strong> We write you completely new website copy you can hand to your web designer or paste into your existing site yourself.</span>
-                </div>
-                <div style={{fontSize:"0.84em",color:"#78350F",display:"flex",gap:"8px"}}>
-                  <span>🚀</span>
-                  <span><strong>Option B:</strong> We build you a brand new website end-to-end — hosted by us, on your own domain — so you can publish blog posts, update content, and manage everything right here in Cliento.</span>
-                </div>
-              </div>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
-              <button onClick={()=>generateFromUrl("content")} style={btnPrimary(C.brand)}>
-                📝 Option A — Write me new website copy →
-              </button>
-              <button onClick={()=>generateFromUrl("build")} style={{...btnPrimary(C.green)}}>
-                🚀 Option B — Build me a whole new website →
-              </button>
-            </div>
-          </>
-        )}
-
-        {phase==="offer" && (
-          <>
-            <Heading emoji="✍️" title="Let's write your new website" sub="Tell us a bit about your business and we'll write every page in about 60 seconds."/>
-            <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
-              {[
-                {key:"name", label:"Business name", placeholder:"e.g. Sandy's Café"},
-                {key:"suburb", label:"Your suburb / location", placeholder:"e.g. Wollongong NSW"},
-                {key:"industry", label:"What kind of business?", placeholder:"e.g. Café, Plumber, Hair Salon"},
-                {key:"description", label:"What do you offer?", placeholder:"e.g. Family café open 7 days, great coffee, breakfast and lunch..."},
-              ].map(f=>(
-                <div key={f.key}>
-                  <label style={{fontWeight:700,fontSize:"0.85em",color:C.muted,display:"block",marginBottom:"6px"}}>{f.label}</label>
-                  {f.key==="description"
-                    ? <textarea value={bizInfo[f.key]} onChange={e=>setBizInfo(b=>({...b,[f.key]:e.target.value}))} placeholder={f.placeholder} rows={3} style={{...inp,resize:"vertical"}}/>
-                    : <input value={bizInfo[f.key]} onChange={e=>setBizInfo(b=>({...b,[f.key]:e.target.value}))} placeholder={f.placeholder} style={inp}/>
-                  }
-                </div>
-              ))}
-              <button onClick={generateFromScratch} disabled={!bizInfo.name||!bizInfo.suburb||!bizInfo.description} style={{...btnPrimary(C.brand),opacity:(bizInfo.name&&bizInfo.suburb&&bizInfo.description)?1:0.4}}>
-                ✨ Write my website →
-              </button>
-            </div>
-          </>
-        )}
-
-        {phase==="generating" && (
-          <div style={{textAlign:"center",padding:"40px 20px"}}>
-            <div style={{fontSize:"2.5em",marginBottom:"14px"}}>✍️</div>
-            <div style={{fontWeight:800,fontSize:"1.1em",color:C.text,marginBottom:"8px"}}>
-              {buildChoice==="build" ? "Planning your new website..." : "Writing your website content..."}
-            </div>
-            <div style={{fontSize:"0.85em",color:C.muted,lineHeight:1.6}}>
-              {buildChoice==="build"
-                ? "We're preparing your full website build. This takes about 30 seconds."
-                : "Writing every page of your website. About 30 seconds..."}
-            </div>
-          </div>
-        )}
-
-        {phase==="done" && (
-          <>
-            <Heading emoji="🎉" title="Your website content is ready!" sub={buildChoice==="build"
-              ? "Here's a plan for your brand new website — we'll publish it live once you've had a chance to review everything."
-              : "Here's your new website copy. Hand it to your web designer, paste it into your website builder, or come back to Cliento anytime to update it."}/>
-            <ResultBox content={websiteContent} onCopy={copy} copied={copied}/>
-            <div style={{marginTop:"20px",background:C.brandLt,border:`1px solid #BFDBFE`,borderRadius:"12px",padding:"16px",fontSize:"0.84em",color:"#1E40AF",lineHeight:1.65}}>
-              💾 This content is saved to your account — you can find it any time under the Marketing tab.
-            </div>
-            <button onClick={()=>onNext({websiteContent, buildChoice, bizInfo, audit})} style={{...btnPrimary(C.green),marginTop:"20px"}}>
-              Amazing — what's next? →
-            </button>
-          </>
-        )}
+          <style>{`@keyframes shimmer{0%{width:0%}50%{width:70%}100%{width:95%}}`}</style>
+          <p style={{fontSize:"0.78em",color:C.muted,marginTop:"16px"}}>Generating content · Designing pages · Publishing live</p>
+        </div>
       </Card>
     </Screen>
   );
+
+  if (phase==="done") return (
+    <Screen step={0}>
+      <Card accent={C.green}>
+        <Heading emoji="🎉" title="Your website is live!" sub="We've built and published your real website. It's live right now — share it with anyone."/>
+        <div style={{background:C.greenLt,border:"1.5px solid #BBF7D0",borderRadius:"14px",padding:"20px",marginBottom:"20px",textAlign:"center"}}>
+          <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"6px",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>Your live website</div>
+          <a href={liveUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:"1.05em",fontWeight:800,color:C.green,wordBreak:"break-all"}}>
+            🌐 {liveUrl}
+          </a>
+        </div>
+        <div style={{background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:"14px",overflow:"hidden",marginBottom:"20px"}}>
+          <div style={{background:C.light,padding:"10px 14px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:"8px"}}>
+            <div style={{display:"flex",gap:"5px"}}>
+              {["#FF5F56","#FFBD2E","#27C93F"].map(c=><div key={c} style={{width:"10px",height:"10px",borderRadius:"50%",background:c}}/>)}
+            </div>
+            <div style={{flex:1,background:"#fff",borderRadius:"6px",padding:"4px 10px",fontSize:"0.75em",color:C.muted,border:`1px solid ${C.border}`,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{liveUrl}</div>
+          </div>
+          <iframe src={liveUrl} style={{width:"100%",height:"420px",border:"none",display:"block"}} title="Your live website" loading="lazy"/>
+        </div>
+        <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>
+          <a href={liveUrl} target="_blank" rel="noopener noreferrer" style={{flex:1,padding:"14px",borderRadius:"10px",background:C.brand,color:"#fff",fontWeight:800,fontSize:"0.9em",textAlign:"center",textDecoration:"none",display:"block"}}>
+            🌐 Open My Website
+          </a>
+          <button onClick={()=>navigator.clipboard.writeText(liveUrl)} style={{padding:"14px 18px",borderRadius:"10px",border:`1.5px solid ${C.border}`,background:"#fff",cursor:"pointer",fontSize:"0.9em",fontWeight:600,color:C.muted}}>
+            📋 Copy
+          </button>
+        </div>
+        <div style={{background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"10px",padding:"14px",fontSize:"0.82em",color:"#78350F",lineHeight:1.65,marginBottom:"20px"}}>
+          💡 Want to connect your own domain (e.g. yourbusiness.com.au)? Head to <strong>Marketing → Publish My Website</strong> in the dashboard after setup.
+        </div>
+        <button onClick={()=>onNext({liveUrl})} style={{width:"100%",padding:"18px",borderRadius:"12px",border:"none",background:C.green,color:"#fff",fontWeight:800,fontSize:"1.05em",cursor:"pointer",fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+          Amazing — what's next? →
+        </button>
+      </Card>
+    </Screen>
+  );
+
+  return null;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1130,7 +926,7 @@ function Step6_Done({ data, onEnterDashboard }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN JOURNEY COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
-export default function Journey({ onComplete }) {
+export default function Journey({ onComplete, session }) {
   const [step, setStep] = useState(0);
   const [collectedData, setCollectedData] = useState({});
 
@@ -1140,7 +936,7 @@ export default function Journey({ onComplete }) {
   };
 
   if (step===0) return <Step0_Welcome onNext={next}/>;
-  if (step===1) return <Step1_Website data={collectedData} onNext={next}/>;
+  if (step===1) return <Step1_Website data={collectedData} session={session} onNext={next}/>;
   if (step===2) return <Step2_Social data={collectedData} onNext={next}/>;
   if (step===3) return <Step3_Email data={collectedData} onNext={next}/>;
   if (step===4) return <Step4_Blog data={collectedData} onNext={next}/>;
