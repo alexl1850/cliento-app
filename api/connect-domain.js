@@ -99,7 +99,7 @@ export default async function handler(req, res) {
         name: cleanDomain.startsWith('www.') ? 'www' : '@',
         value: configData.cnames[0],
         ttl: '3600',
-        note: 'Points your domain to your Cliento website',
+        note: 'Points your domain to your Akus website',
       });
     } else {
       // Default Vercel records
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
         name: '@',
         value: '76.76.21.21',
         ttl: '3600',
-        note: 'Points your domain to your Cliento website',
+        note: 'Points your domain to your Akus website',
       });
     }
 

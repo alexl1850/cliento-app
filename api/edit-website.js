@@ -62,7 +62,7 @@ Apply the instruction to this website and return the complete updated HTML.`
       method: 'POST',
       headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: `cliento-${slug}`,
+        name: `akus-${slug}`,
         files: [{ file: 'index.html', data: Buffer.from(updatedHtml).toString('base64'), encoding: 'base64' }],
         projectSettings: { framework: null },
         target: 'production',

@@ -113,7 +113,7 @@ Return this exact JSON structure — be specific, warm, and locally relevant thr
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: `cliento-${slug}`,
+        name: `akus-${slug}`,
         files: [{ file: 'index.html', data: Buffer.from(html).toString('base64'), encoding: 'base64' }],
         projectSettings: { framework: null },
         target: 'production',
@@ -528,7 +528,7 @@ ${testimonialsHTML}
 </footer>
 
 <div class="powered-by">
-  <a href="https://cliento.com.au" target="_blank">Website built with ⚡ Cliento · Australia's marketing platform for local business</a>
+  <a href="https://akus.com.au" target="_blank">Website built with ⚡ Akus · Australia's marketing platform for local business</a>
 </div>
 
 <script>
