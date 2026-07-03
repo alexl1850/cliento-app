@@ -109,7 +109,7 @@ function Screen({ children, step }) {
         marginBottom:"32px",
       }}>
         <div style={{fontWeight:900,fontSize:"1.2em",letterSpacing:"-0.03em"}}>
-          <span style={{color:C.brand}}>⚡</span>Cliento<span style={{color:C.amber}}>.</span>
+          <span style={{color:C.brand}}>⚡</span>Akus<span style={{color:C.amber}}>.</span>
         </div>
         <div style={{fontSize:"0.75em",color:C.muted,fontWeight:600}}>
           Getting your business set up 🇦🇺
@@ -159,7 +159,7 @@ function ResultBox({ content, onCopy, copied, emailSubject, isEmail }) {
   const extractSubject = () => {
     if (emailSubject) return emailSubject;
     const subjectMatch = content.match(/(?:Subject:|1\.\s*)([^\n]+)/i);
-    return subjectMatch ? subjectMatch[1].trim().replace(/^["']|["']$/g,"") : "Message from Cliento";
+    return subjectMatch ? subjectMatch[1].trim().replace(/^["']|["']$/g,"") : "Message from Akus";
   };
 
   // Build mailto body — strip markdown headers, keep it clean for email clients
@@ -245,7 +245,7 @@ function Step0_Welcome({ onNext }) {
       <Card>
         <Heading
           emoji="👋"
-          title="Welcome to Cliento. Let's get your business sorted."
+          title="Welcome to Akus. Let's get your business sorted."
           sub="This will take about 5–10 minutes. By the end, you'll have done more marketing than most businesses do in a month. Let's start with the basics."
         />
         <div style={{display:"flex",flexDirection:"column",gap:"12px",marginBottom:"24px"}}>

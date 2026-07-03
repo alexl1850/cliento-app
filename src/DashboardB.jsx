@@ -239,7 +239,7 @@ export function HealthPanel({biz, industry, customers, results}) {
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}}>
           <div>
             <div style={{fontWeight:800,fontSize:"1.1em",color:C.text}}>💚 Your Marketing Health Score</div>
-            <div style={{fontSize:"0.8em",color:C.muted,marginTop:"2px"}}>Updated based on what you've completed in Cliento</div>
+            <div style={{fontSize:"0.8em",color:C.muted,marginTop:"2px"}}>Updated based on what you've completed in Akus</div>
           </div>
           <div style={{textAlign:"center"}}>
             <div style={{fontSize:"2.8em",fontWeight:900,color:scoreColor,letterSpacing:"-0.04em",lineHeight:1}}>{score}</div>
@@ -302,7 +302,7 @@ export function HealthPanel({biz, industry, customers, results}) {
 
       {!report&&!generating&&(
         <div style={{background:C.light,borderRadius:"10px",padding:"16px",fontSize:"0.82em",color:C.muted,lineHeight:1.7}}>
-          <strong style={{color:C.text}}>How the Health Score works:</strong> Every tool you complete in Cliento adds points to your score. Your weekly report gives you 3 specific priorities based on your actual score, your customer numbers, and what's been done recently. The more you use Cliento, the smarter and more personalised your report gets.
+          <strong style={{color:C.text}}>How the Health Score works:</strong> Every tool you complete in Akus adds points to your score. Your weekly report gives you 3 specific priorities based on your actual score, your customer numbers, and what's been done recently. The more you use Akus, the smarter and more personalised your report gets.
         </div>
       )}
     </div>
@@ -408,9 +408,9 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
     <div>
       {/* Explainer */}
       <div style={{background:"linear-gradient(135deg,#F0FDFA,#EFF6FF)",border:"1px solid #99F6E4",borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
-        <div style={{fontWeight:800,color:C.teal,fontSize:"1em",marginBottom:"6px"}}>🔗 The Cliento Backlink Network</div>
+        <div style={{fontWeight:800,color:C.teal,fontSize:"1em",marginBottom:"6px"}}>🔗 The Akus Backlink Network</div>
         <div style={{fontSize:"0.84em",color:"#0F766E",lineHeight:1.7,marginBottom:"12px"}}>
-          Every Cliento member has a real website. When you mention another local member in your blog posts or on your website, and they mention you in theirs, Google sees both businesses as locally trusted and boosts your rankings. <strong>Agencies charge $500–$2,000/month for link building.</strong> You get it free as part of being a Cliento member.
+          Every Akus member has a real website. When you mention another local member in your blog posts or on your website, and they mention you in theirs, Google sees both businesses as locally trusted and boosts your rankings. <strong>Agencies charge $500–$2,000/month for link building.</strong> You get it free as part of being a Akus member.
         </div>
         <div style={{display:"flex",gap:"10px",flexWrap:"wrap"}}>
           {[["✓","Completely white-hat — Google loves it"],["✓","Local and relevant — the best kind of backlinks"],["✓","Free — included in your $50/month"]].map(([icon,text])=>(
@@ -561,7 +561,7 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
         </button>
         {showProfile&&(
           <div style={{marginTop:"12px",display:"flex",flexDirection:"column",gap:"10px"}}>
-            <div style={{fontSize:"0.8em",color:C.muted,lineHeight:1.6}}>This is what other Cliento members see when they find your business in the network. Make sure it's accurate and appealing.</div>
+            <div style={{fontSize:"0.8em",color:C.muted,lineHeight:1.6}}>This is what other Akus members see when they find your business in the network. Make sure it's accurate and appealing.</div>
             <div style={{background:C.light,borderRadius:"8px",padding:"12px 14px"}}>
               <div style={{fontWeight:700,fontSize:"0.88em",color:C.text,marginBottom:"2px"}}>{biz.name||"Your business name"}</div>
               <div style={{fontSize:"0.75em",color:C.muted,marginBottom:"6px"}}>{industry?.label} · {biz.suburb}</div>
@@ -587,17 +587,17 @@ export function ProductTour({ step, setStep, onClose, isShopify, ownerName }) {
   const accentLt = isShopify ? "#F5F3FF" : "#EFF6FF";
 
   const localSteps = [
-    { icon:"👋", title:`Welcome to Cliento, ${ownerName||"there"}!`, body:"This is a 60-second tour to show you around. You can skip it any time — and revisit it later by tapping the ? icon in the top bar." },
-    { icon:"📣", title:"Marketing tab — your content engine", body:"Tap any tool — your website, social posts, an email, an ad — and Cliento writes it for you in about 60 seconds. Everything is personalised to your business." },
+    { icon:"👋", title:`Welcome to Akus, ${ownerName||"there"}!`, body:"This is a 60-second tour to show you around. You can skip it any time — and revisit it later by tapping the ? icon in the top bar." },
+    { icon:"📣", title:"Marketing tab — your content engine", body:"Tap any tool — your website, social posts, an email, an ad — and Akus writes it for you in about 60 seconds. Everything is personalised to your business." },
     { icon:"⭐", title:"Reviews tab — grow your Google rating", body:"Ask happy customers for reviews, reply to every review professionally, and turn bad reviews into trust-builders. The single biggest lever for getting found on Google." },
-    { icon:"👥", title:"Customers tab — your simple CRM", body:"Keep a list of your customers. Tap 'Generate Message' on anyone and Cliento writes a personal follow-up, win-back, or thank you — using what you know about them." },
+    { icon:"👥", title:"Customers tab — your simple CRM", body:"Keep a list of your customers. Tap 'Generate Message' on anyone and Akus writes a personal follow-up, win-back, or thank you — using what you know about them." },
     { icon:"💚", title:"Health Score — your Monday morning check-in", body:"Every week, get a plain-English report: what you did well, your 3 priorities, and one quick win. Most people check it with their coffee." },
     { icon:"🔗", title:"Network — free backlinks from other members", body:"Get matched with complementary local businesses and we'll write a natural mention of them for your blog — and they'll do the same for you. Free SEO, built in." },
     { icon:"🚀", title:"You're all set!", body:"Start with whatever feels most useful today. If you ever get stuck, tap the ❓ Help tab for a full walkthrough and FAQ." },
   ];
 
   const shopifySteps = [
-    { icon:"👋", title:`Welcome to Cliento, ${ownerName||"there"}!`, body:"This is a 60-second tour to show you around your store's marketing tools. Skip any time, or revisit later via the ? icon." },
+    { icon:"👋", title:`Welcome to Akus, ${ownerName||"there"}!`, body:"This is a 60-second tour to show you around your store's marketing tools. Skip any time, or revisit later via the ? icon." },
     { icon:"🛍️", title:"Products tab — descriptions that sell", body:"Generate full product descriptions, SEO titles, collection page copy, and bundle suggestions — all written to convert browsers into buyers." },
     { icon:"📧", title:"Emails tab — recover lost sales", body:"Abandoned cart sequences, post-purchase flows, win-back campaigns, and launch emails. The abandoned cart sequence alone typically recovers 5–15% of lost sales." },
     { icon:"📱", title:"Social & Ads — content for every platform", body:"Instagram, TikTok and Facebook captions, ad copy for Meta and Google, and influencer outreach briefs — ready in seconds." },
@@ -670,14 +670,14 @@ export function PublishWebsite({ biz, websiteContent, onBack }) {
     { domain:`${slug}.au`,               note:"New, short Australian domain ending" },
   ].filter(s=>!s.domain.includes("undefined"));
 
-  const cliento_subdomain = `${slug}.cliento.site`;
+  const akus_subdomain = `${slug}.akus.com.au`;
 
   const startDeploy = () => {
     setStep("deploying");
     setDeployProgress(0);
     const timer = setInterval(()=>{
       setDeployProgress(p=>{
-        if(p>=100){ clearInterval(timer); setStep("live"); setLiveUrl(domainChoice||cliento_subdomain); return 100; }
+        if(p>=100){ clearInterval(timer); setStep("live"); setLiveUrl(domainChoice||akus_subdomain); return 100; }
         return p+ (p<70?14:4);
       });
     },350);
@@ -715,8 +715,8 @@ export function PublishWebsite({ biz, websiteContent, onBack }) {
               <div style={{fontSize:"0.78em",color:"#1E40AF"}}>We'll suggest names based on {biz.name||"your business"} and walk you through buying one</div>
             </button>
             <button onClick={startDeploy} style={{padding:"14px",borderRadius:"11px",textAlign:"left",cursor:"pointer",border:`1.5px dashed ${C.border}`,background:"#fff"}}>
-              <div style={{fontWeight:600,fontSize:"0.85em",color:C.muted,marginBottom:"2px"}}>⏭️ Skip for now — just give me a free Cliento web address</div>
-              <div style={{fontSize:"0.76em",color:C.muted}}>You'll get <strong>{cliento_subdomain}</strong> instantly. Add a real domain any time later.</div>
+              <div style={{fontWeight:600,fontSize:"0.85em",color:C.muted,marginBottom:"2px"}}>⏭️ Skip for now — just give me a free Akus web address</div>
+              <div style={{fontSize:"0.76em",color:C.muted}}>You'll get <strong>{akus_subdomain}</strong> instantly. Add a real domain any time later.</div>
             </button>
           </div>
         </div>
@@ -776,7 +776,7 @@ export function PublishWebsite({ biz, websiteContent, onBack }) {
           {[
             ["1","Log in to where you bought your domain","This is usually GoDaddy, Crazy Domains, VentraIP, Namecheap or similar — wherever you purchased it."],
             ["2","Find 'DNS Settings' or 'Manage DNS'","Every registrar calls this something slightly different, but it's usually under your domain's settings page."],
-            ["3","Add these 2 records exactly as shown","Type: A, Name: @, Value: 76.76.21.21  —  Type: CNAME, Name: www, Value: cname.cliento.site"],
+            ["3","Add these 2 records exactly as shown","Type: A, Name: @, Value: 76.76.21.21  —  Type: CNAME, Name: www, Value: cname.akus.com.au"],
           ].map(([num,title,desc])=>(
             <div key={num} style={{display:"flex",gap:"12px",marginBottom:"14px"}}>
               <div style={{width:"24px",height:"24px",borderRadius:"50%",background:C.brand,color:"#fff",fontWeight:800,fontSize:"0.72em",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{num}</div>
@@ -867,7 +867,7 @@ export function ConnectShopify({ biz, onBack }) {
           <span style={{fontSize:"1.8em"}}>🛍️</span>
           <div>
             <div style={{color:"#fff",fontWeight:800,fontSize:"1em"}}>Connect My Shopify Store</div>
-            <div style={{color:"rgba(255,255,255,0.55)",fontSize:"0.78em"}}>Sync your products so Cliento can write for them automatically</div>
+            <div style={{color:"rgba(255,255,255,0.55)",fontSize:"0.78em"}}>Sync your products so Akus can write for them automatically</div>
           </div>
         </div>
       </div>
@@ -876,7 +876,7 @@ export function ConnectShopify({ biz, onBack }) {
       {step==="ask" && (
         <div style={{background:"#fff",borderRadius:"14px",border:`1px solid ${C.border}`,padding:"22px"}}>
           <div style={{fontWeight:700,fontSize:"0.95em",color:C.text,marginBottom:"4px"}}>Do you already have a Shopify store?</div>
-          <div style={{fontSize:"0.82em",color:C.muted,marginBottom:"18px",lineHeight:1.6}}>Connecting your store lets Cliento pull your real product list — no retyping product names and details.</div>
+          <div style={{fontSize:"0.82em",color:C.muted,marginBottom:"18px",lineHeight:1.6}}>Connecting your store lets Akus pull your real product list — no retyping product names and details.</div>
 
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <button onClick={()=>setStep("connect-existing")} style={{padding:"16px",borderRadius:"11px",textAlign:"left",cursor:"pointer",border:`2px solid ${C.border}`,background:"#fff"}}>
@@ -892,7 +892,7 @@ export function ConnectShopify({ biz, onBack }) {
             </a>
             <button onClick={onBack} style={{padding:"14px",borderRadius:"11px",textAlign:"left",cursor:"pointer",border:`1.5px dashed ${C.border}`,background:"#fff"}}>
               <div style={{fontWeight:600,fontSize:"0.85em",color:C.muted,marginBottom:"2px"}}>⏭️ Skip for now</div>
-              <div style={{fontSize:"0.76em",color:C.muted}}>You can keep using Cliento's product tools manually — just type details in as you go.</div>
+              <div style={{fontSize:"0.76em",color:C.muted}}>You can keep using Akus's product tools manually — just type details in as you go.</div>
             </button>
           </div>
         </div>
@@ -908,8 +908,8 @@ export function ConnectShopify({ biz, onBack }) {
           <div style={{fontWeight:700,fontSize:"0.95em",color:C.text,marginBottom:"14px"}}>Connecting your store — 3 simple steps</div>
           {[
             ["1","We'll ask Shopify to confirm it's really you","You'll be sent to a Shopify login screen — this is normal and keeps your store secure."],
-            ["2","Approve Cliento's access","Shopify will show you exactly what Cliento can see (your product list) — nothing else."],
-            ["3","You're connected","Cliento will pull your products automatically so you never have to retype names or details again."],
+            ["2","Approve Akus's access","Shopify will show you exactly what Akus can see (your product list) — nothing else."],
+            ["3","You're connected","Akus will pull your products automatically so you never have to retype names or details again."],
           ].map(([num,title,desc])=>(
             <div key={num} style={{display:"flex",gap:"12px",marginBottom:"14px"}}>
               <div style={{width:"24px",height:"24px",borderRadius:"50%",background:C.purple,color:"#fff",fontWeight:800,fontSize:"0.72em",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{num}</div>
@@ -945,7 +945,7 @@ export function ConnectShopify({ biz, onBack }) {
           <div style={{fontSize:"2.6em",marginBottom:"12px"}}>🎉</div>
           <div style={{fontWeight:800,fontSize:"1.1em",color:C.text,marginBottom:"6px"}}>Your store is connected!</div>
           <div style={{fontSize:"0.85em",color:C.muted,marginBottom:"18px",lineHeight:1.6}}>
-            Cliento can now see your product list at <strong>{storeUrlInput}</strong>. Head to the Products tab and your products will be ready to write content for.
+            Akus can now see your product list at <strong>{storeUrlInput}</strong>. Head to the Products tab and your products will be ready to write content for.
           </div>
           <button onClick={onBack} style={{padding:"12px 24px",borderRadius:"9px",border:"none",background:C.purple,color:"#fff",cursor:"pointer",fontSize:"0.85em",fontWeight:700}}>
             Go to Products →
@@ -993,7 +993,7 @@ export function HelpCentre({ isShopify, onStartTour }) {
           <div style={{fontWeight:700,fontSize:"0.85em",color:accent}}>Replay the tour</div>
           <div style={{fontSize:"0.72em",color:"#6B7280",marginTop:"2px"}}>60-second walkthrough</div>
         </button>
-        <a href="mailto:support@cliento.com.au" style={{padding:"16px",borderRadius:"12px",border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",textAlign:"left",textDecoration:"none",display:"block"}}>
+        <a href="mailto:support@akus.com.au" style={{padding:"16px",borderRadius:"12px",border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",textAlign:"left",textDecoration:"none",display:"block"}}>
           <div style={{fontSize:"1.3em",marginBottom:"6px"}}>✉️</div>
           <div style={{fontWeight:700,fontSize:"0.85em",color:"#111827"}}>Email support</div>
           <div style={{fontSize:"0.72em",color:"#6B7280",marginTop:"2px"}}>We reply within a day</div>
@@ -1017,11 +1017,11 @@ export function HelpCentre({ isShopify, onStartTour }) {
       {/* GETTING STARTED */}
       {openSection==="getting-started" && (
         <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
-          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 14px"}}>Getting started with Cliento</h3>
+          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 14px"}}>Getting started with Akus</h3>
           {[
-            ["1","Set up your business profile","Done at signup — your name, business details, and what you offer. Cliento uses this to personalise everything."],
-            ["2", isShopify?"Try your first product description":"Try your first piece of content","Head to "+(isShopify?"Products → Product Description":"Marketing → My Website")+" and generate something. It takes about 60 seconds and you'll immediately see what Cliento can do."],
-            ["3","Copy it and use it","Everything Cliento writes is yours. Copy it into Facebook, your website, your email tool — wherever it needs to go. Nothing publishes automatically."],
+            ["1","Set up your business profile","Done at signup — your name, business details, and what you offer. Akus uses this to personalise everything."],
+            ["2", isShopify?"Try your first product description":"Try your first piece of content","Head to "+(isShopify?"Products → Product Description":"Marketing → My Website")+" and generate something. It takes about 60 seconds and you'll immediately see what Akus can do."],
+            ["3","Copy it and use it","Everything Akus writes is yours. Copy it into Facebook, your website, your email tool — wherever it needs to go. Nothing publishes automatically."],
             ["4", isShopify?"Set up your abandoned cart emails":"Build your customer list","This is one of the highest-ROI things you can do — "+(isShopify?"recovering lost sales takes just a few minutes to set up.":"add a few regulars and try generating a personal message for one of them.")],
             ["5","Check back weekly", isShopify?"Use the Analytics tab monthly to see what's working in your store.":"The Health Score tab gives you a fresh priority report every week — most people check it Monday mornings."],
           ].map(([num,title,desc])=>(
@@ -1040,7 +1040,7 @@ export function HelpCentre({ isShopify, onStartTour }) {
       {openSection==="connections" && (
         <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
           <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 6px"}}>What do I need to connect?</h3>
-          <p style={{fontSize:"0.83em",color:"#6B7280",lineHeight:1.6,margin:"0 0 18px"}}>Short answer: nothing is required to start. Cliento works today by you copying content where it needs to go. Here's exactly what's available now vs what's coming.</p>
+          <p style={{fontSize:"0.83em",color:"#6B7280",lineHeight:1.6,margin:"0 0 18px"}}>Short answer: nothing is required to start. Akus works today by you copying content where it needs to go. Here's exactly what's available now vs what's coming.</p>
 
           <div style={{marginBottom:"16px"}}>
             <div style={{fontSize:"0.7em",fontWeight:800,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:"10px"}}>✅ Works today — no setup needed</div>
@@ -1093,7 +1093,7 @@ export function HelpCentre({ isShopify, onStartTour }) {
         <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
           <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 14px"}}>How each tool works</h3>
           {(isShopify ? [
-            ["🛍️ Products","Fill in the product name, key features, and target customer. Cliento writes a description, then you copy it into your Shopify product page."],
+            ["🛍️ Products","Fill in the product name, key features, and target customer. Akus writes a description, then you copy it into your Shopify product page."],
             ["📧 Emails","Pick the email type (abandoned cart, post-purchase, win-back). Answer 2-3 questions. Get a full sequence ready to paste into Klaviyo, Mailchimp, or Shopify Email."],
             ["📱 Social & Ads","Tell us the product and angle. Get Instagram, TikTok and Facebook captions, or ad copy for Meta/Google — ready to paste into Ads Manager."],
             ["⭐ Reviews","Paste in a customer review (good or bad) and get the perfect response to post back. Or generate a request email to send after purchase."],
@@ -1102,12 +1102,12 @@ export function HelpCentre({ isShopify, onStartTour }) {
             ["🚀 Growth","Build a referral program, loyalty system, or sale campaign by answering a few quick questions about your offer."],
           ] : [
             ["📣 Marketing","Pick a tool — website, posts, email, ads, offers, blog, seasonal. Answer 1-3 quick questions. Get content ready to copy into Facebook, your website, or your email tool."],
-            ["⭐ Reviews","Ask for a review, reply to one, or handle a bad one — paste in the review text (if relevant) and Cliento writes the perfect response."],
+            ["⭐ Reviews","Ask for a review, reply to one, or handle a bad one — paste in the review text (if relevant) and Akus writes the perfect response."],
             ["🏢 Business","Paste your Google Analytics numbers for a plain English report, or fill in role details to get a complete job ad."],
             ["👥 Customers","Add your customers manually (name, phone, notes). Tap 'Generate Message' on anyone to get a personalised follow-up, win-back, or thank you."],
             ["🚀 Grow","Build a win-back campaign for lapsed customers or a referral program — answer a few questions about your offer."],
-            ["💚 Health Score","Automatically scores based on what you've used in Cliento. Tap 'Get My Weekly Report' for a fresh set of priorities any time."],
-            ["🔗 Network","Browse other local Cliento members, generate a natural mention of their business for your blog, and email them to ask for the same in return."],
+            ["💚 Health Score","Automatically scores based on what you've used in Akus. Tap 'Get My Weekly Report' for a fresh set of priorities any time."],
+            ["🔗 Network","Browse other local Akus members, generate a natural mention of their business for your blog, and email them to ask for the same in return."],
           ]).map(([title,desc])=>(
             <div key={title} style={{marginBottom:"16px",paddingBottom:"16px",borderBottom:"1px solid #F3F4F6"}}>
               <div style={{fontWeight:700,fontSize:"0.88em",color:"#111827",marginBottom:"4px"}}>{title}</div>
@@ -1121,14 +1121,14 @@ export function HelpCentre({ isShopify, onStartTour }) {
       {openSection==="faq" && (
         <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
           <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 8px"}}>Common questions</h3>
-          <FaqItem id="f1" q="Do I need any tech skills to use this?" a="None at all. If you can send a text message, you can use Cliento. Everything is point, click, and copy-paste." />
-          <FaqItem id="f2" q="Will Cliento publish things automatically?" a="No. Cliento never publishes anything on your behalf. You always read, approve, and copy content yourself before it goes anywhere." />
-          <FaqItem id="f3" q="Can I edit what Cliento writes?" a="Always. Everything generated is a starting point — copy it anywhere and change as much as you like. Hit 'Redo' for a completely different version any time." />
-          <FaqItem id="f4" q="What if I want a refund?" a="30-day money-back guarantee on your first payment, no questions asked. Email support@cliento.com.au with 'Refund Request' in the subject." />
+          <FaqItem id="f1" q="Do I need any tech skills to use this?" a="None at all. If you can send a text message, you can use Akus. Everything is point, click, and copy-paste." />
+          <FaqItem id="f2" q="Will Akus publish things automatically?" a="No. Akus never publishes anything on your behalf. You always read, approve, and copy content yourself before it goes anywhere." />
+          <FaqItem id="f3" q="Can I edit what Akus writes?" a="Always. Everything generated is a starting point — copy it anywhere and change as much as you like. Hit 'Redo' for a completely different version any time." />
+          <FaqItem id="f4" q="What if I want a refund?" a="30-day money-back guarantee on your first payment, no questions asked. Email support@akus.com.au with 'Refund Request' in the subject." />
           <FaqItem id="f5" q="Is there a contract?" a="No. Month-to-month, cancel any time from your account settings in about 10 seconds." />
-          <FaqItem id="f6" q={isShopify ? "Can I connect my Shopify store?" : "Can I publish my website through Cliento?"} a={isShopify ? "Yes — head to Products and tap 'Connect My Shopify Store'. If you don't have a store yet, the same button helps you start one. Full automatic two-way product sync is still being finished — for now, connecting gets your store linked and ready." : "Yes — once you've generated your website content, a 'Publish My Website' button appears. It walks you through getting a free Cliento web address instantly, or connecting a domain you own or buy. Google Analytics and Google Business Profile direct connections are still coming — see the 'What Do I Need to Connect?' tab."} />
+          <FaqItem id="f6" q={isShopify ? "Can I connect my Shopify store?" : "Can I publish my website through Akus?"} a={isShopify ? "Yes — head to Products and tap 'Connect My Shopify Store'. If you don't have a store yet, the same button helps you start one. Full automatic two-way product sync is still being finished — for now, connecting gets your store linked and ready." : "Yes — once you've generated your website content, a 'Publish My Website' button appears. It walks you through getting a free Akus web address instantly, or connecting a domain you own or buy. Google Analytics and Google Business Profile direct connections are still coming — see the 'What Do I Need to Connect?' tab."} />
           <FaqItem id="f7" q="Is my information private?" a="Yes. Your business details, customer list, and generated content are private to your account. We never sell your data — see our Privacy Policy for full details." />
-          <FaqItem id="f8" q="How is content generated so fast?" a="Cliento is powered by Claude, one of the most advanced AI systems in the world (made by Anthropic). It reads what you tell it about your business and writes content specifically for you — not a generic template." />
+          <FaqItem id="f8" q="How is content generated so fast?" a="Akus is powered by Claude, one of the most advanced AI systems in the world (made by Anthropic). It reads what you tell it about your business and writes content specifically for you — not a generic template." />
         </div>
       )}
 
@@ -1140,8 +1140,8 @@ export function HelpCentre({ isShopify, onStartTour }) {
           <p style={{fontSize:"0.85em",color:"#6B7280",lineHeight:1.65,margin:"0 0 20px",maxWidth:"380px",marginLeft:"auto",marginRight:"auto"}}>
             Stuck on something, found a bug, or just want to tell us what you'd love to see next? Email us — we typically reply within one business day.
           </p>
-          <a href="mailto:support@cliento.com.au" style={{display:"inline-block",padding:"12px 28px",borderRadius:"10px",background:accent,color:"#fff",textDecoration:"none",fontWeight:700,fontSize:"0.88em"}}>
-            ✉️ Email support@cliento.com.au
+          <a href="mailto:support@akus.com.au" style={{display:"inline-block",padding:"12px 28px",borderRadius:"10px",background:accent,color:"#fff",textDecoration:"none",fontWeight:700,fontSize:"0.88em"}}>
+            ✉️ Email support@akus.com.au
           </a>
         </div>
       )}

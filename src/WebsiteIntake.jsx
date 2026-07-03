@@ -105,7 +105,7 @@ function buildQuestions(answers) {
       id:"menu",
       section:"Your Business",
       question:"Do you have a menu, price list, or key items to feature?",
-      sub:"If you're a café, restaurant, or retailer — list your signature dishes, drinks, or products here. Cliento will reference these specifically in every piece of content it writes for you.",
+      sub:"If you're a café, restaurant, or retailer — list your signature dishes, drinks, or products here. Akus will reference these specifically in every piece of content it writes for you.",
       type:"multiline",
       placeholder:"e.g. Eggs Benny $18, Smashed Avo on sourdough $16, House-made banana bread $8. Best coffee in Wollongong — single origin Ethiopian. Kids menu available. Gluten-free options.\n\nOr for retail: Rose gold ring set $45, Soy candles from $22, Gift wrapping available, Afterpay accepted.",
       optional:true,
@@ -503,7 +503,7 @@ export default function WebsiteIntake({ data, session, onComplete }) {
       {/* Nav */}
       <div style={{width:"100%",maxWidth:"640px",padding:"18px 0 0",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"28px"}}>
         <div style={{fontWeight:900,fontSize:"1.2em",letterSpacing:"-0.03em"}}>
-          <span style={{color:C.brand}}>⚡</span>Cliento<span style={{color:C.amber}}>.</span>
+          <span style={{color:C.brand}}>⚡</span>Akus<span style={{color:C.amber}}>.</span>
         </div>
         <div style={{fontSize:"0.75em",color:C.muted,fontWeight:600}}>Building your website 🏗️</div>
       </div>

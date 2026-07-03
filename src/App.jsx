@@ -100,7 +100,7 @@ export default function App() {
       flexDirection:'column', gap:'12px',
     }}>
       <div style={{fontSize:'1.8rem', fontWeight:900, letterSpacing:'-0.04em'}}>
-        <span style={{color:'#2563EB'}}>⚡</span>Cliento<span style={{color:'#D97706'}}>.</span>
+        <span style={{color:'#2563EB'}}>⚡</span>Akus<span style={{color:'#D97706'}}>.</span>
       </div>
       <div style={{fontSize:'0.85em', color:'#6B7280'}}>Loading your workspace...</div>
     </div>

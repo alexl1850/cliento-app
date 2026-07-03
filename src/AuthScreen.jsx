@@ -76,7 +76,7 @@ export default function AuthScreen() {
       {/* Logo */}
       <div style={{marginBottom:'32px',textAlign:'center'}}>
         <div style={{fontSize:'1.8rem',fontWeight:900,letterSpacing:'-0.04em',color:C.text,marginBottom:'6px'}}>
-          <span style={{color:C.brand}}>⚡</span>Cliento<span style={{color:C.amber}}>.</span>
+          <span style={{color:C.brand}}>⚡</span>Akus<span style={{color:C.amber}}>.</span>
         </div>
         <div style={{fontSize:'0.85em',color:C.muted}}>Skip the agency. Keep the results.</div>
       </div>

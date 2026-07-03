@@ -247,7 +247,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
     const accentLt = isShopify ? C.purpleLt : C.brandLt;
     const steps = [
       {
-        title:"What kind of business do you have?", sub:"Cliento customises everything based on your answer",
+        title:"What kind of business do you have?", sub:"Akus customises everything based on your answer",
         content:(
           <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
             {[
@@ -332,7 +332,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
       <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
         <div style={{background:"linear-gradient(135deg,#0D1117 0%,#1A2235 100%)",padding:"14px 20px"}}>
           <span style={{color:"#fff",fontWeight:900,fontSize:"1.05em"}}>
-            <span style={{color:biz.bizType==="shopify"?"#A78BFA":"#60A5FA"}}>⚡</span> Cliento
+            <span style={{color:biz.bizType==="shopify"?"#A78BFA":"#60A5FA"}}>⚡</span> Akus
           </span>
           <span style={{color:"rgba(255,255,255,0.4)",fontSize:"0.8em",marginLeft:"8px"}}>— Setting up your account</span>
         </div>
@@ -427,7 +427,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
         {/* Logo */}
         <div style={{padding:"24px 20px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
           <div style={{fontWeight:900,fontSize:"1.3em",letterSpacing:"-0.04em",color:"#fff",marginBottom:"2px"}}>
-            <span style={{color:accent}}>⚡</span>Cliento
+            <span style={{color:accent}}>⚡</span>Akus
           </div>
           <div style={{fontSize:"0.7em",color:"rgba(255,255,255,0.3)",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.08em"}}>
             {isShopify ? "Online Store" : "Local Business"}
