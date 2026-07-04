@@ -18,23 +18,394 @@ export default async function handler(req, res) {
     const isRetail  = /shop|store|retail|boutique|market|gift|clothe|fashion|jewel/.test(bizStr);
     const isPet     = /pet|dog|cat|groom|vet|animal/.test(bizStr);
 
-    // ── 2. Get hero images — Unsplash Source (no API key, keyword-based) ─────
-    const imgQuery = isFood    ? 'cafe,restaurant,food,coffee'
-      : isBeauty  ? 'hair,salon,beauty,spa'
-      : isTrade   ? 'plumber,builder,tradesperson,construction'
-      : isHealth  ? 'physiotherapy,wellness,health,clinic'
-      : isRetail  ? 'retail,shop,boutique,store'
-      : isPet     ? 'dog,cat,pet,grooming'
-      : encodeURIComponent((intake.services || 'local business').split(' ').slice(0,2).join(','));
+    // ── 1. Detect business type — comprehensive ────────────────────────────
+    const bizStr = `${intake.services || ''} ${intake.biz_name || ''} ${intake.difference || ''} ${intake.menu || ''}`.toLowerCase();
 
-    // Unsplash Source URLs — free, no API key, returns relevant photos by keyword
-    // Using a seed based on business name for consistency
+    const isButcher   = /butcher|meat|deli|smallgoods|sausage/.test(bizStr);
+    const isBakery    = /baker|bakery|bread|pastry|cake|patisserie/.test(bizStr);
+    const isCafe      = /café|cafe|coffee|espresso|brunch|breakfast/.test(bizStr);
+    const isRestaurant= /restaurant|dining|bistro|eatery|diner|cuisine/.test(bizStr);
+    const isTakeaway  = /takeaway|takeout|pizza|burger|fish.chip|kebab|chinese|thai|indian|sushi|noodle/.test(bizStr);
+    const isBar       = /bar|pub|brewery|cocktail|wine|taproom/.test(bizStr);
+    const isHairSalon = /hair|hairdress|barber|cut|style|colour|highlights/.test(bizStr);
+    const isBeautySpa = /beauty|spa|massage|facial|skin|wax|nail|lash|brow|cosmetic/.test(bizStr);
+    const isPlumber   = /plumb|pipe|drain|hot water|leak/.test(bizStr);
+    const isElectrician=/electri|wiring|power|lighting/.test(bizStr);
+    const isBuilder   = /build|construct|renovation|reno|carpent|cabinet/.test(bizStr);
+    const isPainter   = /paint|colour|decorat/.test(bizStr);
+    const isLandscaper= /landscap|garden|lawn|mow|turf|plant/.test(bizStr);
+    const isGym       = /gym|fitness|crossfit|weights|personal train/.test(bizStr);
+    const isYoga      = /yoga|pilates|meditation|wellness|mindful/.test(bizStr);
+    const isPhysio    = /physio|chiro|osteo|rehab|massage therapy|sports medicine/.test(bizStr);
+    const isDentist   = /dentist|dental|orthodont|teeth/.test(bizStr);
+    const isDoctor    = /doctor|gp|medical|clinic|health centre/.test(bizStr);
+    const isPet       = /pet|dog|cat|groom|vet|animal|puppy/.test(bizStr);
+    const isRetail    = /shop|store|retail|boutique|gift|clothe|fashion|jewel/.test(bizStr);
+    const isRealEstate= /real estate|property|agent|realt/.test(bizStr);
+    const isAccounting= /account|bookkeep|tax|financ|mortgage/.test(bizStr);
+    const isChildcare = /childcare|daycare|kindy|kindergarten|preschool|child/.test(bizStr);
+    const isPhotograph= /photo|portrait|wedding photo|videograph/.test(bizStr);
+    const isCleaning  = /clean|housekeep|domestic|commercial clean/.test(bizStr);
+    const isAutomatic = /mechanic|auto|car|tyre|panel beat|smash repair/.test(bizStr);
+    const isFlorist   = /florist|flower|bouquet|arrangement/.test(bizStr);
+    const isFuneral   = /funeral|cremation/.test(bizStr);
+
+    // Group into image categories
+    const isFood = isCafe || isRestaurant || isTakeaway || isBakery || isBar;
+    const isBeauty = isHairSalon || isBeautySpa;
+    const isTrade = isPlumber || isElectrician || isBuilder || isPainter || isLandscaper;
+    const isHealth = isGym || isYoga || isPhysio || isDentist || isDoctor;
+
+    // ── 2. Curated direct Unsplash photo URLs — permanent, no API key ────────
+    const imageLibrary = {
+      cafe: [
+        'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1920&q=80',
+        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1920&q=80',
+        'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=1920&q=80',
+        'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1920&q=80',
+        'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&q=80',
+        'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80',
+        'https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=800&q=80',
+        'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80',
+      ],
+      restaurant: [
+        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80',
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&q=80',
+        'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1920&q=80',
+        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1920&q=80',
+        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
+        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+        'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
+        'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80',
+      ],
+      bakery: [
+        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1920&q=80',
+        'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=1920&q=80',
+        'https://images.unsplash.com/photo-1568254183919-78a4f43a2877?w=1920&q=80',
+        'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1549931319-a545dcf3bc7b?w=800&q=80',
+        'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
+        'https://images.unsplash.com/photo-1612203985729-70726954388c?w=800&q=80',
+        'https://images.unsplash.com/photo-1594041680534-e8c8cdebd659?w=800&q=80',
+      ],
+      takeaway: [
+        'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1920&q=80',
+        'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=1920&q=80',
+        'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1920&q=80',
+        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1920&q=80',
+        'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=800&q=80',
+        'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&q=80',
+        'https://images.unsplash.com/photo-1527515545081-5db817172677?w=800&q=80',
+        'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800&q=80',
+      ],
+      bar: [
+        'https://images.unsplash.com/photo-1538488881038-e252a119ace7?w=1920&q=80',
+        'https://images.unsplash.com/photo-1525268323446-0505b6fe7778?w=1920&q=80',
+        'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=1920&q=80',
+        'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=1920&q=80',
+        'https://images.unsplash.com/photo-1575444758702-4a6b9222336e?w=800&q=80',
+        'https://images.unsplash.com/photo-1545489709-a7adbff82d8f?w=800&q=80',
+        'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&q=80',
+        'https://images.unsplash.com/photo-1560512823-829485b8bf24?w=800&q=80',
+      ],
+      butcher: [
+        'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=1920&q=80',
+        'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=1920&q=80',
+        'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?w=1920&q=80',
+        'https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800&q=80',
+        'https://images.unsplash.com/photo-1558030006-450675393462?w=800&q=80',
+        'https://images.unsplash.com/photo-1624973405849-c54e50c68879?w=800&q=80',
+        'https://images.unsplash.com/photo-1542528180-1c2803fa048c?w=800&q=80',
+      ],
+      hairsalon: [
+        'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1920&q=80',
+        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1920&q=80',
+        'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=1920&q=80',
+        'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800&q=80',
+        'https://images.unsplash.com/photo-1500840216050-6ffa99d75160?w=800&q=80',
+        'https://images.unsplash.com/photo-1596178060810-72f53ce9a65c?w=800&q=80',
+        'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80',
+      ],
+      beautyspa: [
+        'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1920&q=80',
+        'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1920&q=80',
+        'https://images.unsplash.com/photo-1576426863848-c21f53c60b19?w=1920&q=80',
+        'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1920&q=80',
+        'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=800&q=80',
+        'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800&q=80',
+        'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80',
+        'https://images.unsplash.com/photo-1552693673-1bf958298935?w=800&q=80',
+      ],
+      plumber: [
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80',
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&q=80',
+        'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=1920&q=80',
+        'https://images.unsplash.com/photo-1524749292158-7540c2494485?w=800&q=80',
+        'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=800&q=80',
+        'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
+        'https://images.unsplash.com/photo-1613323593608-abc90fec84ff?w=800&q=80',
+      ],
+      electrician: [
+        'https://images.unsplash.com/photo-1555963153-11ff60182d08?w=1920&q=80',
+        'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=1920&q=80',
+        'https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=1920&q=80',
+        'https://images.unsplash.com/photo-1542621334-a254cf47733d?w=1920&q=80',
+        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80',
+        'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
+        'https://images.unsplash.com/photo-1565808229224-264b24e56344?w=800&q=80',
+        'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
+      ],
+      builder: [
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80',
+        'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1920&q=80',
+        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920&q=80',
+        'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1920&q=80',
+        'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80',
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80',
+        'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=800&q=80',
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+      ],
+      landscaper: [
+        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1920&q=80',
+        'https://images.unsplash.com/photo-1558904541-efa843a96f01?w=1920&q=80',
+        'https://images.unsplash.com/photo-1585320806297-9794b3e4aaae?w=1920&q=80',
+        'https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=1920&q=80',
+        'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&q=80',
+        'https://images.unsplash.com/photo-1585320806297-9794b3e4aaae?w=800&q=80',
+        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
+        'https://images.unsplash.com/photo-1563299796-17596ed6b017?w=800&q=80',
+      ],
+      gym: [
+        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
+        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&q=80',
+        'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920&q=80',
+        'https://images.unsplash.com/photo-1581009137042-c552e485697a?w=800&q=80',
+        'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80',
+        'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=800&q=80',
+        'https://images.unsplash.com/photo-1605296867424-35fc25c9212a?w=800&q=80',
+      ],
+      yoga: [
+        'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80',
+        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80',
+        'https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=1920&q=80',
+        'https://images.unsplash.com/photo-1588286840104-8957b019727f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=800&q=80',
+        'https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?w=800&q=80',
+        'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80',
+        'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80',
+      ],
+      physio: [
+        'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80',
+        'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80',
+        'https://images.unsplash.com/photo-1585011664466-b7bbe92f34ef?w=1920&q=80',
+        'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?w=1920&q=80',
+        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
+        'https://images.unsplash.com/photo-1587725874306-a3ca0d3e68b7?w=800&q=80',
+        'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80',
+        'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=80',
+      ],
+      dentist: [
+        'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=1920&q=80',
+        'https://images.unsplash.com/photo-1588776814546-1ffbb172d936?w=1920&q=80',
+        'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1920&q=80',
+        'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=1920&q=80',
+        'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&q=80',
+        'https://images.unsplash.com/photo-1603847734787-9e8a3f3e9d60?w=800&q=80',
+        'https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=800&q=80',
+        'https://images.unsplash.com/photo-1588776813970-ecbfd79d16c1?w=800&q=80',
+      ],
+      pet: [
+        'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1920&q=80',
+        'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1920&q=80',
+        'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1920&q=80',
+        'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1920&q=80',
+        'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=800&q=80',
+        'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800&q=80',
+        'https://images.unsplash.com/photo-1615751072497-5f5169febe17?w=800&q=80',
+        'https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?w=800&q=80',
+      ],
+      retail: [
+        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80',
+        'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=1920&q=80',
+        'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=1920&q=80',
+        'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1920&q=80',
+        'https://images.unsplash.com/photo-1481437156560-3205f6a55735?w=800&q=80',
+        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
+        'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=800&q=80',
+        'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?w=800&q=80',
+      ],
+      realestate: [
+        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920&q=80',
+        'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1920&q=80',
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80',
+        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1920&q=80',
+        'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80',
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+        'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80',
+        'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
+      ],
+      accounting: [
+        'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1920&q=80',
+        'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1920&q=80',
+        'https://images.unsplash.com/photo-1560472355-536de3962603?w=1920&q=80',
+        'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1920&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+        'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&q=80',
+        'https://images.unsplash.com/photo-1556742393-d75f468bfcb0?w=800&q=80',
+        'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80',
+      ],
+      childcare: [
+        'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1920&q=80',
+        'https://images.unsplash.com/photo-1587691592099-24045742c181?w=1920&q=80',
+        'https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=1920&q=80',
+        'https://images.unsplash.com/photo-1567640202738-b5a8cbc3e0f0?w=1920&q=80',
+        'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800&q=80',
+        'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=80',
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+        'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&q=80',
+      ],
+      florist: [
+        'https://images.unsplash.com/photo-1487530811015-780f5d205f7c?w=1920&q=80',
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
+        'https://images.unsplash.com/photo-1490750967868-88df5691cc84?w=1920&q=80',
+        'https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=1920&q=80',
+        'https://images.unsplash.com/photo-1469259943454-aa100abba749?w=800&q=80',
+        'https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=800&q=80',
+        'https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=800&q=80',
+        'https://images.unsplash.com/photo-1426122402199-be02db90eb90?w=800&q=80',
+      ],
+      auto: [
+        'https://images.unsplash.com/photo-1615906655593-ad0386982a0f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1920&q=80',
+        'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=1920&q=80',
+        'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?w=1920&q=80',
+        'https://images.unsplash.com/photo-1493238792000-8113da705763?w=800&q=80',
+        'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=800&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+        'https://images.unsplash.com/photo-1635274605638-d44babc08a4f?w=800&q=80',
+      ],
+      cleaning: [
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&q=80',
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
+        'https://images.unsplash.com/photo-1527515545081-5db817172677?w=1920&q=80',
+        'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=1920&q=80',
+        'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800&q=80',
+        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80',
+        'https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=800&q=80',
+        'https://images.unsplash.com/photo-1594113526902-a6e6e3e89b2e?w=800&q=80',
+      ],
+      default: [
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80',
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80',
+        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&q=80',
+        'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=1920&q=80',
+        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
+        'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80',
+        'https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80',
+        'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&q=80',
+      ],
+    };
+
+    // Pick the right library
+    const lib = isButcher   ? imageLibrary.butcher
+      : isBakery    ? imageLibrary.bakery
+      : isCafe      ? imageLibrary.cafe
+      : isRestaurant? imageLibrary.restaurant
+      : isTakeaway  ? imageLibrary.takeaway
+      : isBar       ? imageLibrary.bar
+      : isHairSalon ? imageLibrary.hairsalon
+      : isBeautySpa ? imageLibrary.beautyspa
+      : isPlumber   ? imageLibrary.plumber
+      : isElectrician?imageLibrary.electrician
+      : isBuilder   ? imageLibrary.builder
+      : isLandscaper? imageLibrary.landscaper
+      : isGym       ? imageLibrary.gym
+      : isYoga      ? imageLibrary.yoga
+      : isPhysio    ? imageLibrary.physio
+      : isDentist   ? imageLibrary.dentist
+      : isPet       ? imageLibrary.pet
+      : isRetail    ? imageLibrary.retail
+      : isRealEstate? imageLibrary.realestate
+      : isAccounting? imageLibrary.accounting
+      : isChildcare ? imageLibrary.childcare
+      : isFlorist   ? imageLibrary.florist
+      : isAutomatic ? imageLibrary.auto
+      : isCleaning  ? imageLibrary.cleaning
+      : imageLibrary.default;
+
     const nameSeed = intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-    const heroImageUrl = `https://source.unsplash.com/1920x1080/?${imgQuery}&sig=${nameSeed}`;
-    const galleryImages = [1,2,3,4].map(i =>
-      `https://source.unsplash.com/800x600/?${imgQuery}&sig=${nameSeed + i}`
-    );
-
+    const heroImageUrl = lib[nameSeed % 4];
+    const galleryImages = lib.slice(4);
+        'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1920&q=80',
+        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1920&q=80',
+        'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=1920&q=80',
+        'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1920&q=80',
+        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
+        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
+        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+        'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
+      ],
+      beauty: [
+        'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1920&q=80',
+        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1920&q=80',
+        'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1920&q=80',
+        'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1920&q=80',
+        'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800&q=80',
+        'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80',
+        'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&q=80',
+        'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=800&q=80',
+      ],
+      trade: [
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80',
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&q=80',
+        'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1920&q=80',
+        'https://images.unsplash.com/photo-1524749292158-7540c2494485?w=800&q=80',
+        'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800&q=80',
+        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80',
+        'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=800&q=80',
+      ],
+      health: [
+        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&q=80',
+        'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80',
+        'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80',
+        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
+        'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
+        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
+        'https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?w=800&q=80',
+      ],
+      retail: [
+        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80',
+        'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=1920&q=80',
+        'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=1920&q=80',
+        'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1920&q=80',
+        'https://images.unsplash.com/photo-1481437156560-3205f6a55735?w=800&q=80',
+        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
+        'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=800&q=80',
+        'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?w=800&q=80',
+      ],
+      butcher: [
+        'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=1920&q=80',
+        'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=1920&q=80',
+        'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1920&q=80',
+        'https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?w=1920&q=80',
+        'https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800&q=80',
+        'https://images.unsplash.com/photo-1558030006-450675393462?w=800&q=80',
+        'https://images.unsplash.com/photo-1624973405849-c54e50c68879?w=800&q=80',
+        'https://images.unsplash.com/photo-1542528180-1c2803fa048c?w=800&q=80',
+      ],
+      default: [
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80',
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80',
+        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&q=80',
+        'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=1920&q=80',
+        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
+        'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80',
     // ── 3. Generate AI content ─────────────────────────────────────────────
     const bizPersonality = isFood ? 'warm, mouth-watering, inviting — every word should make people hungry and excited to visit'
       : isBeauty ? 'luxurious, confidence-boosting, welcoming — make people feel transformed before they even arrive'
