@@ -366,6 +366,18 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // PAYWALL — show if trial expired or cancelled
+  // ══════════════════════════════════════════════════════════════════════════
+  const plan = profile?.plan || "trial";
+  const trialEnds = profile?.trial_ends ? new Date(profile.trial_ends) : null;
+  const trialExpired = trialEnds && new Date() > trialEnds;
+  const needsUpgrade = (plan === "cancelled" || plan === "past_due" || (plan === "trial" && trialExpired));
+
+  if (needsUpgrade) {
+    return <PaywallScreen session={session} biz={biz} plan={plan} trialEnds={trialEnds} onSignOut={onSignOut}/>;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // DASHBOARD — Premium sidebar layout
   // ══════════════════════════════════════════════════════════════════════════
   const lapsed    = customers.filter(c=>c.tag==="lapsed"||daysSince(c.lastVisit)>60).length;
@@ -2420,6 +2432,149 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
           }
         </button>
       )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PAYWALL SCREEN
+// ═════════════════════════════════════════════════════════════════════════════
+function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+
+  const startCheckout = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/paddle-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId:  session?.user?.id,
+          email:   session?.user?.email,
+          name:    biz?.owner || biz?.name || "Customer",
+        }),
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      window.location.href = d.url;
+    } catch(e) {
+      setError(e.message || "Something went wrong — please try again.");
+      setLoading(false);
+    }
+  };
+
+  const isCancelled = plan === "cancelled";
+  const isPastDue   = plan === "past_due";
+
+  return (
+    <div style={{
+      minHeight:"100vh", background:"#03050A",
+      fontFamily:"'Segoe UI',system-ui,sans-serif",
+      display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+      padding:"24px",
+    }}>
+      {/* Stars */}
+      <div style={{position:"fixed",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}>
+        {[...Array(20)].map((_,i)=>(
+          <div key={i} style={{
+            position:"absolute",
+            width: i%3===0?"2px":"1px", height: i%3===0?"2px":"1px",
+            borderRadius:"50%", background:"white",
+            left:`${(i*17+7)%95}%`, top:`${(i*13+5)%90}%`,
+            opacity: 0.3+((i*7)%5)*0.1,
+          }}/>
+        ))}
+      </div>
+
+      <div style={{position:"relative",zIndex:1,maxWidth:"480px",width:"100%",textAlign:"center"}}>
+        {/* Logo */}
+        <div style={{fontWeight:900,fontSize:"1.5em",letterSpacing:"-0.04em",color:"#fff",marginBottom:"32px"}}>
+          <span style={{color:"#38BDF8"}}>⚡</span>Akus
+        </div>
+
+        {/* Card */}
+        <div style={{background:"#080F1E",border:"1px solid rgba(56,189,248,0.2)",borderRadius:"20px",padding:"40px 36px"}}>
+
+          {isCancelled && (
+            <>
+              <div style={{fontSize:"2em",marginBottom:"12px"}}>😢</div>
+              <h2 style={{fontSize:"1.4em",fontWeight:900,color:"#fff",marginBottom:"8px",letterSpacing:"-0.03em"}}>Your subscription has ended</h2>
+              <p style={{fontSize:"0.9em",color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:"28px"}}>
+                We'd love to have you back. Resubscribe to get full access to all your marketing tools instantly.
+              </p>
+            </>
+          )}
+
+          {isPastDue && (
+            <>
+              <div style={{fontSize:"2em",marginBottom:"12px"}}>💳</div>
+              <h2 style={{fontSize:"1.4em",fontWeight:900,color:"#fff",marginBottom:"8px",letterSpacing:"-0.03em"}}>Payment failed</h2>
+              <p style={{fontSize:"0.9em",color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:"28px"}}>
+                We couldn't process your last payment. Update your billing details to restore access.
+              </p>
+            </>
+          )}
+
+          {!isCancelled && !isPastDue && (
+            <>
+              <div style={{fontSize:"2em",marginBottom:"12px"}}>⏰</div>
+              <h2 style={{fontSize:"1.4em",fontWeight:900,color:"#fff",marginBottom:"8px",letterSpacing:"-0.03em"}}>Your free trial has ended</h2>
+              <p style={{fontSize:"0.9em",color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:"28px"}}>
+                Hope you loved it! Subscribe now to keep your website live and access all your marketing tools.
+              </p>
+            </>
+          )}
+
+          {/* Price */}
+          <div style={{background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:"12px",padding:"20px",marginBottom:"24px"}}>
+            <div style={{fontSize:"3em",fontWeight:900,color:"#fff",letterSpacing:"-0.05em",lineHeight:1}}>
+              <sup style={{fontSize:"0.35em",verticalAlign:"top",marginTop:"0.5em",color:"rgba(255,255,255,0.5)"}}>$</sup>50
+              <span style={{fontSize:"0.25em",fontWeight:600,color:"rgba(255,255,255,0.4)",letterSpacing:0}}>/month</span>
+            </div>
+            <div style={{fontSize:"0.8em",color:"rgba(255,255,255,0.4)",marginTop:"6px"}}>No contract · Cancel any time</div>
+          </div>
+
+          {/* Features */}
+          <div style={{textAlign:"left",marginBottom:"24px",display:"flex",flexDirection:"column",gap:"8px"}}>
+            {["Live website built and published","Unlimited social posts, emails, blog posts","Google reviews and Business profile posts","Seasonal campaigns and win-back tools","Customer CRM and weekly health score","Works for local businesses and Shopify"].map(f=>(
+              <div key={f} style={{display:"flex",gap:"8px",alignItems:"center",fontSize:"0.85em",color:"rgba(255,255,255,0.7)"}}>
+                <span style={{color:"#38BDF8",flexShrink:0}}>✓</span>{f}
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"8px",padding:"10px 12px",fontSize:"0.82em",color:"#FCA5A5",marginBottom:"12px"}}>
+              {error}
+            </div>
+          )}
+
+          <button onClick={startCheckout} disabled={loading} style={{
+            width:"100%",padding:"16px",borderRadius:"12px",border:"none",
+            background:"#38BDF8",color:"#03050A",
+            fontWeight:900,fontSize:"1em",cursor:loading?"not-allowed":"pointer",
+            fontFamily:"inherit",opacity:loading?0.7:1,transition:"all 0.2s",
+            letterSpacing:"-0.02em",
+          }}>
+            {loading ? "Loading checkout..." : isCancelled||isPastDue ? "Resubscribe → $50/month" : "Subscribe now → $50/month"}
+          </button>
+
+          <div style={{fontSize:"0.75em",color:"rgba(255,255,255,0.25)",marginTop:"12px"}}>
+            Secure checkout powered by Paddle · Australian GST included
+          </div>
+        </div>
+
+        {/* Sign out */}
+        <button onClick={onSignOut} style={{
+          marginTop:"20px",background:"none",border:"none",
+          color:"rgba(255,255,255,0.25)",fontSize:"0.8em",cursor:"pointer",
+          fontFamily:"inherit",
+        }}>
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }
