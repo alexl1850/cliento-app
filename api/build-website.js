@@ -18,31 +18,22 @@ export default async function handler(req, res) {
     const isRetail  = /shop|store|retail|boutique|market|gift|clothe|fashion|jewel/.test(bizStr);
     const isPet     = /pet|dog|cat|groom|vet|animal/.test(bizStr);
 
-    // ── 2. Get hero images — using Picsum (always works, no API key) ─────────
-    // Curated Picsum IDs by business type for guaranteed relevant images
-    const imageCollections = {
-      food:    [292, 1640, 1695, 2284, 3184, 431, 488, 566],
-      beauty:  [634, 972, 975, 1027, 1040, 1130, 1139, 1062],
-      trade:   [257, 585, 209, 463, 175, 1080, 119, 247],
-      health:  [461, 1029, 748, 1003, 635, 984, 983, 1005],
-      retail:  [374, 1005, 1055, 236, 357, 328, 305, 347],
-      default: [373, 358, 386, 392, 411, 416, 421, 437],
-    };
-    const collection = isFood ? imageCollections.food
-      : isBeauty ? imageCollections.beauty
-      : isTrade  ? imageCollections.trade
-      : isHealth ? imageCollections.health
-      : isRetail ? imageCollections.retail
-      : imageCollections.default;
+    // ── 2. Get hero images — Unsplash Source (no API key, keyword-based) ─────
+    const imgQuery = isFood    ? 'cafe,restaurant,food,coffee'
+      : isBeauty  ? 'hair,salon,beauty,spa'
+      : isTrade   ? 'plumber,builder,tradesperson,construction'
+      : isHealth  ? 'physiotherapy,wellness,health,clinic'
+      : isRetail  ? 'retail,shop,boutique,store'
+      : isPet     ? 'dog,cat,pet,grooming'
+      : encodeURIComponent((intake.services || 'local business').split(' ').slice(0,2).join(','));
 
-    // Use business name as seed for consistency
-    const nameSeed = intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0) % collection.length;
-    const heroId = collection[nameSeed];
-    const heroImageUrl = `https://picsum.photos/id/${heroId}/1920/1080`;
-    const galleryImages = collection
-      .filter((_,i) => i !== nameSeed)
-      .slice(0, 4)
-      .map(id => `https://picsum.photos/id/${id}/800/600`);
+    // Unsplash Source URLs — free, no API key, returns relevant photos by keyword
+    // Using a seed based on business name for consistency
+    const nameSeed = intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+    const heroImageUrl = `https://source.unsplash.com/1920x1080/?${imgQuery}&sig=${nameSeed}`;
+    const galleryImages = [1,2,3,4].map(i =>
+      `https://source.unsplash.com/800x600/?${imgQuery}&sig=${nameSeed + i}`
+    );
 
     // ── 3. Generate AI content ─────────────────────────────────────────────
     const bizPersonality = isFood ? 'warm, mouth-watering, inviting — every word should make people hungry and excited to visit'
