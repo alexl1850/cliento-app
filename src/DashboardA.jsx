@@ -40,14 +40,15 @@ const TOOL_GROUPS = [
   {
     id:"marketing", label:"📣 Marketing & Content", color:C.brand,
     tools:[
-      {id:"website",  icon:"🌐", label:"My Website",            desc:"Build and publish a real live website for your business — done in 60 seconds"},
-      {id:"posts",    icon:"📱", label:"Social Posts",          desc:"7 Facebook & Instagram posts for this week"},
-      {id:"emails",   icon:"📧", label:"Email Campaign",        desc:"A professional email for your customer list"},
-      {id:"ads",      icon:"🎯", label:"Ad Builder",            desc:"Facebook & Google ad copy that converts"},
-      {id:"promo",    icon:"🎁", label:"Special Offer",         desc:"Full promotion pack — post, SMS, signage"},
-      {id:"gbp",      icon:"📍", label:"Google Business Post",  desc:"A weekly post for your Google listing"},
-      {id:"blog",     icon:"✍️", label:"Blog Post for Google",  desc:"A local SEO blog post that helps you rank — topic chosen for you"},
-      {id:"seasonal", icon:"🗓️", label:"Seasonal Campaign",     desc:"Christmas, Easter, EOFY — full campaign kit for any season"},
+      {id:"website",    icon:"🌐", label:"My Website",            desc:"Build and publish a real live website for your business — done in 60 seconds"},
+      {id:"posts",      icon:"📱", label:"Social Posts",          desc:"7 Facebook & Instagram posts for this week"},
+      {id:"emails",     icon:"📧", label:"Email Campaign",        desc:"A professional email for your customer list"},
+      {id:"ads",        icon:"🎯", label:"Ad Builder",            desc:"Facebook & Google ad copy that converts"},
+      {id:"calendar90", icon:"🗓️", label:"90-Day Content Calendar",desc:"A full 3-month social media content plan — specific topics, dates and formats"},
+      {id:"promo",      icon:"🎁", label:"Special Offer",         desc:"Full promotion pack — post, SMS, signage"},
+      {id:"gbp",        icon:"📍", label:"Google Business Post",  desc:"A weekly post for your Google listing"},
+      {id:"blog",       icon:"✍️", label:"Blog Post for Google",  desc:"A local SEO blog post that helps you rank — topic chosen for you"},
+      {id:"seasonal",   icon:"🎄", label:"Seasonal Campaign",     desc:"Christmas, Easter, EOFY — full campaign kit for any season"},
     ]
   },
   {
@@ -62,8 +63,9 @@ const TOOL_GROUPS = [
   {
     id:"business", label:"🏢 Business Tools", color:C.teal,
     tools:[
-      {id:"analytics", icon:"📊", label:"Google Analytics Report",   desc:"Paste your numbers in — get plain English results: what's working and what to fix"},
-      {id:"jobad",     icon:"📋", label:"Staff Job Ad",              desc:"Write a job ad for Seek or Facebook that attracts the right people"},
+      {id:"gap_report", icon:"🔍", label:"Competitor Gap Report",     desc:"See exactly what your competitors are doing that you're not — and how to beat them"},
+      {id:"analytics",  icon:"📊", label:"Google Analytics Report",   desc:"Paste your numbers in — get plain English results: what's working and what to fix"},
+      {id:"jobad",      icon:"📋", label:"Staff Job Ad",              desc:"Write a job ad for Seek or Facebook that attracts the right people"},
     ]
   },
 ];
@@ -219,7 +221,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
   ]);
 
   // Track savings counter
-  const toolSavings = {website:1500,posts:500,emails:300,ads:500,promo:200,gbp:100,blog:300,seasonal:600,review_request:100,review_respond:50,review_negative:50,review_link:50,analytics:200,jobad:200};
+  const toolSavings = {website:1500,posts:500,emails:300,ads:500,promo:200,gbp:100,blog:300,seasonal:600,review_request:100,review_respond:50,review_negative:50,review_link:50,analytics:200,jobad:200,calendar90:800,gap_report:500};
   const totalSaved = Object.keys(results).reduce((sum,id)=>sum+(toolSavings[id]||150),0);
 
   useEffect(() => {
@@ -2562,7 +2564,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
           </button>
 
           <div style={{fontSize:"0.75em",color:"rgba(255,255,255,0.25)",marginTop:"12px"}}>
-            Secure checkout powered by Paddle · Australian GST included
+            🏆 30-day money-back guarantee · If you don't save $500 in your first month we'll refund every cent
           </div>
         </div>
 
@@ -2787,6 +2789,10 @@ Write the complete blog post now. Use real names throughout.`},
     review_link:{system:`Step-by-step guide writer for non-tech-savvy Australian small business owners. Plain English, no jargon.`,user:`Write a guide for the owner of ${biz.name} to find and share their Google review link.\nBusiness: ${extra.googleName||biz.name} | Location: ${extra.googleSuburb||biz.suburb}\n\nWrite:\n## HOW TO FIND YOUR REVIEW LINK\n[Numbered steps — via Google Maps on phone + via Google Search on computer. Under 10 steps total. Simple language.]\n\n## WHERE TO SHARE IT (8 places)\n[List: email signature, SMS, Facebook bio, printed receipts, etc.]\n\n## COPY-PASTE SMS TO SEND CUSTOMERS\n[Ready-to-go with placeholder [YOUR REVIEW LINK]]\n\n## PRO TIP\n[One sentence on when/how often to ask]\n\nFriendly, encouraging tone. Written for someone who isn't tech-savvy.`},
 
     seasonal:{system:`You are a seasonal marketing campaign writer for Australian small businesses. You write complete, ready-to-run campaigns that are warm, local, and genuinely effective. No corporate-speak.`,user:`Write a complete ${extra.season?.label||"seasonal"} campaign for ${biz.name}.\n\n${ctx}\nSeason: ${extra.season?.label||"seasonal campaign"} (${extra.season?.dates||""})\n${extra.season?.id==="custom"&&extra.customSeason?`Occasion details: ${extra.customSeason}`:""}\nSpecial offer: ${extra.seasonOffer||"No specific offer — general seasonal promotion"}\n\nWrite ALL of the following, clearly labelled:\n\n## THE CAMPAIGN IDEA\n[2-3 sentences — what this campaign is about and why it works for this business at this time of year]\n\n## FACEBOOK & INSTAGRAM POST (Post this 2 weeks before)\n[Full caption with emojis, hooks readers immediately, mentions the offer and the season, ends with CTA and 4-5 hashtags]\n\n## FACEBOOK & INSTAGRAM POST (Post this the week of)\n[Different angle — urgency-focused, reminds people time is running out]\n\n## EMAIL TO YOUR CUSTOMER LIST\nSubject line: [3 options]\n[Full email — warm seasonal opener, the offer, why they should come in now, clear CTA, sign-off]\n\n## SMS TO CUSTOMERS (under 160 chars)\n[Short, warm, direct. Mentions the offer and a deadline.]\n\n## IN-STORE SIGNAGE / WINDOW SIGN\n[Bold headline + 2-3 lines. Something customers will actually read walking past.]\n\n## FACEBOOK AD COPY (if they want to boost a post)\nHeadline (30 chars max): \nDescription (90 chars max): \nCaption: [2 sentences]\n\n## YOUR 7-DAY PLAN\n[Day-by-day action list: what to post, send, or do each day in the week leading up to the campaign]\n\n## WHAT TO DO AFTER\n[2-3 sentences on following up — thank customers who came in, ask for a review, share photos]\n\nMake everything copy-paste ready. Australian spelling and tone throughout.`},
+
+    calendar90:{system:`You are a social media strategist for Australian local businesses. You create specific, detailed 90-day content calendars tailored to the exact business. Never generic. Always specific to the business name, suburb, and services.`,user:`Create a complete 90-day social media content calendar for ${biz.name||"this business"} in ${biz.suburb||"Australia"}.\n\n${ctx}\n\n${biz.menu ? `Menu / key products: ${biz.menu}` : ""}\n\nCreate a 90-day calendar covering Week 1 through Week 13.\n\nFor each week:\n**Week [N] — [Theme]**\n- Monday: [specific post topic]\n- Wednesday: [specific post topic]\n- Friday: [specific post topic]\n- Best time to post: [time]\n- Format tip: [photo/video/story]\n\nMake every post topic SPECIFIC to ${biz.name||"this business"} — actual services, local angles in ${biz.suburb||"the area"}, seasonal events. Not generic.\n\nInclude: school holidays, long weekends, Christmas, EOFY, local events.\n\nEnd with:\n## CONTENT THEMES (5 recurring pillars for this business)\n## HASHTAG STRATEGY (20 hashtags to rotate)\n## BEST PERFORMING POST TYPES FOR THIS BUSINESS`},
+
+    gap_report:{system:`You are a competitive intelligence analyst for Australian local businesses. You produce sharp, specific competitor gap reports that make business owners see exactly what they're missing. Be direct, specific, not generic.`,user:`Generate a Competitor Gap Report for ${biz.name||"this business"} in ${biz.suburb||"Australia"}.\n\n${ctx}\n\n${biz.menu ? `Their products/services: ${biz.menu}` : ""}\n\n## 🔍 BUSINESS SNAPSHOT\n[Quick summary of ${biz.name||"this business"} and their current likely marketing presence]\n\n## 🏆 WHAT YOUR COMPETITORS ARE DOING\n[Describe 3 specific competitor types for a ${industry?.label||"local business"} in ${biz.suburb||"Australia"} and EXACTLY what they're doing in marketing — specific tactics]\n\n## 🚨 YOUR 5 BIGGEST GAPS\n[For each gap: what it is, why it matters, exact revenue/customer impact]\n\n## 📈 8 KEYWORDS YOU'RE MISSING\n[Specific local search keywords people in ${biz.suburb||"the area"} search that ${biz.name||"this business"} should rank for — keyword + why it converts]\n\n## ⚡ YOUR 30-DAY ACTION PLAN\n[Week by week. Specific actions to close the gap. Not general advice.]\n\n## 🎯 THE ONE THING THAT MOVES THE NEEDLE MOST\n[Single highest-leverage action. One paragraph. Direct and specific.]\n\nMake this feel like a paid $500 consultant report.`},
 
     analytics:{system:`You are a plain-English Google Analytics interpreter for non-technical Australian small business owners. You explain website data in simple terms — what it means, what's good, what's bad, and exactly what to do about it. No jargon. No technical terms without explanation.`,user:`Analyse this website data for ${biz.name}, a ${industry?.label} in ${biz.suburb}.\n\n${ctx}\n\nWEBSITE DATA PROVIDED:\nVisitors last 30 days: ${extra.visitors||"Not provided"}\nMain traffic source: ${extra.topSource||"Not provided"}\nMost visited page: ${extra.topPage||"Not provided"}\nBounce rate: ${extra.bounceRate||"Not provided"}\nAverage time on site: ${extra.avgTime||"Not provided"}\nOwner's question: ${extra.analyticsQuestion||"General overview — what do my numbers mean?"}\n\nWrite a plain English analysis using these sections:\n\n## WHAT YOUR NUMBERS MEAN\n[Explain each number they provided in plain English — is it good? bad? average for a local business? One paragraph per metric they gave you. If they provided no data, explain what Google Analytics is and how to set it up for free, then skip to the action plan.]\n\n## WHAT'S WORKING\n[Based on the data, what's going well? Be specific and encouraging.]\n\n## WHAT NEEDS ATTENTION\n[What does the data suggest isn't working? Be direct but kind. Explain WHY it matters in plain terms — e.g. "Your bounce rate of 65% means roughly 65 out of 100 people who visit your site leave without clicking anything. That usually means they couldn't find what they were looking for fast enough."]\n\n## YOUR 3 MOST IMPORTANT ACTIONS THIS MONTH\n[Three specific, actionable things they can do RIGHT NOW to improve their results. Written like advice from a knowledgeable friend — not a consultant. Number them clearly.]\n\n## ANSWER TO YOUR QUESTION\n[Directly answer the specific question they asked, in plain English.]\n\n## HOW TO CHECK NEXT MONTH\n[Tell them exactly where to look in Google Analytics to check these same numbers again in 30 days — what to click, what to look for, what would mean things are improving.]\n\nWrite like you're explaining to a smart person who just doesn't know this stuff yet. Encouraging, not condescending.`},
 
