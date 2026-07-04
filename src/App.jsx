@@ -4,6 +4,14 @@ import AuthScreen from './AuthScreen.jsx'
 import Dashboard from './DashboardA.jsx'
 import Journey from './Journey.jsx'
 
+// Check for demo params from homepage
+const urlParams = new URLSearchParams(window.location.search);
+const demoParams = urlParams.get('demo') === '1' ? {
+  biz:    urlParams.get('biz') || '',
+  suburb: urlParams.get('suburb') || '',
+  type:   urlParams.get('type') || 'local business',
+} : null;
+
 export default function App() {
   const [session,         setSession]         = useState(null)
   const [loading,         setLoading]         = useState(true)
@@ -106,8 +114,25 @@ export default function App() {
     </div>
   )
 
-  // Not logged in
-  if (!session) return <AuthScreen />
+  // Not logged in — show auth with demo context if arriving from homepage
+  if (!session) return (
+    <div>
+      {demoParams && (
+        <div style={{
+          background:'linear-gradient(135deg,#052E16,#166534)',
+          padding:'14px 24px',
+          textAlign:'center',
+          fontFamily:"'Segoe UI',system-ui,sans-serif",
+          fontSize:'0.88rem',
+          color:'#fff',
+          fontWeight:600,
+        }}>
+          🎉 Building your website for <strong>{demoParams.biz}</strong> in <strong>{demoParams.suburb}</strong> — sign up free to see it live!
+        </div>
+      )}
+      <AuthScreen demoParams={demoParams}/>
+    </div>
+  )
 
   // New user — show the guided journey
   if (!journeyComplete) return (
