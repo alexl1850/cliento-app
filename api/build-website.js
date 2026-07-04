@@ -18,33 +18,31 @@ export default async function handler(req, res) {
     const isRetail  = /shop|store|retail|boutique|market|gift|clothe|fashion|jewel/.test(bizStr);
     const isPet     = /pet|dog|cat|groom|vet|animal/.test(bizStr);
 
-    // ── 2. Get Unsplash hero image based on business type ─────────────────
-    const unsplashQuery = isFood ? 'cafe restaurant food australia'
-      : isBeauty ? 'hair salon beauty australia'
-      : isTrade  ? 'tradesperson plumber builder australia'
-      : isHealth ? 'physiotherapy wellness health australia'
-      : isRetail ? 'retail shop boutique australia'
-      : isPet    ? 'pet grooming dog cat australia'
-      : `${intake.services || 'local business'} australia`;
+    // ── 2. Get hero images — using Picsum (always works, no API key) ─────────
+    // Curated Picsum IDs by business type for guaranteed relevant images
+    const imageCollections = {
+      food:    [292, 1640, 1695, 2284, 3184, 431, 488, 566],
+      beauty:  [634, 972, 975, 1027, 1040, 1130, 1139, 1062],
+      trade:   [257, 585, 209, 463, 175, 1080, 119, 247],
+      health:  [461, 1029, 748, 1003, 635, 984, 983, 1005],
+      retail:  [374, 1005, 1055, 236, 357, 328, 305, 347],
+      default: [373, 358, 386, 392, 411, 416, 421, 437],
+    };
+    const collection = isFood ? imageCollections.food
+      : isBeauty ? imageCollections.beauty
+      : isTrade  ? imageCollections.trade
+      : isHealth ? imageCollections.health
+      : isRetail ? imageCollections.retail
+      : imageCollections.default;
 
-    let heroImageUrl = '';
-    let galleryImages = [];
-    try {
-      const unsplashRes = await fetch(
-        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(unsplashQuery)}&count=6&orientation=landscape`,
-        { headers: { 'Authorization': 'Client-ID 3aRHNKLFpMI3KCHFn_N9Py1FQqVjdFj1WwUxwDmAEFk' } }
-      );
-      const imgs = await unsplashRes.json();
-      if (Array.isArray(imgs) && imgs.length > 0) {
-        heroImageUrl = imgs[0].urls.regular;
-        galleryImages = imgs.slice(1, 5).map(img => img.urls.regular);
-      }
-    } catch(e) {
-      // Fallback to Picsum if Unsplash fails
-      const seed = Math.abs(intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0)) % 1000;
-      heroImageUrl = `https://picsum.photos/seed/${seed}/1920/1080`;
-      galleryImages = [1,2,3,4].map(n => `https://picsum.photos/seed/${seed+n}/800/600`);
-    }
+    // Use business name as seed for consistency
+    const nameSeed = intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0) % collection.length;
+    const heroId = collection[nameSeed];
+    const heroImageUrl = `https://picsum.photos/id/${heroId}/1920/1080`;
+    const galleryImages = collection
+      .filter((_,i) => i !== nameSeed)
+      .slice(0, 4)
+      .map(id => `https://picsum.photos/id/${id}/800/600`);
 
     // ── 3. Generate AI content ─────────────────────────────────────────────
     const bizPersonality = isFood ? 'warm, mouth-watering, inviting — every word should make people hungry and excited to visit'
@@ -180,28 +178,27 @@ img{max-width:100%;height:auto;display:block}
 .reveal-delay-4{transition-delay:0.4s}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:1000;transition:all 0.3s}
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;transition:all 0.3s;background:linear-gradient(to bottom,rgba(0,0,0,0.5),transparent)}
 nav.scrolled{background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(0,0,0,0.08)}
 .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:72px;display:flex;align-items:center;justify-content:space-between}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:-0.02em;transition:color 0.3s}
 nav.scrolled .nav-logo{color:${p.primary}}
 .nav-links{display:flex;align-items:center;gap:32px}
-.nav-links a{font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.85);transition:color 0.2s}
+.nav-links a{font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.9);transition:color 0.2s}
 nav.scrolled .nav-links a{color:#374151}
 .nav-links a:hover{color:#fff}
 nav.scrolled .nav-links a:hover{color:${p.primary}}
 .nav-cta{background:${p.accent};color:#fff !important;padding:10px 24px;border-radius:99px;font-weight:700;font-size:0.85rem;transition:all 0.2s !important;box-shadow:0 4px 12px ${p.accent}44}
-nav.scrolled .nav-cta{background:${p.primary};color:#fff !important}
 .nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px ${p.accent}55 !important}
 .nav-mobile-btn{display:none;background:none;border:none;cursor:pointer;padding:4px}
 .nav-mobile-btn span{display:block;width:24px;height:2px;background:#fff;margin:5px 0;transition:all 0.3s}
 nav.scrolled .nav-mobile-btn span{background:#111}
 
 /* ── HERO ── */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden}
-.hero-bg{position:absolute;inset:0;background-image:url('${heroImageUrl}');background-size:cover;background-position:center;transform:scale(1.05);animation:heroZoom 12s ease-in-out infinite alternate}
-@keyframes heroZoom{from{transform:scale(1.05)}to{transform:scale(1.0)}}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.72) 0%,rgba(0,0,0,0.35) 60%,rgba(0,0,0,0.15) 100%)}
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:#111}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;transform:scale(1.08);animation:heroZoom 14s ease-in-out infinite alternate}
+@keyframes heroZoom{from{transform:scale(1.08)}to{transform:scale(1.0)}}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.2) 100%)}
 .hero-content{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:120px 24px 80px;width:100%}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:99px;padding:8px 18px;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.9);margin-bottom:24px;backdrop-filter:blur(12px);animation:fadeIn 0.8s ease}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:${p.accent};animation:pulse 2s infinite}
@@ -388,7 +385,7 @@ footer{background:#111827;padding:56px 24px 32px}
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-bg"></div>
+  <div class="hero-bg" style="background-image:url('${heroImageUrl}')"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <div class="hero-badge">
