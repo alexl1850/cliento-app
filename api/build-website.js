@@ -9,15 +9,6 @@ export default async function handler(req, res) {
     const { intake } = req.body;
     const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN;
 
-    // ── 1. Detect business type ────────────────────────────────────────────
-    const bizStr = `${intake.services || ''} ${intake.biz_name || ''} ${intake.difference || ''}`.toLowerCase();
-    const isFood    = /café|cafe|restaurant|food|snack|bar|bakery|pizza|burger|sushi|takeaway|bistro|diner|eatery|coffee/.test(bizStr);
-    const isBeauty  = /hair|salon|beauty|spa|nail|massage|wax|skin|facial|barber|lash|brow/.test(bizStr);
-    const isTrade   = /plumb|electri|build|carpent|constr|paint|tiler|roofer|landscap|garden|handyman/.test(bizStr);
-    const isHealth  = /physio|chiro|dentist|doctor|medical|health|fitness|gym|yoga|pilates|wellness/.test(bizStr);
-    const isRetail  = /shop|store|retail|boutique|market|gift|clothe|fashion|jewel/.test(bizStr);
-    const isPet     = /pet|dog|cat|groom|vet|animal/.test(bizStr);
-
     // ── 1. Detect business type — comprehensive ────────────────────────────
     const bizStr = `${intake.services || ''} ${intake.biz_name || ''} ${intake.difference || ''} ${intake.menu || ''}`.toLowerCase();
 
@@ -340,72 +331,6 @@ export default async function handler(req, res) {
     const nameSeed = intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
     const heroImageUrl = lib[nameSeed % 4];
     const galleryImages = lib.slice(4);
-        'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1920&q=80',
-        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1920&q=80',
-        'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=1920&q=80',
-        'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1920&q=80',
-        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
-        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
-        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
-        'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
-      ],
-      beauty: [
-        'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1920&q=80',
-        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1920&q=80',
-        'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1920&q=80',
-        'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1920&q=80',
-        'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800&q=80',
-        'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80',
-        'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&q=80',
-        'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=800&q=80',
-      ],
-      trade: [
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
-        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80',
-        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&q=80',
-        'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1920&q=80',
-        'https://images.unsplash.com/photo-1524749292158-7540c2494485?w=800&q=80',
-        'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800&q=80',
-        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80',
-        'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=800&q=80',
-      ],
-      health: [
-        'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&q=80',
-        'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80',
-        'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920&q=80',
-        'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80',
-        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
-        'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
-        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
-        'https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?w=800&q=80',
-      ],
-      retail: [
-        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80',
-        'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=1920&q=80',
-        'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=1920&q=80',
-        'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1920&q=80',
-        'https://images.unsplash.com/photo-1481437156560-3205f6a55735?w=800&q=80',
-        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
-        'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=800&q=80',
-        'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?w=800&q=80',
-      ],
-      butcher: [
-        'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=1920&q=80',
-        'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=1920&q=80',
-        'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1920&q=80',
-        'https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?w=1920&q=80',
-        'https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=800&q=80',
-        'https://images.unsplash.com/photo-1558030006-450675393462?w=800&q=80',
-        'https://images.unsplash.com/photo-1624973405849-c54e50c68879?w=800&q=80',
-        'https://images.unsplash.com/photo-1542528180-1c2803fa048c?w=800&q=80',
-      ],
-      default: [
-        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80',
-        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80',
-        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&q=80',
-        'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=1920&q=80',
-        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
-        'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80',
     // ── 3. Generate AI content ─────────────────────────────────────────────
     const bizPersonality = isFood ? 'warm, mouth-watering, inviting — every word should make people hungry and excited to visit'
       : isBeauty ? 'luxurious, confidence-boosting, welcoming — make people feel transformed before they even arrive'
