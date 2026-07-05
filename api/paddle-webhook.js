@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import { deployStaticHtml } from './_lib/vercelDeploy.js';
+import { buildSplashHtml } from './_lib/splashPage.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -49,6 +51,61 @@ async function updateSupabase(userId, plan, subscriptionId) {
   return res.ok;
 }
 
+async function getSiteInfo(userId) {
+  const res = await fetch(
+    `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=biz_name,site_slug,site_html,site_paused`,
+    {
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+      },
+    }
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows?.[0] || null;
+}
+
+async function setSitePaused(userId, paused) {
+  await fetch(
+    `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ site_paused: paused }),
+    }
+  );
+}
+
+// Swap a lapsed customer's live website for a "renew to reactivate" splash page.
+async function pauseSite(userId) {
+  const site = await getSiteInfo(userId);
+  if (!site?.site_slug || site.site_paused) return;
+  try {
+    await deployStaticHtml(process.env.VERCEL_API_TOKEN, `akus-${site.site_slug}`, buildSplashHtml(site.biz_name));
+    await setSitePaused(userId, true);
+  } catch (e) {
+    console.error('Failed to pause site for', userId, e.message);
+  }
+}
+
+// Restore a customer's real website once their subscription is active again.
+async function resumeSite(userId) {
+  const site = await getSiteInfo(userId);
+  if (!site?.site_slug || !site.site_html || !site.site_paused) return;
+  try {
+    await deployStaticHtml(process.env.VERCEL_API_TOKEN, `akus-${site.site_slug}`, site.site_html);
+    await setSitePaused(userId, false);
+  } catch (e) {
+    console.error('Failed to resume site for', userId, e.message);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -91,20 +148,24 @@ export default async function handler(req, res) {
     case 'subscription.activated':
     case 'subscription.trialing':
       await updateSupabase(userId, 'trial', subscriptionId);
+      await resumeSite(userId);
       break;
 
     case 'subscription.updated':
     case 'transaction.completed':
       await updateSupabase(userId, 'active', subscriptionId);
+      await resumeSite(userId);
       break;
 
     case 'subscription.canceled':
       await updateSupabase(userId, 'cancelled', subscriptionId);
+      await pauseSite(userId);
       break;
 
     case 'subscription.past_due':
     case 'transaction.payment_failed':
       await updateSupabase(userId, 'past_due', subscriptionId);
+      await pauseSite(userId);
       break;
 
     default:

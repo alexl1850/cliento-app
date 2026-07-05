@@ -946,6 +946,26 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     if (deployData.error) throw new Error(deployData.error.message);
     const liveUrl = `https://${deployData.alias?.[0] || deployData.url}`;
 
+    // ── 8. Persist the live site so it can be restored if the subscription
+    // ever lapses and the site gets swapped for a "renew" splash page ──────
+    try {
+      // Upsert on user_id — this must work whether or not a profiles row
+      // already exists, since this can be the very first build a brand-new
+      // user does during onboarding, before their row is created.
+      await fetch(`${process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL}/rest/v1/profiles?on_conflict=user_id`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': process.env.SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+          'Prefer': 'resolution=merge-duplicates,return=minimal',
+        },
+        body: JSON.stringify({ user_id: access.userId, site_html: html, site_slug: slug, site_paused: false, live_url: liveUrl }),
+      });
+    } catch (saveErr) {
+      console.error('Failed to persist site_html (non-fatal):', saveErr.message);
+    }
+
     return res.status(200).json({ success: true, url: liveUrl, deployId: deployData.id, slug, html });
 
   } catch (err) {
