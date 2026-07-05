@@ -29,18 +29,24 @@ export default async function handler(req, res) {
     const isElectrician=/electri|wiring|power|lighting/.test(bizStr);
     const isBuilder   = /build|construct|renovation|reno|carpent|cabinet/.test(bizStr);
     const isPainter   = /paint|colour|decorat/.test(bizStr);
+    const isBathroomReno = /bathroom.*(renov|remodel|fitout)|renovat.*bathroom|ensuite renovation/.test(bizStr);
+    const isCarpenter = /carpent|joiner|joinery|cabinet.?mak|woodwork/.test(bizStr);
     const isLandscaper= /landscap|garden|lawn|mow|turf|plant/.test(bizStr);
+    const isRemovalist= /removalist|removals|moving compan|furniture removal|interstate mov|house mov/.test(bizStr);
+    const isHandyman  = /handyman|handy man|odd jobs|home repair|property maintenance|maintenance man/.test(bizStr);
     const isGym       = /gym|fitness|crossfit|weights|personal train/.test(bizStr);
     const isYoga      = /yoga|pilates|meditation|wellness|mindful/.test(bizStr);
     const isPhysio    = /physio|chiro|osteo|rehab|massage therapy|sports medicine/.test(bizStr);
     const isDentist   = /dentist|dental|orthodont|teeth/.test(bizStr);
     const isDoctor    = /doctor|gp|medical|clinic|health centre/.test(bizStr);
+    const isNDIS      = /ndis|disability support|disability care|support coordination/.test(bizStr);
     const isPet       = /pet|dog|cat|groom|vet|animal|puppy/.test(bizStr);
     const isRetail    = /shop|store|retail|boutique|gift|clothe|fashion|jewel/.test(bizStr);
     const isRealEstate= /real estate|property|agent|realt/.test(bizStr);
     const isAccounting= /account|bookkeep|tax|financ|mortgage/.test(bizStr);
     const isChildcare = /childcare|daycare|kindy|kindergarten|preschool|child/.test(bizStr);
     const isPhotograph= /photo|portrait|wedding photo|videograph/.test(bizStr);
+    const isCarpetClean = /carpet clean|upholstery clean|steam clean|carpet care|rug clean/.test(bizStr);
     const isCleaning  = /clean|housekeep|domestic|commercial clean/.test(bizStr);
     const isAutomatic = /mechanic|auto|car|tyre|panel beat|smash repair/.test(bizStr);
     const isFlorist   = /florist|flower|bouquet|arrangement/.test(bizStr);
@@ -49,8 +55,8 @@ export default async function handler(req, res) {
     // Group into image categories
     const isFood = isCafe || isRestaurant || isTakeaway || isBakery || isBar;
     const isBeauty = isHairSalon || isBeautySpa;
-    const isTrade = isPlumber || isElectrician || isBuilder || isPainter || isLandscaper;
-    const isHealth = isGym || isYoga || isPhysio || isDentist || isDoctor;
+    const isTrade = isPlumber || isElectrician || isBuilder || isPainter || isLandscaper || isBathroomReno || isCarpenter || isRemovalist || isCarpetClean || isHandyman;
+    const isHealth = isGym || isYoga || isPhysio || isDentist || isDoctor || isNDIS;
 
     // ── 2. Curated direct Unsplash photo URLs — permanent, no API key ────────
     const imageLibrary = {
@@ -174,6 +180,26 @@ export default async function handler(req, res) {
         'https://images.pexels.com/photos/17410515/pexels-photo-17410515.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/32826199/pexels-photo-32826199.jpeg?auto=compress&cs=tinysrgb&w=800',
       ],
+      bathroomreno: [
+        'https://images.pexels.com/photos/38076239/pexels-photo-38076239.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/19403712/pexels-photo-19403712.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/5493654/pexels-photo-5493654.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/36035072/pexels-photo-36035072.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/29181495/pexels-photo-29181495.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/29181494/pexels-photo-29181494.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4981810/pexels-photo-4981810.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5493672/pexels-photo-5493672.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
+      carpenter: [
+        'https://images.pexels.com/photos/32357250/pexels-photo-32357250.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/20723244/pexels-photo-20723244.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/313776/pexels-photo-313776.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/36866655/pexels-photo-36866655.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/8817851/pexels-photo-8817851.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/33005110/pexels-photo-33005110.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5059649/pexels-photo-5059649.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/11127339/pexels-photo-11127339.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
       landscaper: [
         'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1920&q=80',
         'https://images.unsplash.com/photo-1558904541-efa843a96f01?w=1920&q=80',
@@ -183,6 +209,26 @@ export default async function handler(req, res) {
         'https://images.pexels.com/photos/5027617/pexels-photo-5027617.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/27176769/pexels-photo-27176769.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/33650475/pexels-photo-33650475.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
+      removalist: [
+        'https://images.pexels.com/photos/20706506/pexels-photo-20706506.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7464244/pexels-photo-7464244.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7464712/pexels-photo-7464712.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7464687/pexels-photo-7464687.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7464262/pexels-photo-7464262.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/7464369/pexels-photo-7464369.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/7464232/pexels-photo-7464232.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/7464732/pexels-photo-7464732.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
+      handyman: [
+        'https://images.pexels.com/photos/5767799/pexels-photo-5767799.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/17063686/pexels-photo-17063686.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/5691550/pexels-photo-5691550.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/5768284/pexels-photo-5768284.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/5691503/pexels-photo-5691503.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5767926/pexels-photo-5767926.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5691521/pexels-photo-5691521.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4792525/pexels-photo-4792525.jpeg?auto=compress&cs=tinysrgb&w=800',
       ],
       gym: [
         'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
@@ -223,6 +269,16 @@ export default async function handler(req, res) {
         'https://images.unsplash.com/photo-1603847734787-9e8a3f3e9d60?w=800&q=80',
         'https://images.pexels.com/photos/3946835/pexels-photo-3946835.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/6812558/pexels-photo-6812558.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
+      ndis: [
+        'https://images.pexels.com/photos/8415932/pexels-photo-8415932.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7699072/pexels-photo-7699072.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/8415896/pexels-photo-8415896.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/8777801/pexels-photo-8777801.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7446636/pexels-photo-7446636.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/7698023/pexels-photo-7698023.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/8415852/pexels-photo-8415852.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/8777882/pexels-photo-8777882.jpeg?auto=compress&cs=tinysrgb&w=800',
       ],
       pet: [
         'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1920&q=80',
@@ -294,6 +350,16 @@ export default async function handler(req, res) {
         'https://images.pexels.com/photos/4116221/pexels-photo-4116221.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/4116170/pexels-photo-4116170.jpeg?auto=compress&cs=tinysrgb&w=800',
       ],
+      carpetclean: [
+        'https://images.pexels.com/photos/6196239/pexels-photo-6196239.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/6195882/pexels-photo-6195882.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/6195879/pexels-photo-6195879.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/6200780/pexels-photo-6200780.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/6196223/pexels-photo-6196223.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4401535/pexels-photo-4401535.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/6196579/pexels-photo-6196579.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4107278/pexels-photo-4107278.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
       cleaning: [
         'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&q=80',
         'https://images.pexels.com/photos/4099086/pexels-photo-4099086.jpeg?auto=compress&cs=tinysrgb&w=1920',
@@ -328,12 +394,17 @@ export default async function handler(req, res) {
       : isPlumber   ? imageLibrary.plumber
       : isElectrician?imageLibrary.electrician
       : isPainter   ? imageLibrary.painter
+      : isBathroomReno?imageLibrary.bathroomreno
+      : isCarpenter ? imageLibrary.carpenter
       : isBuilder   ? imageLibrary.builder
       : isLandscaper? imageLibrary.landscaper
+      : isRemovalist? imageLibrary.removalist
+      : isHandyman  ? imageLibrary.handyman
       : isGym       ? imageLibrary.gym
       : isYoga      ? imageLibrary.yoga
       : isPhysio    ? imageLibrary.physio
       : isDentist   ? imageLibrary.dentist
+      : isNDIS      ? imageLibrary.ndis
       : isPet       ? imageLibrary.pet
       : isRetail    ? imageLibrary.retail
       : isRealEstate? imageLibrary.realestate
@@ -341,6 +412,7 @@ export default async function handler(req, res) {
       : isChildcare ? imageLibrary.childcare
       : isFlorist   ? imageLibrary.florist
       : isAutomatic ? imageLibrary.auto
+      : isCarpetClean?imageLibrary.carpetclean
       : isCleaning  ? imageLibrary.cleaning
       : imageLibrary.default;
 
