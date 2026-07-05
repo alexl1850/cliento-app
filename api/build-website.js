@@ -144,6 +144,16 @@ export default async function handler(req, res) {
         'https://images.pexels.com/photos/35290675/pexels-photo-35290675.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/7220892/pexels-photo-7220892.jpeg?auto=compress&cs=tinysrgb&w=800',
       ],
+      painter: [
+        'https://images.pexels.com/photos/7218579/pexels-photo-7218579.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/7218683/pexels-photo-7218683.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/36153946/pexels-photo-36153946.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/16734519/pexels-photo-16734519.jpeg?auto=compress&cs=tinysrgb&w=1920',
+        'https://images.pexels.com/photos/1669754/pexels-photo-1669754.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/8481711/pexels-photo-8481711.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5691610/pexels-photo-5691610.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/7217985/pexels-photo-7217985.jpeg?auto=compress&cs=tinysrgb&w=800',
+      ],
       electrician: [
         'https://images.pexels.com/photos/17018103/pexels-photo-17018103.jpeg?auto=compress&cs=tinysrgb&w=1920',
         'https://images.pexels.com/photos/257736/pexels-photo-257736.jpeg?auto=compress&cs=tinysrgb&w=1920',
@@ -317,6 +327,7 @@ export default async function handler(req, res) {
       : isBeautySpa ? imageLibrary.beautyspa
       : isPlumber   ? imageLibrary.plumber
       : isElectrician?imageLibrary.electrician
+      : isPainter   ? imageLibrary.painter
       : isBuilder   ? imageLibrary.builder
       : isLandscaper? imageLibrary.landscaper
       : isGym       ? imageLibrary.gym
