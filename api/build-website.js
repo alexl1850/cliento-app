@@ -1,5 +1,52 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 
+// ── Icon set — minimal stroke icons, replaces emoji everywhere on the built site ──
+const ICONS = {
+  phone: `<path d="M6.6 10.8c1.5 3 4 5.4 7 7l2.3-2.3c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1v3.4c0 .6-.4 1-1 1C10.4 21.3 2.7 13.6 2.7 3.5c0-.6.4-1 1-1H7c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.3 0 .7-.2 1L6.6 10.8Z"/>`,
+  mail: `<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>`,
+  mappin: `<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>`,
+  clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
+  star: `<path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3Z"/>`,
+  starfilled: `<path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3Z" fill="currentColor" stroke="none"/>`,
+  check: `<path d="M20 6 9 17l-5-5"/>`,
+  checkcircle: `<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.3 2.3 4.7-5"/>`,
+  wrench: `<path d="M15 6a4.5 4.5 0 0 0-6 4.9L3 17v4h4l6-6a4.5 4.5 0 0 0 5-7.4l-3.2 3.2-2.6-.9-.9-2.6L14.6 4c-.2 0-.4 0-.6 0Z"/>`,
+  droplet: `<path d="M12 3s6.5 7 6.5 11.5A6.5 6.5 0 0 1 5.5 14.5C5.5 10 12 3 12 3Z"/>`,
+  flame: `<path d="M12 2s5 4.5 5 9.5a5 5 0 0 1-10 0c0-1.4.7-2.6 1.5-3.5.2 1 .8 1.8 1.5 1.8 1 0 1-1.3 1-2.3C11 6 11 4 12 2Z"/>`,
+  shield: `<path d="M12 3 4.5 6v6c0 5 3.4 8 7.5 9 4.1-1 7.5-4 7.5-9V6L12 3Z"/>`,
+  home: `<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>`,
+  heart: `<path d="M12 20.5s-7.5-4.6-9.8-9.4C.7 7.6 2.3 4.5 5.4 4c2-.3 3.7.7 4.6 2.3.5-1.6 2.6-2.6 4.6-2.3 3.1.5 4.7 3.6 3.2 7.1-2.3 4.8-9.8 9.4-9.8 9.4Z"/>`,
+  calendar: `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>`,
+  truck: `<path d="M2 7h11v9H2z"/><path d="M13 10h4l3 3v3h-7z"/><circle cx="6.5" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>`,
+  leaf: `<path d="M5 20C3 12 8 5 20 4c1 10-5 16-15 16Z"/><path d="M6 19c3-4 6-7 12-13"/>`,
+  dollar: `<circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.2c0-1.2-1.3-2.2-3-2.2s-3 .9-3 2.2 1.3 1.9 3 2.2 3 1 3 2.2-1.3 2.1-3 2.1-3-.8-3-2.1"/>`,
+  users: `<circle cx="9" cy="8" r="3.3"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c2.6.4 4.5 2.4 4.5 5.3"/>`,
+  thumbsup: `<path d="M7 11v9H4v-9h3Z"/><path d="M7 11l3.5-7c1.5 0 2.5 1.2 2.2 2.6L12 9h5.5c1.2 0 2 1.1 1.6 2.2l-2 6c-.3.9-1.1 1.5-2 1.5H7"/>`,
+  award: `<circle cx="12" cy="8" r="5.3"/><path d="m8.5 12.8-1.3 7 4.8-2.6 4.8 2.6-1.3-7"/>`,
+  sparkles: `<path d="M12 3v4M12 17v4M4 12h4M16 12h4M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2"/>`,
+  coffee: `<path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3.5c0 1-1 1-1 2s1 1 1 2M12 3.5c0 1-1 1-1 2s1 1 1 2"/>`,
+  utensils: `<path d="M6 2v8a2 2 0 0 0 2 2v10M6 2v8M9 2v8M15 2c-1.7 0-3 2-3 5s1.3 5 3 5v10M15 2c1.7 0 3 2 3 5s-1.3 5-3 5"/>`,
+  dumbbell: `<path d="M4 9v6M2 10.5v3M20 9v6M22 10.5v3M7 12h10"/><rect x="5" y="7.5" width="4" height="9" rx="1"/><rect x="15" y="7.5" width="4" height="9" rx="1"/>`,
+  stethoscope: `<path d="M6 3v6a4 4 0 0 0 8 0V3M6 3H4.5M14 3h1.5"/><path d="M10 13v2.5a5.5 5.5 0 0 0 11 0V13.8"/><circle cx="20.5" cy="12.5" r="1.8"/>`,
+  tooth: `<path d="M7 3c-2.5 0-4 2-4 5 0 4 1.5 6 2 10 .3 2 2 2 2.5.3.4-1.3.6-3.3 2.5-3.3s2.1 2 2.5 3.3c.5 1.7 2.2 1.7 2.5-.3.5-4 2-6 2-10 0-3-1.5-5-4-5-1.2 0-2 .6-2.5 1-.5-.4-1.3-1-3.5-1Z"/>`,
+  paw: `<circle cx="6" cy="9" r="2"/><circle cx="12" cy="6.5" r="2"/><circle cx="18" cy="9" r="2"/><path d="M8 15c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5-1.8 4-4 4-4-2-4-4Z"/>`,
+  palette: `<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.7-1.5 1.6-1.5H16a4 4 0 0 0 4-4c0-4.7-3.6-8.4-8-8.4Z"/><circle cx="7.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="7" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/>`,
+  hammer: `<rect x="13.5" y="2.5" width="4.2" height="7" rx="1" transform="rotate(45 15.6 6)"/><path d="M13 8.5 4.5 17a1.8 1.8 0 0 0 0 2.5l0 0a1.8 1.8 0 0 0 2.5 0L15.5 11"/>`,
+  broom: `<path d="M20 4 10.5 13.5"/><path d="m10.5 13.5-3 6.8L4 22l1.7-3.8 3-6.8Z"/><path d="M9 12.3 12.2 15.5"/>`,
+  car: `<path d="M4 16V11l2-5h12l2 5v5"/><path d="M4 16h16v2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H7v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Z"/><circle cx="7.5" cy="16" r="1.3"/><circle cx="16.5" cy="16" r="1.3"/>`,
+  flower: `<circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="12" r="2.6"/><path d="M12 18v3"/>`,
+  briefcase: `<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>`,
+  scissors: `<circle cx="6" cy="6" r="2.3"/><circle cx="6" cy="18" r="2.3"/><path d="m20 5-12.5 8M20 19 7.5 11"/>`,
+  messagecircle: `<path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.5-5A8.5 8.5 0 1 1 21 11.5Z"/>`,
+  clipboardlist: `<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M8.5 11h.01M8.5 15h.01M11.5 11h5M11.5 15h5"/>`,
+  alert: `<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/>`,
+};
+function svgIcon(name, size = 20) {
+  const path = ICONS[name] || ICONS.sparkles;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;flex-shrink:0">${path}</svg>`;
+}
+const ICON_VOCAB = Object.keys(ICONS).filter(k => k !== 'starfilled').join(', ');
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -458,6 +505,8 @@ Special: ${intake.special_notes || 'None'}
 
 ${intake.menu ? `CRITICAL: Feature these specific items: ${intake.menu}` : ''}
 
+For every "icon" field below, choose the single best-fitting keyword from this exact list (lowercase, no other text): ${ICON_VOCAB}. If nothing fits well, use "sparkles".
+
 Return this JSON (be vivid and specific, not generic):
 {
   "meta_title": "Under 60 chars — business name + suburb + what they do",
@@ -468,16 +517,16 @@ Return this JSON (be vivid and specific, not generic):
   "about_headline": "Warm headline about the business story",
   "about_story": "4 sentences. Personal story of ${intake.owner_name} and ${intake.biz_name}. Specific to ${intake.base_suburb}. Why they started. What drives them.",
   "services": [
-    {"name": "specific service/item name", "desc": "2 vivid sentences. Specific benefit. Sensory details if food.", "icon": "emoji", "highlight": false},
-    {"name": "...", "desc": "...", "icon": "emoji", "highlight": true},
-    {"name": "...", "desc": "...", "icon": "emoji", "highlight": false}
+    {"name": "specific service/item name", "desc": "2 vivid sentences. Specific benefit. Sensory details if food.", "icon": "keyword from the list above", "highlight": false},
+    {"name": "...", "desc": "...", "icon": "keyword from the list above", "highlight": true},
+    {"name": "...", "desc": "...", "icon": "keyword from the list above", "highlight": false}
   ],
   "trust_signals": ["signal with specific detail", "signal 2", "signal 3", "signal 4"],
   "why_us": [
-    {"icon": "emoji", "point": "specific differentiator", "detail": "one sentence why this matters"},
-    {"icon": "emoji", "point": "...", "detail": "..."},
-    {"icon": "emoji", "point": "...", "detail": "..."},
-    {"icon": "emoji", "point": "...", "detail": "..."}
+    {"icon": "keyword from the list above", "point": "specific differentiator", "detail": "one sentence why this matters"},
+    {"icon": "keyword from the list above", "point": "...", "detail": "..."},
+    {"icon": "keyword from the list above", "point": "...", "detail": "..."},
+    {"icon": "keyword from the list above", "point": "...", "detail": "..."}
   ],
   "cta_headline": "Warm, urgent call to action",
   "cta_sub": "One sentence removing hesitation",
@@ -597,7 +646,8 @@ nav.scrolled .nav-mobile-btn span{background:#111}
 .trust{background:#fff;border-bottom:1px solid #F3F4F6;padding:20px 24px}
 .trust-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
 .trust-item{display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:600;color:#374151}
-.trust-icon{width:32px;height:32px;border-radius:50%;background:${p.light};display:flex;align-items:center;justify-content:center;font-size:1em;flex-shrink:0}
+.trust-icon{width:32px;height:32px;border-radius:50%;background:${p.light};display:flex;align-items:center;justify-content:center;font-size:1em;flex-shrink:0;color:${p.primary}}
+.trust-icon svg{width:16px;height:16px}
 
 /* ── SECTIONS ── */
 section{padding:96px 24px}
@@ -616,8 +666,9 @@ section{padding:96px 24px}
 .service-card:hover{transform:translateY(-6px);box-shadow:0 20px 48px rgba(0,0,0,0.12)}
 .service-card.normal:hover{border-color:${p.primary}30}
 .service-icon-wrap{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px}
-.service-card.normal .service-icon-wrap{background:${p.light}}
-.service-card.featured .service-icon-wrap{background:rgba(255,255,255,0.15)}
+.service-icon-wrap svg{width:26px;height:26px}
+.service-card.normal .service-icon-wrap{background:${p.light};color:${p.primary}}
+.service-card.featured .service-icon-wrap{background:rgba(255,255,255,0.15);color:#fff}
 .service-card h3{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;margin-bottom:10px;letter-spacing:-0.01em}
 .service-card.normal h3{color:#111827}
 .service-card.featured h3{color:#fff}
@@ -653,7 +704,8 @@ section{padding:96px 24px}
 .why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:56px}
 .why-card{background:#F9FAFB;border:1px solid #F3F4F6;border-radius:20px;padding:32px;transition:all 0.3s}
 .why-card:hover{background:${p.light};border-color:${p.primary}25;transform:translateY(-4px);box-shadow:0 12px 32px ${p.primary}15}
-.why-icon{font-size:2rem;margin-bottom:16px}
+.why-icon{margin-bottom:16px;color:${p.primary}}
+.why-icon svg{width:30px;height:30px}
 .why-card h4{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#111827;margin-bottom:8px}
 .why-card p{font-size:0.88rem;color:#6B7280;line-height:1.7}
 
@@ -694,13 +746,14 @@ section{padding:96px 24px}
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
 .contact-info{display:flex;flex-direction:column;gap:24px}
 .contact-item{display:flex;gap:16px;align-items:flex-start}
-.contact-item-icon{width:48px;height:48px;border-radius:14px;background:${p.light};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.contact-item-icon{width:48px;height:48px;border-radius:14px;background:${p.light};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;color:${p.primary}}
 .contact-item-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9CA3AF;margin-bottom:4px}
 .contact-item-value{font-size:1rem;font-weight:700;color:#111827}
 .contact-map{border-radius:20px;overflow:hidden;height:340px;background:#F3F4F6;position:relative}
 .contact-map iframe{width:100%;height:100%;border:none;display:block}
 .contact-map-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,${p.light},${p.bg})}
-.contact-map-placeholder .map-icon{font-size:3rem}
+.contact-map-placeholder .map-icon{color:${p.primary}}
+.contact-map-placeholder .map-icon svg{width:44px;height:44px}
 .contact-map-placeholder p{font-size:0.88rem;color:#6B7280;font-weight:600}
 
 /* ── FOOTER ── */
@@ -765,17 +818,17 @@ footer{background:#111827;padding:56px 24px 32px}
   <div class="hero-content">
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
-      📍 ${intake.base_suburb}, Australia
+      ${intake.base_suburb}, Australia
     </div>
     <h1>${c.hero_headline.replace(/([^.!?]+)/g, (m, g) => g.includes(intake.biz_name.split(' ')[0]) ? `<span>${g}</span>` : g)}</h1>
     <p class="hero-sub">${c.hero_sub}</p>
     <div class="hero-btns">
-      ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-hero-primary">📞 Call ${intake.phone}</a>` : ''}
-      <a href="#services" class="btn-hero-secondary">${isFood ? '🍽️ View Menu' : isBeauty ? '✨ Our Services' : '📋 What We Do'} ↓</a>
+      ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-hero-primary">${svgIcon('phone',18)} Call ${intake.phone}</a>` : ''}
+      <a href="#services" class="btn-hero-secondary">${svgIcon(isFood ? 'utensils' : isBeauty ? 'sparkles' : 'clipboardlist',18)} ${isFood ? 'View Menu' : isBeauty ? 'Our Services' : 'What We Do'} ↓</a>
     </div>
     <div class="hero-stats">
       <div>
-        <div class="hero-stat-num">⭐ ${c.review_count || '50'}+</div>
+        <div class="hero-stat-num">${svgIcon('starfilled',22)} ${c.review_count || '50'}+</div>
         <div class="hero-stat-label">Happy customers</div>
       </div>
       <div>
@@ -799,7 +852,7 @@ footer{background:#111827;padding:56px 24px 32px}
   <div class="trust-inner">
     ${(c.trust_signals || []).map(s => `
     <div class="trust-item reveal">
-      <div class="trust-icon">✓</div>
+      <div class="trust-icon">${svgIcon('check',16)}</div>
       <span>${s}</span>
     </div>`).join('')}
   </div>
@@ -816,10 +869,10 @@ footer{background:#111827;padding:56px 24px 32px}
     <div class="services-grid">
       ${(c.services || []).map((s, i) => `
       <div class="service-card ${s.highlight ? 'featured' : 'normal'} reveal reveal-delay-${(i%4)+1}">
-        <div class="service-icon-wrap">${s.icon}</div>
+        <div class="service-icon-wrap">${svgIcon(s.icon,26)}</div>
         <h3>${s.name}</h3>
         <p>${s.desc}</p>
-        <div class="service-tag">${isFood ? '🍴 Order now' : isBeauty ? '📅 Book this' : isTrade ? '💬 Get a quote' : '→ Learn more'}</div>
+        <div class="service-tag">${isFood ? svgIcon('utensils',14)+' Order now' : isBeauty ? svgIcon('calendar',14)+' Book this' : isTrade ? svgIcon('messagecircle',14)+' Get a quote' : '→ Learn more'}</div>
       </div>`).join('')}
     </div>
   </div>
@@ -852,7 +905,7 @@ ${allPhotos.length > 0 ? `
         <div class="about-story">
           <p>${c.about_story || ''}</p>
         </div>
-        ${intake.phone ? `<div style="margin-top:32px"><a href="tel:${intake.phone.replace(/\s/g,'')}" style="display:inline-flex;align-items:center;gap:10px;background:${p.primary};color:#fff;padding:16px 32px;border-radius:12px;font-weight:800;font-size:0.95rem;transition:all 0.2s">📞 Call ${intake.phone}</a></div>` : ''}
+        ${intake.phone ? `<div style="margin-top:32px"><a href="tel:${intake.phone.replace(/\s/g,'')}" style="display:inline-flex;align-items:center;gap:10px;background:${p.primary};color:#fff;padding:16px 32px;border-radius:12px;font-weight:800;font-size:0.95rem;transition:all 0.2s">${svgIcon('phone',18)} Call ${intake.phone}</a></div>` : ''}
       </div>
     </div>
   </div>
@@ -868,7 +921,7 @@ ${allPhotos.length > 0 ? `
     <div class="why-grid">
       ${(c.why_us || []).map((w, i) => `
       <div class="why-card reveal reveal-delay-${(i%4)+1}">
-        <div class="why-icon">${w.icon}</div>
+        <div class="why-icon">${svgIcon(w.icon,30)}</div>
         <h4>${w.point}</h4>
         <p>${w.detail}</p>
       </div>`).join('')}
@@ -880,7 +933,7 @@ ${allPhotos.length > 0 ? `
 <section class="reviews" id="reviews">
   <div class="reviews-inner">
     <div class="reveal">
-      <div class="stars-row">${'⭐'.repeat(5)}</div>
+      <div class="stars-row">${Array(5).fill(`<span class="star">${svgIcon('starfilled',22)}</span>`).join('')}</div>
       <p class="reviews-num">Rated 5 stars by ${c.review_count || '50'}+ customers in ${intake.base_suburb}</p>
       <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-0.03em;margin-bottom:48px">What our customers say</h2>
     </div>
@@ -891,13 +944,13 @@ ${allPhotos.length > 0 ? `
         { text: `${intake.biz_name} is everything you want in a local ${isFood ? 'café' : isBeauty ? 'salon' : 'business'}. Professional, friendly and always delivers.`, name: 'Michelle K.', location: intake.base_suburb },
       ].map(r => `
       <div class="review-card reveal">
-        <div class="review-stars">${'⭐'.repeat(5)}</div>
+        <div class="review-stars">${Array(5).fill(`<span class="review-star">${svgIcon('starfilled',15)}</span>`).join('')}</div>
         <p class="review-text">"${r.text}"</p>
         <div class="review-author">
           <div class="review-avatar">${r.name[0]}</div>
           <div>
             <div class="review-name">${r.name}</div>
-            <div class="review-location">📍 ${r.location}</div>
+            <div class="review-location">${svgIcon('mappin',13)} ${r.location}</div>
           </div>
         </div>
       </div>`).join('')}
@@ -913,7 +966,7 @@ ${allPhotos.length > 0 ? `
     <h2>${c.cta_headline || `Ready to experience ${intake.biz_name}?`}</h2>
     <p>${c.cta_sub || `We'd love to hear from you. Get in touch today.`}</p>
     <div class="cta-btns">
-      ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-cta-primary">📞 Call ${intake.phone}</a>` : ''}
+      ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-cta-primary">${svgIcon('phone',18)} Call ${intake.phone}</a>` : ''}
       <a href="#contact" class="btn-cta-secondary">Send a message →</a>
     </div>
     <div class="cta-pills">
@@ -933,10 +986,10 @@ ${allPhotos.length > 0 ? `
         <h2 class="section-h2">We'd love to <em>hear from you</em></h2>
         <p class="section-sub" style="margin-bottom:40px">${c.contact_intro || `Come visit us in ${intake.base_suburb} or get in touch below.`}</p>
         <div class="contact-info">
-          ${intake.phone ? `<div class="contact-item"><div class="contact-item-icon">📞</div><div><div class="contact-item-label">Phone</div><a href="tel:${intake.phone.replace(/\s/g,'')}" class="contact-item-value" style="color:${p.primary}">${intake.phone}</a></div></div>` : ''}
-          ${intake.email ? `<div class="contact-item"><div class="contact-item-icon">✉️</div><div><div class="contact-item-label">Email</div><a href="mailto:${intake.email}" class="contact-item-value" style="color:${p.primary}">${intake.email}</a></div></div>` : ''}
-          ${intake.address ? `<div class="contact-item"><div class="contact-item-icon">📍</div><div><div class="contact-item-label">Address</div><div class="contact-item-value">${intake.address}, ${intake.base_suburb}</div></div></div>` : `<div class="contact-item"><div class="contact-item-icon">📍</div><div><div class="contact-item-label">Location</div><div class="contact-item-value">${intake.base_suburb}, Australia</div></div></div>`}
-          ${intake.hours ? `<div class="contact-item"><div class="contact-item-icon">🕐</div><div><div class="contact-item-label">Hours</div><div class="contact-item-value">${intake.hours}</div></div></div>` : ''}
+          ${intake.phone ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('phone',20)}</div><div><div class="contact-item-label">Phone</div><a href="tel:${intake.phone.replace(/\s/g,'')}" class="contact-item-value" style="color:${p.primary}">${intake.phone}</a></div></div>` : ''}
+          ${intake.email ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('mail',20)}</div><div><div class="contact-item-label">Email</div><a href="mailto:${intake.email}" class="contact-item-value" style="color:${p.primary}">${intake.email}</a></div></div>` : ''}
+          ${intake.address ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('mappin',20)}</div><div><div class="contact-item-label">Address</div><div class="contact-item-value">${intake.address}, ${intake.base_suburb}</div></div></div>` : `<div class="contact-item"><div class="contact-item-icon">${svgIcon('mappin',20)}</div><div><div class="contact-item-label">Location</div><div class="contact-item-value">${intake.base_suburb}, Australia</div></div></div>`}
+          ${intake.hours ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('clock',20)}</div><div><div class="contact-item-label">Hours</div><div class="contact-item-value">${intake.hours}</div></div></div>` : ''}
         </div>
       </div>
       <div class="contact-map reveal reveal-delay-2">
@@ -948,7 +1001,7 @@ ${allPhotos.length > 0 ? `
           allowfullscreen>
         </iframe>` : `
         <div class="contact-map-placeholder">
-          <div class="map-icon">📍</div>
+          <div class="map-icon">${svgIcon('mappin',44)}</div>
           <p>Located in ${intake.base_suburb}, Australia</p>
           <a href="https://maps.google.com/?q=${encodeURIComponent(intake.biz_name + ' ' + intake.base_suburb)}" target="_blank" style="color:${p.primary};font-weight:700;font-size:0.88rem">Open in Google Maps →</a>
         </div>`}
@@ -964,7 +1017,7 @@ ${allPhotos.length > 0 ? `
       <div class="footer-brand">
         <h3>${intake.biz_name}</h3>
         <p>${c.footer_tagline || `Proudly serving ${intake.base_suburb} and surrounds.`}</p>
-        ${intake.phone ? `<p style="margin-top:12px"><a href="tel:${intake.phone.replace(/\s/g,'')}" style="color:rgba(255,255,255,0.6);font-weight:600">📞 ${intake.phone}</a></p>` : ''}
+        ${intake.phone ? `<p style="margin-top:12px"><a href="tel:${intake.phone.replace(/\s/g,'')}" style="color:rgba(255,255,255,0.6);font-weight:600">${svgIcon('phone',15)} ${intake.phone}</a></p>` : ''}
       </div>
       <div class="footer-links-group">
         <h4>Navigate</h4>
