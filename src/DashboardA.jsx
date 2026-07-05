@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { GrowPanel, HealthPanel, NetworkPanel, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field } from "./DashboardB.jsx";
 import WebsiteEditor from "./WebsiteEditor.jsx";
+import { authHeaders } from "./supabase.js";
 
 // ─── TOKENS ──────────────────────────────────────────────────────────────────
 const C = {
@@ -1299,7 +1300,7 @@ function CRMPanel({customers,setCustomers,crmView,setCrmView,activeCustomer,setA
           <button onClick={async()=>{
             set("loadingKeywords",true);
             try {
-              const res = await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+              const res = await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json",...(await authHeaders())},body:JSON.stringify({
                 system:`You are an ecommerce SEO expert. Find low-competition blog post topics for online stores. Return ONLY valid JSON arrays — no other text, no markdown, no code fences.`,
                 user:`Find 5 blog post keyword ideas for this Shopify store: ${biz.name||"this online store"} — ${biz.description||"sells products online"}\n${extra.topicHint?`Topic hint: ${extra.topicHint}`:""}\n\nReturn ONLY JSON, no other text:\n[{"keyword":"best soy candles for gifts","title":"The Best Soy Candles for Gifting in 2026 (and How to Choose the Perfect One)","why":"High buyer intent, moderate volume, easy to rank for a small store"},...]`,
                 max_tokens:800,
@@ -1685,7 +1686,7 @@ function ExtraFields({toolId,biz,extra,setExtra}) {
               const bizType = industry?.label || biz.industry || "local business";
               try {
                 const res = await fetch("/api/generate", {
-                  method:"POST", headers:{"Content-Type":"application/json"},
+                  method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
                   body: JSON.stringify({
                     system:`You are a local SEO expert for Australian small businesses. You know which long-tail keywords are low competition and easy for a local business to rank for on Google. Return ONLY valid JSON arrays — no other text, no markdown, no code fences.`,
                     user:`Generate 5 blog post keyword ideas for a ${bizType} business called "${bizName}" located in ${bizSuburb}, Australia.
@@ -1979,7 +1980,7 @@ function ConnectDomainPanel({ liveUrl }) {
     setErrorMsg("");
     try {
       const res = await fetch("/api/connect-domain", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
         body: JSON.stringify({ domain: domain.trim(), deploymentUrl: liveUrl, action:"add" })
       });
       const d = await res.json();
@@ -1996,7 +1997,7 @@ function ConnectDomainPanel({ liveUrl }) {
     setPhase("checking");
     try {
       const res = await fetch("/api/connect-domain", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
         body: JSON.stringify({ domain: domain.trim(), action:"check" })
       });
       const d = await res.json();
@@ -2207,7 +2208,7 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
     try {
       const res = await fetch("/api/build-website", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({
           intake: {
             biz_name:      bizName,
@@ -2621,7 +2622,7 @@ function BlogPublishButton({ output, biz, extra }) {
     try {
       const res = await fetch("/api/publish-blog", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({
           post: {
             title,

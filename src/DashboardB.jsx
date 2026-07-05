@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { authHeaders } from "./supabase.js";
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 const C = {
@@ -46,7 +47,7 @@ export function GrowPanel({biz, industry, customers}) {
         usr = `Create a complete referral program for ${biz?.name||"this business"}.\n\n${ctx}\nReferrer reward: ${referralReward||"Suggest something appropriate"}\nNew customer offer: ${referralOffer||"Suggest a compelling first-visit offer"}\n\nWrite:\n## THE PROGRAM IN PLAIN ENGLISH\n## THE REFERRER'S REWARD\n## THE NEW CUSTOMER'S OFFER\n## HOW TO TELL CUSTOMERS ABOUT IT (in-store, SMS, email, Facebook post)\n## HOW TO TRACK IT\n## WHEN TO REMIND CUSTOMERS`;
       }
       const res = await fetch("/api/generate", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
         body: JSON.stringify({ system: sys, user: usr, max_tokens: 1000 })
       });
       const d = await res.json();
@@ -218,7 +219,7 @@ export function HealthPanel({biz, industry, customers, results}) {
     const missing   = scoreData.filter(s=>!s.done).map(s=>s.label).join(", ");
     try {
       const res = await fetch("/api/generate", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
         body: JSON.stringify({
           system:`You are a friendly, no-nonsense marketing advisor for Australian small businesses. Give clear, practical weekly priorities — not generic advice. Be direct, warm, and specific to this business. Write like a smart friend, not a consultant.`,
           user:`Generate a weekly business health report for ${biz?.name||"this business"}.\n\nBusiness: ${industry?.label||"local business"} in ${biz?.suburb||"Australia"}\nWhat they do: ${biz?.description||"local services"}\n\nCurrent marketing score: ${score}/100\nCompleted recently: ${completed}\nNot done yet: ${missing}\nCustomers in system: ${safeCustomers.length}\nLapsed customers (60+ days): ${lapsed}\nVIP customers: ${vip}\nNew leads: ${leads}\n\nWrite a friendly weekly check-in using these sections:\n\n## YOUR HEALTH SCORE: ${score}/100 — ${scoreLabel}\n[2-3 sentences on what the score means]\n\n## ✅ WHAT YOU DID WELL\n[Acknowledge what's completed — specific and encouraging]\n\n## 🎯 YOUR 3 PRIORITIES THIS WEEK\n[Three specific, actionable things ranked by impact. Each: what to do, why it matters, how long it takes]\n\n## ⚠️ ONE THING TO WATCH\n[One potential problem — ${lapsed} lapsed customers, ${leads} leads, etc.]\n\n## 💡 QUICK WIN (under 15 minutes)\n[Something they can do RIGHT NOW]\n\nUnder 400 words. Write like a smart friend who knows their business.`,
@@ -392,7 +393,7 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
 
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ system, user, max_tokens: 600 })
       });
       const d = await res.json();

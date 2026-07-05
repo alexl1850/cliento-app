@@ -1,5 +1,6 @@
 import { useState } from "react";
 import WebsiteIntake from "./WebsiteIntake.jsx";
+import { authHeaders } from "./supabase.js";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -40,7 +41,7 @@ const btnSecondary = {
 async function callClaude(system, user, maxTokens=1000) {
   const res = await fetch("/api/generate", {
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{"Content-Type":"application/json",...(await authHeaders())},
     body: JSON.stringify({ system, user, max_tokens: maxTokens })
   });
   const d = await res.json();
@@ -307,7 +308,7 @@ function Step1_Website({ data, session, onNext }) {
     try {
       const res = await fetch("/api/build-website", {
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json",...(await authHeaders())},
         body: JSON.stringify({ intake })
       });
       const d = await res.json();

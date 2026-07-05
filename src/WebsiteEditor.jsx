@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { authHeaders } from "./supabase.js";
 
 const inp = {width:"100%",padding:"12px 14px",borderRadius:"10px",border:"1.5px solid #E5E7EB",fontSize:"0.92em",color:"#111827",outline:"none",boxSizing:"border-box",fontFamily:"inherit",background:"#fff"};
 const btn = (bg="#2563EB") => ({padding:"14px 20px",borderRadius:"10px",border:"none",background:bg,color:"#fff",fontSize:"0.9em",fontWeight:800,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"});
@@ -52,7 +53,7 @@ export default function WebsiteEditor({ biz, liveUrl, initialHtml, onBack }) {
     try {
       const res = await fetch("/api/edit-website", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({
           instruction: instruction.trim(),
           currentUrl,
