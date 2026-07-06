@@ -480,7 +480,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 4000,
-        system: `You are a world-class website copywriter for Australian local businesses. 
+        system: `Today's date is ${new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' })}. If any copy references a year, use the current one — never an earlier one.
+
+You are a world-class website copywriter for Australian local businesses.
 Tone: ${bizPersonality}
 Write copy that is VIVID, SPECIFIC, and sounds like a real person wrote it about THIS exact business.
 Return ONLY valid JSON — no markdown, no code fences.`,
@@ -581,9 +583,16 @@ Return this JSON (be vivid and specific, not generic):
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi ${intake.biz_name}, I found you online and I'd like to know more.`)}`
       : '';
 
-    // ── 6b. LocalBusiness structured data — a live site URL isn't known until
-    // after the first Vercel deploy below, so a placeholder token is used here
-    // and swapped for the real URL once the deploy responds (see step 7). ────
+    // ── 6b. LocalBusiness structured data — Vercel's production alias for a
+    // fresh project deployed under `name: akus-${slug}` is deterministically
+    // `https://akus-${slug}.vercel.app`, so the URL can be predicted up front
+    // instead of deploying once to learn it and deploying again to bake it
+    // in (that two-deploy approach could leave the production alias briefly
+    // dangling between the two calls — not worth the risk for a predictable
+    // value). The response from the single deploy below is still what's
+    // actually shown/persisted, so a custom domain or any mismatch is
+    // reflected correctly regardless of this prediction.
+    const predictedLiveUrl = `https://akus-${slug}.vercel.app`;
     const schemaType = isFood ? 'Restaurant' : isBeauty ? 'HealthAndBeautyBusiness' : isTrade ? 'HomeAndConstructionBusiness' : isHealth ? 'MedicalBusiness' : 'LocalBusiness';
     const jsonLd = {
       '@context': 'https://schema.org',
@@ -591,7 +600,7 @@ Return this JSON (be vivid and specific, not generic):
       name: intake.biz_name,
       description: c.meta_desc || c.hero_sub || '',
       image: heroImageUrl,
-      url: '__LIVE_URL__',
+      url: predictedLiveUrl,
       telephone: intake.phone || undefined,
       email: intake.email || undefined,
       address: {
@@ -613,7 +622,7 @@ Return this JSON (be vivid and specific, not generic):
 <meta property="og:title" content="${c.meta_title || intake.biz_name}">
 <meta property="og:description" content="${c.meta_desc || ''}">
 <meta property="og:image" content="${heroImageUrl}">
-<link rel="canonical" href="__LIVE_URL__">
+<link rel="canonical" href="${predictedLiveUrl}">
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='${encodeURIComponent(p.primary)}'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='system-ui' font-weight='900' fill='white'>${(intake.biz_name||'B')[0].toUpperCase()}</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1117,13 +1126,33 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 </body>
 </html>`;
 
-    // ── 7. Deploy to Vercel ────────────────────────────────────────────────
+    // ── 7. Deploy to Vercel — a single call with all 3 files. (An earlier
+    // version of this deployed once to learn the live URL, then deployed
+    // again to bake it into the HTML/sitemap — that two-deploy-per-build
+    // pattern could leave the production alias briefly dangling between the
+    // two calls, which is suspected to have caused live sites to 404. Now
+    // that the URL is predicted up front, one deploy is all that's needed.) ─
+    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${predictedLiveUrl}/</loc>
+    <lastmod>${new Date().toISOString().slice(0,10)}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${predictedLiveUrl}/sitemap.xml\n`;
+
     const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: `akus-${slug}`,
-        files: [{ file: 'index.html', data: Buffer.from(html).toString('base64'), encoding: 'base64' }],
+        files: [
+          { file: 'index.html', data: Buffer.from(html).toString('base64'), encoding: 'base64' },
+          { file: 'sitemap.xml', data: Buffer.from(sitemapXml).toString('base64'), encoding: 'base64' },
+          { file: 'robots.txt', data: Buffer.from(robotsTxt).toString('base64'), encoding: 'base64' },
+        ],
         projectSettings: { framework: null },
         target: 'production',
       })
@@ -1132,44 +1161,8 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     const deployData = await deployRes.json();
     if (deployData.error) throw new Error(deployData.error.message);
     const liveUrl = `https://${deployData.alias?.[0] || deployData.url}`;
-
-    // ── 7b. Now that the real URL exists, bake it into the canonical tag and
-    // schema, then redeploy with sitemap.xml + robots.txt alongside it — a
-    // single-page site only needs one sitemap entry, but it and robots.txt
-    // still need to be genuinely present for Search Console to find them. ──
-    const finalHtml = html.split('__LIVE_URL__').join(liveUrl);
-    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${liveUrl}/</loc>
-    <lastmod>${new Date().toISOString().slice(0,10)}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-</urlset>`;
-    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${liveUrl}/sitemap.xml\n`;
-
-    let deployId = deployData.id;
-    try {
-      const finalDeployRes = await fetch('https://api.vercel.com/v13/deployments', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `akus-${slug}`,
-          files: [
-            { file: 'index.html', data: Buffer.from(finalHtml).toString('base64'), encoding: 'base64' },
-            { file: 'sitemap.xml', data: Buffer.from(sitemapXml).toString('base64'), encoding: 'base64' },
-            { file: 'robots.txt', data: Buffer.from(robotsTxt).toString('base64'), encoding: 'base64' },
-          ],
-          projectSettings: { framework: null },
-          target: 'production',
-        })
-      });
-      const finalDeployData = await finalDeployRes.json();
-      if (!finalDeployData.error) deployId = finalDeployData.id;
-    } catch (seoDeployErr) {
-      console.error('Failed to deploy sitemap/canonical pass (non-fatal, first deploy still live):', seoDeployErr.message);
-    }
+    const finalHtml = html;
+    const deployId = deployData.id;
 
     // ── 8. Persist the live site so it can be restored if the subscription
     // ever lapses and the site gets swapped for a "renew" splash page ──────
