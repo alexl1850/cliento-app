@@ -22,7 +22,7 @@ export default function App() {
   const [journeyComplete, setJourneyComplete] = useState(false)
   const [isAdmin,         setIsAdmin]         = useState(false)
   const [showAdminPanel,  setShowAdminPanel]  = useState(false)
-  const [impersonating,   setImpersonating]   = useState(() => !!sessionStorage.getItem(ADMIN_RETURN_KEY))
+  const [impersonating,   setImpersonating]   = useState(() => !!localStorage.getItem(ADMIN_RETURN_KEY))
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,7 +34,12 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       if (session) loadProfile(session.user.id)
-      else { setProfile(null); setLoading(false); setJourneyComplete(false) }
+      else {
+        setProfile(null); setLoading(false); setJourneyComplete(false)
+        // A stale impersonation stash left behind by a sign-out mid-session
+        // would otherwise show a broken "Exit to admin" banner on next login.
+        localStorage.removeItem(ADMIN_RETURN_KEY); setImpersonating(false)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -71,19 +76,24 @@ export default function App() {
     // without needing them to sign in again.
     const { data: { session: adminSession } } = await supabase.auth.getSession()
     if (adminSession) {
-      sessionStorage.setItem(ADMIN_RETURN_KEY, JSON.stringify({
+      localStorage.setItem(ADMIN_RETURN_KEY, JSON.stringify({
         access_token: adminSession.access_token,
         refresh_token: adminSession.refresh_token,
       }))
     }
-    setShowAdminPanel(false)
-    setImpersonating(true)
-    await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token })
+    try {
+      await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token })
+      setShowAdminPanel(false)
+      setImpersonating(true)
+    } catch (err) {
+      localStorage.removeItem(ADMIN_RETURN_KEY)
+      alert('Could not switch into that customer\'s session: ' + err.message)
+    }
   }
 
   const exitImpersonation = async () => {
-    const stashed = sessionStorage.getItem(ADMIN_RETURN_KEY)
-    sessionStorage.removeItem(ADMIN_RETURN_KEY)
+    const stashed = localStorage.getItem(ADMIN_RETURN_KEY)
+    localStorage.removeItem(ADMIN_RETURN_KEY)
     setImpersonating(false)
     if (stashed) {
       const { access_token, refresh_token } = JSON.parse(stashed)
@@ -102,7 +112,13 @@ export default function App() {
     if (data && !error) {
       setProfile(data)
       // If they've already completed setup before, skip the journey
-      if (data.biz_name) setJourneyComplete(true)
+      setJourneyComplete(!!data.biz_name)
+    } else {
+      // No row yet (brand-new signup) — reset rather than leaving whatever
+      // the PREVIOUS session's profile was, which otherwise lingers when
+      // switching users without a full reload (e.g. admin impersonation).
+      setProfile(null)
+      setJourneyComplete(false)
     }
     setLoading(false)
   }
