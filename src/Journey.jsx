@@ -301,10 +301,12 @@ function Step1_Website({ data, session, onNext }) {
   const [phase, setPhase] = useState("intake"); // intake | building | done
   const [liveUrl, setLiveUrl] = useState("");
   const [error, setError] = useState("");
+  const [intakeData, setIntakeData] = useState(null);
 
   const handleIntakeComplete = async (intake) => {
     setPhase("building");
     setError("");
+    setIntakeData(intake);
     try {
       const res = await fetch("/api/build-website", {
         method:"POST",
@@ -320,6 +322,21 @@ function Step1_Website({ data, session, onNext }) {
       setPhase("intake");
     }
   };
+
+  // The rest of the journey (social posts, email, blog, Google posts) reads
+  // business details from data.bizInfo — the intake answers use different
+  // field names (biz_name, base_suburb) than what those steps expect (name,
+  // suburb), and there's no dedicated "industry"/"description" question in
+  // the intake at all, so services/difference stand in for those.
+  const bizInfo = intakeData ? {
+    name: intakeData.biz_name || '',
+    suburb: intakeData.base_suburb || '',
+    owner: intakeData.owner_name || '',
+    phone: intakeData.phone || '',
+    email: intakeData.email || '',
+    industry: intakeData.services || '',
+    description: [intakeData.services, intakeData.difference].filter(Boolean).join(' — '),
+  } : {};
 
   if (phase==="intake") return (
     <WebsiteIntake
@@ -385,7 +402,7 @@ function Step1_Website({ data, session, onNext }) {
         <div style={{background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"10px",padding:"14px",fontSize:"0.82em",color:"#78350F",lineHeight:1.65,marginBottom:"20px"}}>
           💡 Want to connect your own domain (e.g. yourbusiness.com.au)? Head to <strong>Marketing → Publish My Website</strong> in the dashboard after setup.
         </div>
-        <button onClick={()=>onNext({liveUrl})} style={{width:"100%",padding:"18px",borderRadius:"12px",border:"none",background:C.green,color:"#fff",fontWeight:800,fontSize:"1.05em",cursor:"pointer",fontFamily:"'Inter',system-ui,sans-serif"}}>
+        <button onClick={()=>onNext({liveUrl, bizInfo, intake:intakeData})} style={{width:"100%",padding:"18px",borderRadius:"12px",border:"none",background:C.green,color:"#fff",fontWeight:800,fontSize:"1.05em",cursor:"pointer",fontFamily:"'Inter',system-ui,sans-serif"}}>
           Amazing — what's next? →
         </button>
       </Card>
