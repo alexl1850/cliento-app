@@ -15,6 +15,12 @@ export default async function handler(req, res) {
   try {
     const { system, user, max_tokens = 1000 } = req.body;
 
+    // Claude has no innate sense of "today" — without this, date-flavoured
+    // content (blog post titles like "2024 Guide", "this year" references)
+    // defaults to stale years from training data instead of the real date.
+    const todayStr = new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' });
+    const dateContext = `Today's date is ${todayStr}. If the content references a year (e.g. in a title like "2025 Guide"), use the current year — never an earlier one.`;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -25,7 +31,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens,
-        system,
+        system: `${dateContext}\n\n${system || ''}`,
         messages: [{ role: 'user', content: user }],
       }),
     });

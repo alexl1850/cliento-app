@@ -30,7 +30,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 8000,
-        system: `You are a website editor for Australian local businesses.
+        system: `Today's date is ${new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' })}. If any new content references a year, use the current one — never an earlier one.
+
+You are a website editor for Australian local businesses.
 You receive a business website's HTML and a specific instruction for what to change.
 Make ONLY the requested changes — preserve all other content, CSS, JavaScript, and structure exactly.
 Return ONLY the complete updated HTML — no explanation, no markdown, no code fences.

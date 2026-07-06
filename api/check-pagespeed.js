@@ -1,8 +1,10 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 
-// Google's PageSpeed Insights API is public and works without a key at low
-// volume — GOOGLE_PAGESPEED_API_KEY is optional, only needed if usage grows
-// enough to hit the unauthenticated rate limit.
+// Google's PageSpeed Insights API technically works unauthenticated, but the
+// shared/unkeyed quota turned out to be exhausted almost immediately in
+// practice — GOOGLE_PAGESPEED_API_KEY (a free, instant, self-serve Google
+// Cloud API key, no approval wait) is effectively required, not just an
+// at-scale nice-to-have.
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -23,7 +25,15 @@ export default async function handler(req, res) {
 
     const psiRes = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`);
     const psiData = await psiRes.json();
-    if (!psiRes.ok) throw new Error(psiData.error?.message || 'PageSpeed check failed');
+    if (!psiRes.ok) {
+      const rawMessage = psiData.error?.message || 'PageSpeed check failed';
+      console.error('PageSpeed API error:', rawMessage);
+      // Don't leak raw Google Cloud quota/project internals to the customer —
+      // show a clean, generic message instead for anything that isn't just a
+      // bad URL from them.
+      const isQuota = /quota/i.test(rawMessage);
+      throw new Error(isQuota ? 'Speed checks are temporarily unavailable — please try again later.' : 'Could not check that URL — make sure it\'s a valid, live website address.');
+    }
 
     const audits = psiData.lighthouseResult?.audits || {};
     const score = Math.round((psiData.lighthouseResult?.categories?.performance?.score || 0) * 100);
