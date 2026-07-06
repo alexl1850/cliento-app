@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GrowPanel, HealthPanel, NetworkPanel, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
+import { GrowPanel, HealthPanel, NetworkPanel, CitationBuilder, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
 import WebsiteEditor from "./WebsiteEditor.jsx";
 import { authHeaders } from "./supabase.js";
 
@@ -408,6 +408,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
     {id:"crm",       icon:"users", label:"Customers",    badge:needsFollowUp>0?needsFollowUp:null},
     {id:"grow",      icon:"rocket", label:"Grow",          badge:null},
     {id:"health",    icon:"heart", label:"Health Score",  badge:null},
+    {id:"citations", icon:"search", label:"Local SEO",     badge:null},
     {id:"network",   icon:"link", label:"Network",       badge:networkMembers.length},
     {id:"help",      icon:"helpcircle", label:"Help",           badge:null},
   ];
@@ -742,6 +743,11 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
         {/* ── HEALTH SCORE TAB ─────────────────────────────────────────────── */}
         {activeTab==="health" && (
           <HealthPanel biz={biz} industry={industry} customers={customers} results={results}/>
+        )}
+
+        {/* ── LOCAL SEO / CITATIONS TAB ────────────────────────────────────── */}
+        {activeTab==="citations" && (
+          <CitationBuilder biz={biz} profile={profile} session={session}/>
         )}
 
         {/* ── NETWORK TAB ───────────────────────────────────────────────────── */}

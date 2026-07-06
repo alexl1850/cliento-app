@@ -121,3 +121,10 @@ ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies added: with RLS enabled and zero policies,
 -- PostgREST denies all access through the anon/authenticated roles, so this
 -- table is reachable only via the service-role key (which bypasses RLS).
+
+-- ─── LOCAL SEO / CITATION BUILDER ─────────────────────────────────
+-- Tracks which business directories the customer has told us they've
+-- submitted their listing to (self-reported checklist, not verified) —
+-- read/written directly from the dashboard under the existing
+-- "Users can update own profile" RLS policy, no new policy needed.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS citations_done JSONB DEFAULT '[]'::jsonb;

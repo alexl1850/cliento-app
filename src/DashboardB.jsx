@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { authHeaders } from "./supabase.js";
+import { authHeaders, supabase } from "./supabase.js";
 
 // ─── Icon set — minimal stroke icons, replaces emoji in the dashboard chrome ──
 const ICONS = {
@@ -627,6 +627,129 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
             <div style={{fontSize:"0.75em",color:C.muted}}>Your profile automatically updates when you update your business details in setup.</div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CITATION BUILDER — local business directory listings for SEO/citations
+// ═════════════════════════════════════════════════════════════════════════════
+const DIRECTORIES = [
+  { id: "gbp",       name: "Google Business Profile", url: "https://business.google.com/create", note: "The most important listing by far — powers Maps and local search results." },
+  { id: "facebook",  name: "Facebook Page",           url: "https://facebook.com/pages/create",   note: "Most customers check here before they call." },
+  { id: "bing",      name: "Bing Places",             url: "https://www.bingplaces.com",          note: "Powers Microsoft/Bing search and some GPS units." },
+  { id: "apple",     name: "Apple Maps",              url: "https://mapsconnect.apple.com",       note: "Shows up for anyone searching on an iPhone." },
+  { id: "truelocal", name: "True Local",              url: "https://www.truelocal.com.au",        note: "One of the biggest Australian directories." },
+  { id: "yellowpages", name: "Yellow Pages Australia",url: "https://www.yellowpages.com.au",      note: "Long-established, still well trusted by Google." },
+  { id: "yelp",      name: "Yelp Australia",          url: "https://biz.yelp.com.au",              note: "Growing in Australia, strong for food/hospitality." },
+  { id: "hotfrog",   name: "Hotfrog Australia",       url: "https://www.hotfrog.com.au",           note: "Quick to set up, adds another citation." },
+  { id: "startlocal", name: "StartLocal",             url: "https://www.startlocal.com.au",        note: "Australian small-business directory." },
+  { id: "womo",      name: "Word Of Mouth",           url: "https://www.womo.com.au",              note: "Review-focused Australian directory." },
+  { id: "localsearch", name: "Localsearch",           url: "https://www.localsearch.com.au",       note: "Formerly Yellow — still widely used in AU search." },
+];
+
+export function CitationBuilder({ biz, profile, session }) {
+  const [done, setDone] = useState(() => new Set(Array.isArray(profile?.citations_done) ? profile.citations_done : []));
+  const [saving, setSaving] = useState(false);
+  const [copiedField, setCopiedField] = useState("");
+
+  const napFields = [
+    { label: "Business name", value: biz?.name || "" },
+    { label: "Suburb",        value: biz?.suburb ? `${biz.suburb}, Australia` : "" },
+    { label: "Phone",         value: biz?.phone || "" },
+    { label: "Email",         value: biz?.email || "" },
+    { label: "Website",       value: biz?.live_url || biz?.website || "" },
+    { label: "Category",      value: biz?.industry || "" },
+  ].filter(f => f.value);
+
+  const napText = napFields.map(f => `${f.label}: ${f.value}`).join("\n");
+
+  const copy = (text, field) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(field); setTimeout(() => setCopiedField(""), 1800);
+    }).catch(() => {});
+  };
+
+  const toggleDone = async (id) => {
+    const next = new Set(done);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setDone(next);
+    if (!session?.user?.id) return;
+    setSaving(true);
+    try {
+      await supabase.from("profiles").update({ citations_done: Array.from(next) }).eq("user_id", session.user.id);
+    } catch { /* best-effort — the checkbox state still holds locally this session */ }
+    setSaving(false);
+  };
+
+  const pct = Math.round((done.size / DIRECTORIES.length) * 100);
+
+  return (
+    <div>
+      <div style={{background:C.brandLt,border:"1px solid #BAE6FD",borderRadius:"10px",padding:"14px 16px",marginBottom:"20px",fontSize:"0.84em",color:"#0C4A6E",lineHeight:1.65}}>
+        <Icon name="search" size={15}/> <strong>Consistent listings across directories ("citations") are one of Google's ranking signals for local search.</strong> Use the same details everywhere — copy them below, then submit to each directory and tick it off.
+      </div>
+
+      {/* NAP block */}
+      <div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"12px"}}>
+          <div style={{fontWeight:700,fontSize:"0.9em",color:C.text}}>Your business details</div>
+          <button onClick={()=>copy(napText,"__all")} style={{...btnPrimary,padding:"7px 14px",fontSize:"0.78em",background:copiedField==="__all"?C.green:C.brand}}>
+            {copiedField==="__all" ? "Copied!" : "Copy all"}
+          </button>
+        </div>
+        {napFields.length === 0 ? (
+          <div style={{fontSize:"0.83em",color:C.muted}}>Fill in your business details in Setup first, then come back here.</div>
+        ) : (
+          <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+            {napFields.map(f => (
+              <div key={f.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px",padding:"8px 12px",background:C.light,borderRadius:"8px"}}>
+                <div style={{minWidth:0}}>
+                  <div style={{fontSize:"0.7em",color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.03em"}}>{f.label}</div>
+                  <div style={{fontSize:"0.85em",color:C.text,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{f.value}</div>
+                </div>
+                <button onClick={()=>copy(f.value,f.label)} style={{...backBtn,flexShrink:0}}>
+                  {copiedField===f.label ? "Copied" : "Copy"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Progress */}
+      <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px"}}>
+        <div style={{flex:1,height:"8px",background:C.light,borderRadius:"99px",overflow:"hidden"}}>
+          <div style={{width:`${pct}%`,height:"100%",background:C.green,transition:"width 0.2s"}}/>
+        </div>
+        <div style={{fontSize:"0.8em",color:C.muted,fontWeight:600,flexShrink:0}}>{done.size}/{DIRECTORIES.length} listed{saving ? " · saving…" : ""}</div>
+      </div>
+
+      {/* Directory checklist */}
+      <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+        {DIRECTORIES.map(d => (
+          <div key={d.id} style={{
+            display:"flex",alignItems:"center",gap:"12px",padding:"12px 14px",
+            background:"#fff",border:`1px solid ${done.has(d.id)?C.greenLt:C.border}`,borderRadius:"10px",
+          }}>
+            <button onClick={()=>toggleDone(d.id)} aria-label="Mark as submitted" style={{
+              width:"22px",height:"22px",borderRadius:"6px",flexShrink:0,cursor:"pointer",
+              border:`2px solid ${done.has(d.id)?C.green:C.border}`,
+              background:done.has(d.id)?C.green:"#fff",
+              display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",
+            }}>
+              {done.has(d.id) && <Icon name="check" size={13}/>}
+            </button>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:"0.88em",color:C.text}}>{d.name}</div>
+              <div style={{fontSize:"0.76em",color:C.muted}}>{d.note}</div>
+            </div>
+            <a href={d.url} target="_blank" rel="noopener noreferrer" style={{...backBtn,flexShrink:0,whiteSpace:"nowrap"}}>
+              Submit here <Icon name="link" size={13}/>
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   );
