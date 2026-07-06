@@ -686,6 +686,53 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// SITE SPEED CHECK — standalone widget for Shopify's SEO tab, since a Shopify
+// store's URL isn't stored anywhere (unlike a local business's Akus-built
+// site, which always has a known live_url) — the merchant enters it here.
+// ═════════════════════════════════════════════════════════════════════════════
+export function SiteSpeedCheck({ biz }) {
+  const [url, setUrl] = useState(biz?.website || biz?.live_url || "");
+  const [checking, setChecking] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+
+  const check = async () => {
+    if (!url) return;
+    setChecking(true); setError(""); setResult(null);
+    try {
+      const res = await fetch("/api/check-pagespeed", {
+        method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
+        body: JSON.stringify({ url: url.startsWith("http") ? url : `https://${url}` })
+      });
+      const d = await res.json();
+      if(d.error) throw new Error(d.error);
+      setResult(d);
+    } catch(e) { setError(e.message); }
+    setChecking(false);
+  };
+
+  return (
+    <div style={{background:"#fff",borderRadius:"12px",border:`1px solid ${C.border}`,padding:"18px 20px",marginBottom:"20px"}}>
+      <div style={{fontWeight:700,fontSize:"0.9em",color:C.text,marginBottom:"4px"}}><Icon name="zap" size={15}/> Store Speed Check</div>
+      <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"12px",lineHeight:1.6}}>Google uses mobile page speed as a ranking signal — check how your store loads.</div>
+      <div style={{display:"flex",gap:"8px",marginBottom:"10px",flexWrap:"wrap"}}>
+        <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="e.g. yourstore.myshopify.com" style={{...inputSt,flex:"1 1 220px"}}/>
+        <button onClick={check} disabled={checking||!url} style={{...btnPrimary,background:C.purple,opacity:(checking||!url)?0.5:1,whiteSpace:"nowrap"}}>
+          {checking ? "Checking…" : "Check speed"}
+        </button>
+      </div>
+      {error && <div style={{fontSize:"0.78em",color:C.red}}>{error}</div>}
+      {result && (
+        <div style={{display:"flex",alignItems:"baseline",gap:"8px",marginTop:"6px"}}>
+          <span style={{fontSize:"1.8em",fontWeight:900,color:result.score>=70?C.green:result.score>=50?C.amber:C.red}}>{result.score}</span>
+          <span style={{fontSize:"0.78em",color:C.muted}}>/100 (mobile) · Largest Contentful Paint: {result.metrics?.largestContentfulPaint || "n/a"}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // CITATION BUILDER — local business directory listings for SEO/citations
 // ═════════════════════════════════════════════════════════════════════════════
 const DIRECTORIES = [

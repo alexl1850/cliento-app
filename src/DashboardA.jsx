@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GrowPanel, HealthPanel, NetworkPanel, CitationBuilder, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
+import { GrowPanel, HealthPanel, NetworkPanel, CitationBuilder, SiteSpeedCheck, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
 import WebsiteEditor from "./WebsiteEditor.jsx";
 import { authHeaders } from "./supabase.js";
 
@@ -99,6 +99,7 @@ const SHOPIFY_TOOL_GROUPS = [
       {id:"sh_ad_copy",        icon:"target", label:"Ad Copy Generator",     desc:"Meta and Google ad copy for a specific product or collection"},
       {id:"sh_ugc_brief",      icon:"video", label:"UGC Creator Brief",     desc:"Brief for customers or creators asking for content about your product"},
       {id:"sh_bio",            icon:"sparkles", label:"Instagram Bio + Links", desc:"Optimised bio and link-in-bio copy for your store"},
+      {id:"sh_whatsapp",       icon:"messagecircle", label:"WhatsApp Chat Button", desc:"A ready-to-use WhatsApp link and button snippet for your store or bio"},
     ]
   },
   {
@@ -418,6 +419,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
     {id:"sh_social",   icon:"messagecircle", label:"Social & Ads",badge:null},
     {id:"sh_reviews",  icon:"starfilled", label:"Reviews",      badge:null},
     {id:"sh_seo",      icon:"search", label:"SEO",          badge:null},
+    {id:"citations",   icon:"mappin", label:"Local SEO",    badge:null},
     {id:"sh_analytics",icon:"barchart", label:"Analytics",   badge:null},
     {id:"sh_growth",   icon:"rocket", label:"Growth",       badge:null},
     {id:"help",        icon:"helpcircle", label:"Help",          badge:null},
@@ -631,6 +633,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
           <ShopifyDashboard
             activeTab={activeTab} activeTool={activeTool} setActiveTool={setActiveTool}
             biz={biz} results={results} setResults={setResults}
+            profile={profile} onSaveProfile={onSaveProfile} session={session}
           />
         )}
 
@@ -776,7 +779,14 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
 // ═════════════════════════════════════════════════════════════════════════════
 // SHOPIFY DASHBOARD
 // ═════════════════════════════════════════════════════════════════════════════
-function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, setResults}) {
+function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, setResults, profile, onSaveProfile, session}) {
+  // "citations" isn't one of the AI tool groups (Product Content, Emails, etc.)
+  // — it's the same standalone Local SEO panel local businesses get, so it's
+  // handled before the group lookup rather than falling through to it.
+  if (activeTab === "citations") {
+    return <CitationBuilder biz={biz} profile={profile} session={session}/>;
+  }
+
   const group = SHOPIFY_TOOL_GROUPS.find(g=>g.id===activeTab) ||
                 SHOPIFY_TOOL_GROUPS.find(g=>g.id==="products");
 
@@ -822,6 +832,7 @@ function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, s
               <div style={{color:"#A78BFA",fontSize:"1.2em"}}>→</div>
             </button>
           )}
+          {activeTab==="sh_seo" && <SiteSpeedCheck biz={biz}/>}
           <ToolGrid group={group} results={results} onSelect={setActiveTool} accentColor={C.purple} accentLt={C.purpleLt}/>
         </>
       )}
@@ -1551,6 +1562,11 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
     return <WebsiteBuilderPanel biz={biz} profile={profile} onBack={onBack} onSave={onSave} onSaveProfile={onSaveProfile}/>;
   }
 
+  // ── WHATSAPP CHAT BUTTON — deterministic link/snippet, not AI copy ───────
+  if (toolId === "sh_whatsapp") {
+    return <WhatsAppButtonPanel biz={biz} onBack={onBack}/>;
+  }
+
   const generate = async () => {
     setPhase("generating"); setError("");
     try {
@@ -2201,6 +2217,77 @@ function ConnectDomainPanel({ liveUrl }) {
           </a>
         </div>
       )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// WHATSAPP CHAT BUTTON — deterministic link + embeddable snippet for stores
+// Akus doesn't host (Shopify) — no AI call needed, it's just string templating
+// ═════════════════════════════════════════════════════════════════════════════
+function WhatsAppButtonPanel({ biz, onBack }) {
+  const [phone, setPhone] = useState(biz?.phone || "");
+  const [message, setMessage] = useState(`Hi ${biz?.name || "there"}, I have a question about your products.`);
+  const [copied, setCopied] = useState("");
+
+  const toWhatsAppNumber = (p) => {
+    const digits = (p || "").replace(/\D/g, "");
+    if (!digits) return "";
+    return digits.startsWith("0") ? "61" + digits.slice(1) : digits;
+  };
+  const waNumber = toWhatsAppNumber(phone);
+  const waLink = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}` : "";
+  const embedSnippet = waLink
+    ? `<a href="${waLink}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:12px 20px;border-radius:99px;font-weight:700;text-decoration:none;font-family:sans-serif">💬 Chat on WhatsApp</a>`
+    : "";
+
+  const copy = (text, field) => {
+    navigator.clipboard.writeText(text).then(()=>{setCopied(field);setTimeout(()=>setCopied(""),1800);}).catch(()=>{});
+  };
+
+  return (
+    <div>
+      <button onClick={onBack} style={{...backBtn,marginBottom:"14px"}}>← Back</button>
+      <div style={{background:"#fff",borderRadius:"13px",border:`1px solid ${C.border}`,padding:"20px"}}>
+        <div style={{fontWeight:800,fontSize:"1em",color:C.text,marginBottom:"4px"}}>WhatsApp Chat Button</div>
+        <div style={{fontSize:"0.8em",color:C.muted,marginBottom:"18px"}}>Generates a link and a ready-to-paste button — add it to your Shopify theme, bio link, or email signature.</div>
+
+        <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
+          <Field label="Your WhatsApp number">
+            <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 0412 345 678" style={inputSt}/>
+          </Field>
+          <Field label="Pre-filled greeting (customers can edit before sending)">
+            <input value={message} onChange={e=>setMessage(e.target.value)} style={inputSt}/>
+          </Field>
+        </div>
+
+        {waLink ? (
+          <div style={{marginTop:"20px",display:"flex",flexDirection:"column",gap:"14px"}}>
+            <div style={{background:C.light,borderRadius:"10px",padding:"14px"}}>
+              <div style={{fontSize:"0.72em",color:C.muted,fontWeight:700,textTransform:"uppercase",marginBottom:"6px"}}>Your link</div>
+              <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                <div style={{flex:1,fontSize:"0.82em",color:C.text,wordBreak:"break-all"}}>{waLink}</div>
+                <button onClick={()=>copy(waLink,"link")} style={{...backBtn,flexShrink:0}}>{copied==="link"?"Copied":"Copy"}</button>
+              </div>
+            </div>
+            <div style={{background:C.light,borderRadius:"10px",padding:"14px"}}>
+              <div style={{fontSize:"0.72em",color:C.muted,fontWeight:700,textTransform:"uppercase",marginBottom:"10px"}}>Preview</div>
+              <a href={waLink} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"8px",background:"#25D366",color:"#fff",padding:"12px 20px",borderRadius:"99px",fontWeight:700,textDecoration:"none"}}>
+                💬 Chat on WhatsApp
+              </a>
+            </div>
+            <div style={{background:C.light,borderRadius:"10px",padding:"14px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}>
+                <div style={{fontSize:"0.72em",color:C.muted,fontWeight:700,textTransform:"uppercase"}}>Embed code (paste into your Shopify theme)</div>
+                <button onClick={()=>copy(embedSnippet,"embed")} style={backBtn}>{copied==="embed"?"Copied":"Copy code"}</button>
+              </div>
+              <pre style={{fontSize:"0.72em",color:C.text,whiteSpace:"pre-wrap",wordBreak:"break-all",margin:0,fontFamily:"monospace"}}>{embedSnippet}</pre>
+            </div>
+          </div>
+        ) : (
+          <div style={{marginTop:"16px",fontSize:"0.82em",color:C.muted}}>Enter your WhatsApp number above to generate your link and button.</div>
+        )}
+      </div>
     </div>
   );
 }
