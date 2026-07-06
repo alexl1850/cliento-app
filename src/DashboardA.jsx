@@ -141,18 +141,19 @@ const SHOPIFY_TOOL_GROUPS = [
 const ALL_TOOLS = [...TOOL_GROUPS, ...SHOPIFY_TOOL_GROUPS].flatMap(g=>g.tools);
 
 // ─── CLAUDE API ───────────────────────────────────────────────────────────────
+// Goes through the backend proxy like everywhere else in the app — a direct
+// browser call to api.anthropic.com (the previous implementation) has no way
+// to authenticate and is blocked by CORS, so it always failed with a bare
+// "Failed to fetch" for every tool that used it.
 async function askClaude(system, user) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/generate", {
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-6", max_tokens:1000,
-      system, messages:[{role:"user",content:user}],
-    }),
+    headers:{"Content-Type":"application/json",...(await authHeaders())},
+    body:JSON.stringify({ system, user, max_tokens: 1000 }),
   });
   const d = await res.json();
-  if(d.error) throw new Error(d.error.message);
-  return d.content[0].text;
+  if(d.error) throw new Error(d.error);
+  return d.text;
 }
 
 // ─── DAYS SINCE HELPER ───────────────────────────────────────────────────────
