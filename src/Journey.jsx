@@ -316,6 +316,12 @@ function Step1_Website({ data, session, onNext }) {
       const d = await res.json();
       if (d.error) throw new Error(d.error);
       setLiveUrl(d.url);
+      // A brand-new Vercel deployment can take a couple of seconds to
+      // actually be servable — without this, the iframe preview below can
+      // briefly show a DEPLOYMENT_NOT_FOUND page even though the real site
+      // is fine seconds later. Keep the "building" screen up a bit longer
+      // rather than embedding a URL that might not be ready yet.
+      await new Promise(r => setTimeout(r, 3000));
       setPhase("done");
     } catch(e) {
       setError(e.message || "Something went wrong — please try again.");
