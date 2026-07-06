@@ -569,6 +569,18 @@ Return this JSON (be vivid and specific, not generic):
     // ── 6. Build the HTML ──────────────────────────────────────────────────
     const slug = (intake.biz_name || 'my-business').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,30);
 
+    // ── 6a. WhatsApp click-to-chat — AU numbers need the leading 0 swapped for
+    // the country code and every non-digit stripped for a valid wa.me link. ──
+    const toWhatsAppNumber = (phone) => {
+      const digits = (phone || '').replace(/\D/g, '');
+      if (!digits) return '';
+      return digits.startsWith('0') ? '61' + digits.slice(1) : digits;
+    };
+    const whatsappNumber = toWhatsAppNumber(intake.phone);
+    const whatsappLink = whatsappNumber
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi ${intake.biz_name}, I found you online and I'd like to know more.`)}`
+      : '';
+
     // ── 6b. LocalBusiness structured data — a live site URL isn't known until
     // after the first Vercel deploy below, so a placeholder token is used here
     // and swapped for the real URL once the deploy responds (see step 7). ────
@@ -848,6 +860,7 @@ footer{background:#111827;padding:56px 24px 32px}
     <p class="hero-sub">${c.hero_sub}</p>
     <div class="hero-btns">
       ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-hero-primary">${svgIcon('phone',18)} Call ${intake.phone}</a>` : ''}
+      ${whatsappLink ? `<a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary">${svgIcon('messagecircle',18)} WhatsApp Us</a>` : ''}
       <a href="#services" class="btn-hero-secondary">${svgIcon(isFood ? 'utensils' : isBeauty ? 'sparkles' : 'clipboardlist',18)} ${isFood ? 'View Menu' : isBeauty ? 'Our Services' : 'What We Do'} ↓</a>
     </div>
     <div class="hero-stats">
@@ -1003,6 +1016,7 @@ ${allPhotos.length > 0 ? `
     <p>${c.cta_sub || `We'd love to hear from you. Get in touch today.`}</p>
     <div class="cta-btns">
       ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-cta-primary">${svgIcon('phone',18)} Call ${intake.phone}</a>` : ''}
+      ${whatsappLink ? `<a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" class="btn-cta-secondary">${svgIcon('messagecircle',18)} WhatsApp</a>` : ''}
       <a href="#contact" class="btn-cta-secondary">Send a message →</a>
     </div>
     <div class="cta-pills">
@@ -1023,6 +1037,7 @@ ${allPhotos.length > 0 ? `
         <p class="section-sub" style="margin-bottom:40px">${c.contact_intro || `Come visit us in ${intake.base_suburb} or get in touch below.`}</p>
         <div class="contact-info">
           ${intake.phone ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('phone',20)}</div><div><div class="contact-item-label">Phone</div><a href="tel:${intake.phone.replace(/\s/g,'')}" class="contact-item-value" style="color:${p.primary}">${intake.phone}</a></div></div>` : ''}
+          ${whatsappLink ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('messagecircle',20)}</div><div><div class="contact-item-label">WhatsApp</div><a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" class="contact-item-value" style="color:${p.primary}">Message us</a></div></div>` : ''}
           ${intake.email ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('mail',20)}</div><div><div class="contact-item-label">Email</div><a href="mailto:${intake.email}" class="contact-item-value" style="color:${p.primary}">${intake.email}</a></div></div>` : ''}
           ${intake.address ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('mappin',20)}</div><div><div class="contact-item-label">Address</div><div class="contact-item-value">${intake.address}, ${intake.base_suburb}</div></div></div>` : `<div class="contact-item"><div class="contact-item-icon">${svgIcon('mappin',20)}</div><div><div class="contact-item-label">Location</div><div class="contact-item-value">${intake.base_suburb}, Australia</div></div></div>`}
           ${intake.hours ? `<div class="contact-item"><div class="contact-item-icon">${svgIcon('clock',20)}</div><div><div class="contact-item-label">Hours</div><div class="contact-item-value">${intake.hours}</div></div></div>` : ''}

@@ -128,3 +128,9 @@ ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
 -- read/written directly from the dashboard under the existing
 -- "Users can update own profile" RLS policy, no new policy needed.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS citations_done JSONB DEFAULT '[]'::jsonb;
+
+-- Cached result of the last Google PageSpeed check (see api/check-pagespeed.js)
+-- so the Health Score panel can show it without re-hitting Google's API on
+-- every page view — checks are user-triggered, not automatic.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pagespeed_score INTEGER;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pagespeed_checked_at TIMESTAMPTZ;

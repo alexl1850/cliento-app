@@ -238,13 +238,21 @@ export function GrowPanel({biz, industry, customers}) {
 // ═════════════════════════════════════════════════════════════════════════════
 // HEALTH PANEL — Weekly Business Health Score
 // ═════════════════════════════════════════════════════════════════════════════
-export function HealthPanel({biz, industry, customers, results}) {
+export function HealthPanel({biz, industry, customers, results, profile}) {
   const [generating, setGenerating] = useState(false);
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
+  const [pagespeed, setPagespeed] = useState({
+    score: profile?.pagespeed_score ?? null,
+    checkedAt: profile?.pagespeed_checked_at ?? null,
+  });
+  const [checkingSpeed, setCheckingSpeed] = useState(false);
+  const [speedError, setSpeedError] = useState("");
 
   const safeCustomers = customers || [];
   const safeResults   = results   || {};
+  const citationsDone = Array.isArray(profile?.citations_done) ? profile.citations_done.length : 0;
+  const totalDirectories = 11;
 
   const lapsed = safeCustomers.filter(c => daysSince(c.lastVisit) >= 60).length;
   const vip    = safeCustomers.filter(c => c.tag === "vip").length;
@@ -252,14 +260,31 @@ export function HealthPanel({biz, industry, customers, results}) {
   const toolsDone = Object.keys(safeResults).length;
   const totalTools = 15;
 
+  const checkSiteSpeed = async () => {
+    if (!biz?.live_url) return;
+    setCheckingSpeed(true); setSpeedError("");
+    try {
+      const res = await fetch("/api/check-pagespeed", {
+        method:"POST", headers:{"Content-Type":"application/json",...(await authHeaders())},
+        body: JSON.stringify({ url: biz.live_url })
+      });
+      const d = await res.json();
+      if(d.error) throw new Error(d.error);
+      setPagespeed({ score: d.score, checkedAt: d.checkedAt });
+    } catch(e) { setSpeedError(e.message); }
+    setCheckingSpeed(false);
+  };
+
   const scoreData = [
-    {label:"Website",        done:!!safeResults.website,  points:15, icon:"globe"},
-    {label:"Social Posts",   done:!!safeResults.posts,    points:15, icon:"messagecircle"},
-    {label:"Google Reviews", done:!!safeResults.review_request||!!safeResults.review_respond, points:20, icon:"starfilled"},
-    {label:"Email Campaign", done:!!safeResults.emails,   points:10, icon:"mail"},
-    {label:"Blog Post",      done:!!safeResults.blog,     points:20, icon:"pen"},
-    {label:"Google Post",    done:!!safeResults.gbp,      points:10, icon:"mappin"},
-    {label:"Ad Running",     done:!!safeResults.ads,      points:10, icon:"target"},
+    {label:"Website",        done:!!safeResults.website,  points:13, icon:"globe"},
+    {label:"Social Posts",   done:!!safeResults.posts,    points:12, icon:"messagecircle"},
+    {label:"Google Reviews", done:!!safeResults.review_request||!!safeResults.review_respond, points:16, icon:"starfilled"},
+    {label:"Email Campaign", done:!!safeResults.emails,   points:8, icon:"mail"},
+    {label:"Blog Post",      done:!!safeResults.blog,     points:16, icon:"pen"},
+    {label:"Google Post",    done:!!safeResults.gbp,      points:8, icon:"mappin"},
+    {label:"Ad Running",     done:!!safeResults.ads,      points:8, icon:"target"},
+    {label:"Local Citations",done:citationsDone >= 3,     points:10, icon:"search"},
+    {label:"Site Speed",     done:pagespeed.score !== null && pagespeed.score >= 50, points:9, icon:"zap"},
   ];
   const score = scoreData.reduce((a,s) => a + (s.done ? s.points : 0), 0);
   const scoreColor = score >= 70 ? C.green : score >= 40 ? C.amber : C.red;
@@ -328,6 +353,34 @@ export function HealthPanel({biz, industry, customers, results}) {
               <div style={{fontSize:"0.65em",color:C.muted,fontWeight:600,marginTop:"2px"}}>{label}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* SEO checks: site speed + citations */}
+      <div style={{background:"#fff",borderRadius:"12px",border:`1px solid ${C.border}`,padding:"18px 20px",marginBottom:"16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px"}}>
+        <div>
+          <div style={{fontSize:"0.7em",color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.03em",marginBottom:"6px"}}>Site Speed</div>
+          {pagespeed.score !== null ? (
+            <div style={{display:"flex",alignItems:"baseline",gap:"6px",marginBottom:"6px"}}>
+              <span style={{fontSize:"1.6em",fontWeight:900,color:pagespeed.score>=70?C.green:pagespeed.score>=50?C.amber:C.red}}>{pagespeed.score}</span>
+              <span style={{fontSize:"0.72em",color:C.muted}}>/100 (mobile)</span>
+            </div>
+          ) : (
+            <div style={{fontSize:"0.8em",color:C.muted,marginBottom:"6px"}}>Not checked yet</div>
+          )}
+          <button onClick={checkSiteSpeed} disabled={checkingSpeed || !biz?.live_url}
+            style={{...backBtn,fontSize:"0.78em",opacity:!biz?.live_url?0.5:1}}>
+            {checkingSpeed ? "Checking…" : biz?.live_url ? (pagespeed.score!==null ? "Re-check" : "Check now") : "Build your website first"}
+          </button>
+          {speedError && <div style={{fontSize:"0.72em",color:C.red,marginTop:"4px"}}>{speedError}</div>}
+        </div>
+        <div>
+          <div style={{fontSize:"0.7em",color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.03em",marginBottom:"6px"}}>Local Citations</div>
+          <div style={{display:"flex",alignItems:"baseline",gap:"6px",marginBottom:"6px"}}>
+            <span style={{fontSize:"1.6em",fontWeight:900,color:citationsDone>=3?C.green:C.amber}}>{citationsDone}</span>
+            <span style={{fontSize:"0.72em",color:C.muted}}>/{totalDirectories} listed</span>
+          </div>
+          <div style={{fontSize:"0.78em",color:C.muted}}>{citationsDone>=3 ? "Nice work — keep going in Local SEO." : "Head to the Local SEO tab to list your business."}</div>
         </div>
       </div>
 

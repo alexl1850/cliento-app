@@ -742,7 +742,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
 
         {/* ── HEALTH SCORE TAB ─────────────────────────────────────────────── */}
         {activeTab==="health" && (
-          <HealthPanel biz={biz} industry={industry} customers={customers} results={results}/>
+          <HealthPanel biz={biz} industry={industry} customers={customers} results={results} profile={profile}/>
         )}
 
         {/* ── LOCAL SEO / CITATIONS TAB ────────────────────────────────────── */}
