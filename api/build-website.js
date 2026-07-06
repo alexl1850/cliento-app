@@ -569,6 +569,28 @@ Return this JSON (be vivid and specific, not generic):
     // ── 6. Build the HTML ──────────────────────────────────────────────────
     const slug = (intake.biz_name || 'my-business').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,30);
 
+    // ── 6b. LocalBusiness structured data — a live site URL isn't known until
+    // after the first Vercel deploy below, so a placeholder token is used here
+    // and swapped for the real URL once the deploy responds (see step 7). ────
+    const schemaType = isFood ? 'Restaurant' : isBeauty ? 'HealthAndBeautyBusiness' : isTrade ? 'HomeAndConstructionBusiness' : isHealth ? 'MedicalBusiness' : 'LocalBusiness';
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': schemaType,
+      name: intake.biz_name,
+      description: c.meta_desc || c.hero_sub || '',
+      image: heroImageUrl,
+      url: '__LIVE_URL__',
+      telephone: intake.phone || undefined,
+      email: intake.email || undefined,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: intake.address && intake.address !== intake.base_suburb ? intake.address : undefined,
+        addressLocality: intake.base_suburb,
+        addressCountry: 'AU',
+      },
+      areaServed: intake.base_suburb,
+    };
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -579,6 +601,8 @@ Return this JSON (be vivid and specific, not generic):
 <meta property="og:title" content="${c.meta_title || intake.biz_name}">
 <meta property="og:description" content="${c.meta_desc || ''}">
 <meta property="og:image" content="${heroImageUrl}">
+<link rel="canonical" href="__LIVE_URL__">
+<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='${encodeURIComponent(p.primary)}'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='system-ui' font-weight='900' fill='white'>${(intake.biz_name||'B')[0].toUpperCase()}</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -882,7 +906,19 @@ footer{background:#111827;padding:56px 24px 32px}
 ${allPhotos.length > 0 ? `
 <section class="gallery">
   <div class="gallery-grid">
-    ${allPhotos.slice(0,5).map(url => `<img src="${url}" alt="${intake.biz_name}" loading="lazy">`).join('')}
+    ${(() => {
+      const galleryAlts = isFood
+        ? ['Inside {b}', '{b} — a favourite in {s}', 'Food and drinks at {b}', '{b}, {s}', 'The team at {b}']
+        : isTrade
+        ? ['{b} at work in {s}', 'A recent job by {b}', '{b} — trusted tradies in {s}', 'The {b} crew', 'Quality work from {b}, {s}']
+        : isBeauty
+        ? ['Inside {b}', '{b} — {s}', 'The {b} treatment room', 'Results from {b}', 'The {b} team, {s}']
+        : ['{b} in {s}', 'Inside {b}', 'The {b} team', 'A look at {b}', '{b} — serving {s}'];
+      return allPhotos.slice(0,5).map((url, i) => {
+        const alt = (galleryAlts[i % galleryAlts.length]).replace('{b}', intake.biz_name).replace('{s}', intake.base_suburb);
+        return `<img src="${url}" alt="${alt}" loading="lazy">`;
+      }).join('');
+    })()}
   </div>
 </section>` : ''}
 
@@ -892,7 +928,7 @@ ${allPhotos.length > 0 ? `
     <div class="about-grid">
       <div class="about-image-wrap reveal">
         <div class="about-image">
-          <img src="${allPhotos[1] || heroImageUrl}" alt="${intake.biz_name} — ${intake.base_suburb}" loading="lazy">
+          <img src="${allPhotos[1] || heroImageUrl}" alt="${intake.owner_name ? `${intake.owner_name}, owner of ${intake.biz_name}` : `${intake.biz_name} — locally owned and operated in ${intake.base_suburb}`}" loading="lazy">
         </div>
         <div class="about-badge">
           <div class="about-badge-num">${c.years_badge?.match(/\d+/)?.[0] || '5'}+</div>
@@ -1082,6 +1118,44 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     if (deployData.error) throw new Error(deployData.error.message);
     const liveUrl = `https://${deployData.alias?.[0] || deployData.url}`;
 
+    // ── 7b. Now that the real URL exists, bake it into the canonical tag and
+    // schema, then redeploy with sitemap.xml + robots.txt alongside it — a
+    // single-page site only needs one sitemap entry, but it and robots.txt
+    // still need to be genuinely present for Search Console to find them. ──
+    const finalHtml = html.split('__LIVE_URL__').join(liveUrl);
+    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${liveUrl}/</loc>
+    <lastmod>${new Date().toISOString().slice(0,10)}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${liveUrl}/sitemap.xml\n`;
+
+    let deployId = deployData.id;
+    try {
+      const finalDeployRes = await fetch('https://api.vercel.com/v13/deployments', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `akus-${slug}`,
+          files: [
+            { file: 'index.html', data: Buffer.from(finalHtml).toString('base64'), encoding: 'base64' },
+            { file: 'sitemap.xml', data: Buffer.from(sitemapXml).toString('base64'), encoding: 'base64' },
+            { file: 'robots.txt', data: Buffer.from(robotsTxt).toString('base64'), encoding: 'base64' },
+          ],
+          projectSettings: { framework: null },
+          target: 'production',
+        })
+      });
+      const finalDeployData = await finalDeployRes.json();
+      if (!finalDeployData.error) deployId = finalDeployData.id;
+    } catch (seoDeployErr) {
+      console.error('Failed to deploy sitemap/canonical pass (non-fatal, first deploy still live):', seoDeployErr.message);
+    }
+
     // ── 8. Persist the live site so it can be restored if the subscription
     // ever lapses and the site gets swapped for a "renew" splash page ──────
     try {
@@ -1096,13 +1170,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
           'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
           'Prefer': 'resolution=merge-duplicates,return=minimal',
         },
-        body: JSON.stringify({ user_id: access.userId, site_html: html, site_slug: slug, site_paused: false, live_url: liveUrl }),
+        body: JSON.stringify({ user_id: access.userId, site_html: finalHtml, site_slug: slug, site_paused: false, live_url: liveUrl }),
       });
     } catch (saveErr) {
       console.error('Failed to persist site_html (non-fatal):', saveErr.message);
     }
 
-    return res.status(200).json({ success: true, url: liveUrl, deployId: deployData.id, slug, html });
+    return res.status(200).json({ success: true, url: liveUrl, deployId, slug, html: finalHtml });
 
   } catch (err) {
     console.error('Build website error:', err);
