@@ -619,7 +619,7 @@ nav.scrolled .nav-links a:hover{color:${p.primary}}
 nav.scrolled .nav-mobile-btn span{background:#111}
 
 /* ── HERO ── */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:#111}
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:#111;clip-path:polygon(0 0,100% 0,100% 100%,0 calc(100% - 48px))}
 .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;transform:scale(1.08);animation:heroZoom 14s ease-in-out infinite alternate}
 @keyframes heroZoom{from{transform:scale(1.08)}to{transform:scale(1.0)}}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.2) 100%)}
@@ -643,7 +643,7 @@ nav.scrolled .nav-mobile-btn span{background:#111}
 @keyframes scrollLine{0%,100%{opacity:0;transform:scaleY(0);transform-origin:top}50%{opacity:1;transform:scaleY(1);transform-origin:top}}
 
 /* ── TRUST BAR ── */
-.trust{background:#fff;border-bottom:1px solid #F3F4F6;padding:20px 24px}
+.trust{position:relative;margin-top:-48px;background:#fff;border-bottom:1px solid #F3F4F6;padding:56px 24px 20px}
 .trust-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
 .trust-item{display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:600;color:#374151}
 .trust-icon{width:32px;height:32px;border-radius:50%;background:${p.light};display:flex;align-items:center;justify-content:center;font-size:1em;flex-shrink:0;color:${p.primary}}

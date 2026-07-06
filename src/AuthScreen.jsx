@@ -71,7 +71,7 @@ export default function AuthScreen() {
   }
 
   return (
-    <div style={{minHeight:'100vh',background:'#F8F9FA',fontFamily:"'Segoe UI',system-ui,sans-serif",display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px'}}>
+    <div style={{minHeight:'100vh',background:'#F8F9FA',fontFamily:"'Inter',system-ui,sans-serif",display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px'}}>
 
       {/* Logo */}
       <div style={{marginBottom:'32px',textAlign:'center'}}>

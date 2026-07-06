@@ -14,7 +14,7 @@ const C = {
   border:"#E5E7EB", text:"#111827", muted:"#6B7280", light:"#F8F9FA",
 };
 
-const ff = "'Segoe UI', system-ui, sans-serif";
+const ff = "'Inter', system-ui, sans-serif";
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 const inp = {
@@ -385,7 +385,7 @@ function Step1_Website({ data, session, onNext }) {
         <div style={{background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"10px",padding:"14px",fontSize:"0.82em",color:"#78350F",lineHeight:1.65,marginBottom:"20px"}}>
           💡 Want to connect your own domain (e.g. yourbusiness.com.au)? Head to <strong>Marketing → Publish My Website</strong> in the dashboard after setup.
         </div>
-        <button onClick={()=>onNext({liveUrl})} style={{width:"100%",padding:"18px",borderRadius:"12px",border:"none",background:C.green,color:"#fff",fontWeight:800,fontSize:"1.05em",cursor:"pointer",fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+        <button onClick={()=>onNext({liveUrl})} style={{width:"100%",padding:"18px",borderRadius:"12px",border:"none",background:C.green,color:"#fff",fontWeight:800,fontSize:"1.05em",cursor:"pointer",fontFamily:"'Inter',system-ui,sans-serif"}}>
           Amazing — what's next? →
         </button>
       </Card>

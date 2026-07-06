@@ -83,7 +83,7 @@ export default function WebsiteEditor({ biz, liveUrl, initialHtml, onBack }) {
   };
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: "#2563EB", cursor: "pointer", fontSize: "0.86em", fontWeight: 600, padding: 0, display: "flex", alignItems: "center", gap: "4px", marginBottom: "16px" }}>
         ← Back
       </button>

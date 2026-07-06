@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import { GrowPanel, HealthPanel, NetworkPanel, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field } from "./DashboardB.jsx";
+import { GrowPanel, HealthPanel, NetworkPanel, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
 import WebsiteEditor from "./WebsiteEditor.jsx";
 import { authHeaders } from "./supabase.js";
 
 // ─── TOKENS ──────────────────────────────────────────────────────────────────
 const C = {
-  brand:"#2563EB", brandLt:"#EFF6FF", brandDk:"#1D4ED8",
+  brand:"#0284C7", brandLt:"#F0F9FF", brandDk:"#075985",
   amber:"#D97706", amberLt:"#FFFBEB",
   green:"#16A34A", greenLt:"#F0FDF4",
   red:"#DC2626",   redLt:"#FEF2F2",
   purple:"#7C3AED",purpleLt:"#F5F3FF",
-  teal:"#0D9488",  tealLt:"#F0FDFA",  sky:"#BFDBFE",
-  bg:"#F8F9FA", card:"#FFFFFF",
-  border:"#E5E7EB", border2:"#D1D5DB",
-  text:"#111827", muted:"#6B7280", light:"#F3F4F6",
+  teal:"#0D9488",  tealLt:"#F0FDFA",  sky:"#BAE6FD",
+  bg:"#F7F9FC", card:"#FFFFFF",
+  border:"#E5E9F0", border2:"#D8DEE9",
+  text:"#0F172A", muted:"#64748B", light:"#F1F5F9",
 };
 
 const INDUSTRIES = [
@@ -30,7 +30,7 @@ const INDUSTRIES = [
 ];
 
 const TAGS = [
-  {id:"regular",  label:"Regular",   color:"#2563EB", bg:"#EFF6FF"},
+  {id:"regular",  label:"Regular",   color:"#0284C7", bg:"#F0F9FF"},
   {id:"vip",      label:"VIP ⭐",     color:"#D97706", bg:"#FFFBEB"},
   {id:"new",      label:"New",        color:"#16A34A", bg:"#F0FDF4"},
   {id:"lapsed",   label:"Lapsed",     color:"#DC2626", bg:"#FEF2F2"},
@@ -39,34 +39,34 @@ const TAGS = [
 
 const TOOL_GROUPS = [
   {
-    id:"marketing", label:"📣 Marketing & Content", color:C.brand,
+    id:"marketing", label:"Marketing & Content", icon:"megaphone", color:C.brand,
     tools:[
-      {id:"website",    icon:"🌐", label:"My Website",            desc:"Build and publish a real live website for your business — done in 60 seconds"},
-      {id:"posts",      icon:"📱", label:"Social Posts",          desc:"7 Facebook & Instagram posts for this week"},
-      {id:"emails",     icon:"📧", label:"Email Campaign",        desc:"A professional email for your customer list"},
-      {id:"ads",        icon:"🎯", label:"Ad Builder",            desc:"Facebook & Google ad copy that converts"},
-      {id:"calendar90", icon:"🗓️", label:"90-Day Content Calendar",desc:"A full 3-month social media content plan — specific topics, dates and formats"},
-      {id:"promo",      icon:"🎁", label:"Special Offer",         desc:"Full promotion pack — post, SMS, signage"},
-      {id:"gbp",        icon:"📍", label:"Google Business Post",  desc:"A weekly post for your Google listing"},
-      {id:"blog",       icon:"✍️", label:"Blog Post for Google",  desc:"A local SEO blog post that helps you rank — topic chosen for you"},
-      {id:"seasonal",   icon:"🎄", label:"Seasonal Campaign",     desc:"Christmas, Easter, EOFY — full campaign kit for any season"},
+      {id:"website",    icon:"globe", label:"My Website",            desc:"Build and publish a real live website for your business — done in 60 seconds"},
+      {id:"posts",      icon:"messagecircle", label:"Social Posts",          desc:"7 Facebook & Instagram posts for this week"},
+      {id:"emails",     icon:"mail", label:"Email Campaign",        desc:"A professional email for your customer list"},
+      {id:"ads",        icon:"target", label:"Ad Builder",            desc:"Facebook & Google ad copy that converts"},
+      {id:"calendar90", icon:"calendar", label:"90-Day Content Calendar",desc:"A full 3-month social media content plan — specific topics, dates and formats"},
+      {id:"promo",      icon:"gift", label:"Special Offer",         desc:"Full promotion pack — post, SMS, signage"},
+      {id:"gbp",        icon:"mappin", label:"Google Business Post",  desc:"A weekly post for your Google listing"},
+      {id:"blog",       icon:"pen", label:"Blog Post for Google",  desc:"A local SEO blog post that helps you rank — topic chosen for you"},
+      {id:"seasonal",   icon:"sparkles", label:"Seasonal Campaign",     desc:"Christmas, Easter, EOFY — full campaign kit for any season"},
     ]
   },
   {
-    id:"reviews", label:"⭐ Google Reviews", color:C.amber,
+    id:"reviews", label:"Google Reviews", icon:"starfilled", color:C.amber,
     tools:[
-      {id:"review_request",  icon:"✉️", label:"Ask for a Review",     desc:"SMS & email to request a Google review"},
-      {id:"review_respond",  icon:"💬", label:"Reply to a Review",    desc:"Paste any review — get the perfect response"},
-      {id:"review_negative", icon:"😬", label:"Handle a Bad Review",  desc:"Turn a negative review into a trust-builder"},
-      {id:"review_link",     icon:"🔗", label:"Get Your Review Link", desc:"Step-by-step guide to find and share it"},
+      {id:"review_request",  icon:"mail", label:"Ask for a Review",     desc:"SMS & email to request a Google review"},
+      {id:"review_respond",  icon:"messagecircle", label:"Reply to a Review",    desc:"Paste any review — get the perfect response"},
+      {id:"review_negative", icon:"shield", label:"Handle a Bad Review",  desc:"Turn a negative review into a trust-builder"},
+      {id:"review_link",     icon:"link", label:"Get Your Review Link", desc:"Step-by-step guide to find and share it"},
     ]
   },
   {
-    id:"business", label:"🏢 Business Tools", color:C.teal,
+    id:"business", label:"Business Tools", icon:"briefcase", color:C.teal,
     tools:[
-      {id:"gap_report", icon:"🔍", label:"Competitor Gap Report",     desc:"See exactly what your competitors are doing that you're not — and how to beat them"},
-      {id:"analytics",  icon:"📊", label:"Google Analytics Report",   desc:"Paste your numbers in — get plain English results: what's working and what to fix"},
-      {id:"jobad",      icon:"📋", label:"Staff Job Ad",              desc:"Write a job ad for Seek or Facebook that attracts the right people"},
+      {id:"gap_report", icon:"search", label:"Competitor Gap Report",     desc:"See exactly what your competitors are doing that you're not — and how to beat them"},
+      {id:"analytics",  icon:"barchart", label:"Google Analytics Report",   desc:"Paste your numbers in — get plain English results: what's working and what to fix"},
+      {id:"jobad",      icon:"clipboardlist", label:"Staff Job Ad",              desc:"Write a job ad for Seek or Facebook that attracts the right people"},
     ]
   },
 ];
@@ -74,65 +74,65 @@ const TOOL_GROUPS = [
 // ─── SHOPIFY TOOL GROUPS ─────────────────────────────────────────────────────
 const SHOPIFY_TOOL_GROUPS = [
   {
-    id:"products", label:"🛍️ Product Content", color:C.purple,
+    id:"products", label:"Product Content", icon:"shoppingbag", color:C.purple,
     tools:[
-      {id:"sh_product_desc",   icon:"📝", label:"Product Description",   desc:"Write a full SEO-optimised product description that sells"},
-      {id:"sh_product_titles", icon:"🏷️", label:"Product Titles + Meta", desc:"SEO-optimised titles, meta descriptions and URL slugs for your products"},
-      {id:"sh_collection",     icon:"🗂️", label:"Collection Page Copy",  desc:"Intro copy for each product category that ranks on Google"},
-      {id:"sh_bundle_copy",    icon:"🎁", label:"Bundle & Upsell Copy",  desc:"'Frequently bought together' and cross-sell descriptions"},
+      {id:"sh_product_desc",   icon:"pen", label:"Product Description",   desc:"Write a full SEO-optimised product description that sells"},
+      {id:"sh_product_titles", icon:"tag", label:"Product Titles + Meta", desc:"SEO-optimised titles, meta descriptions and URL slugs for your products"},
+      {id:"sh_collection",     icon:"folder", label:"Collection Page Copy",  desc:"Intro copy for each product category that ranks on Google"},
+      {id:"sh_bundle_copy",    icon:"gift", label:"Bundle & Upsell Copy",  desc:"'Frequently bought together' and cross-sell descriptions"},
     ]
   },
   {
-    id:"sh_emails", label:"📧 Email Flows", color:C.brand,
+    id:"sh_emails", label:"Email Flows", icon:"mail", color:C.brand,
     tools:[
-      {id:"sh_abandoned_cart", icon:"🛒", label:"Abandoned Cart Sequence", desc:"3-email flow to recover customers who left without buying"},
-      {id:"sh_post_purchase",  icon:"📦", label:"Post-Purchase Sequence",  desc:"Thank you → tips → review request → cross-sell flow"},
-      {id:"sh_winback",        icon:"🔄", label:"Win-Back Sequence",       desc:"Re-engage customers who haven't ordered in 90+ days"},
-      {id:"sh_product_launch", icon:"🚀", label:"New Product Launch Email", desc:"Announce a new product to your list and drive sales"},
-      {id:"sh_flash_sale",     icon:"⚡", label:"Flash Sale Email",         desc:"Urgency-based sale email that converts"},
+      {id:"sh_abandoned_cart", icon:"cart", label:"Abandoned Cart Sequence", desc:"3-email flow to recover customers who left without buying"},
+      {id:"sh_post_purchase",  icon:"box", label:"Post-Purchase Sequence",  desc:"Thank you → tips → review request → cross-sell flow"},
+      {id:"sh_winback",        icon:"refresh", label:"Win-Back Sequence",       desc:"Re-engage customers who haven't ordered in 90+ days"},
+      {id:"sh_product_launch", icon:"rocket", label:"New Product Launch Email", desc:"Announce a new product to your list and drive sales"},
+      {id:"sh_flash_sale",     icon:"zap", label:"Flash Sale Email",         desc:"Urgency-based sale email that converts"},
     ]
   },
   {
-    id:"sh_social", label:"📱 Social & Ads", color:C.amber,
+    id:"sh_social", label:"Social & Ads", icon:"messagecircle", color:C.amber,
     tools:[
-      {id:"sh_social_posts",   icon:"📸", label:"Product Launch Posts",  desc:"Instagram, Facebook and TikTok captions for a new product"},
-      {id:"sh_ad_copy",        icon:"🎯", label:"Ad Copy Generator",     desc:"Meta and Google ad copy for a specific product or collection"},
-      {id:"sh_ugc_brief",      icon:"🎬", label:"UGC Creator Brief",     desc:"Brief for customers or creators asking for content about your product"},
-      {id:"sh_bio",            icon:"✨", label:"Instagram Bio + Links", desc:"Optimised bio and link-in-bio copy for your store"},
+      {id:"sh_social_posts",   icon:"camera", label:"Product Launch Posts",  desc:"Instagram, Facebook and TikTok captions for a new product"},
+      {id:"sh_ad_copy",        icon:"target", label:"Ad Copy Generator",     desc:"Meta and Google ad copy for a specific product or collection"},
+      {id:"sh_ugc_brief",      icon:"video", label:"UGC Creator Brief",     desc:"Brief for customers or creators asking for content about your product"},
+      {id:"sh_bio",            icon:"sparkles", label:"Instagram Bio + Links", desc:"Optimised bio and link-in-bio copy for your store"},
     ]
   },
   {
-    id:"sh_reviews", label:"⭐ Reviews & Trust", color:C.green,
+    id:"sh_reviews", label:"Reviews & Trust", icon:"starfilled", color:C.green,
     tools:[
-      {id:"sh_review_request", icon:"✉️", label:"Review Request Email",  desc:"Post-purchase email asking for a product review"},
-      {id:"sh_review_respond", icon:"💬", label:"Reply to a Review",     desc:"Professional response to any product review"},
-      {id:"sh_bad_review",     icon:"😬", label:"Handle Bad Review",     desc:"Calm, professional reply that turns bad reviews around"},
-      {id:"sh_trust_copy",     icon:"🛡️", label:"Trust Badge Copy",      desc:"Free returns, fast shipping and guarantee copy for your store"},
+      {id:"sh_review_request", icon:"mail", label:"Review Request Email",  desc:"Post-purchase email asking for a product review"},
+      {id:"sh_review_respond", icon:"messagecircle", label:"Reply to a Review",     desc:"Professional response to any product review"},
+      {id:"sh_bad_review",     icon:"shield", label:"Handle Bad Review",     desc:"Calm, professional reply that turns bad reviews around"},
+      {id:"sh_trust_copy",     icon:"checkcircle", label:"Trust Badge Copy",      desc:"Free returns, fast shipping and guarantee copy for your store"},
     ]
   },
   {
-    id:"sh_seo", label:"🔍 SEO & Content", color:C.teal,
+    id:"sh_seo", label:"SEO & Content", icon:"search", color:C.teal,
     tools:[
-      {id:"sh_blog",           icon:"✍️", label:"Blog Post for Google",  desc:"Find a buyer keyword and write the full article — ranks and converts"},
-      {id:"sh_faq",            icon:"❓", label:"Product FAQ Builder",   desc:"10 common questions answered for your product — great for SEO"},
-      {id:"sh_about",          icon:"🏠", label:"About Us Page",         desc:"Brand story that builds trust and converts first-time visitors"},
+      {id:"sh_blog",           icon:"pen", label:"Blog Post for Google",  desc:"Find a buyer keyword and write the full article — ranks and converts"},
+      {id:"sh_faq",            icon:"helpcircle", label:"Product FAQ Builder",   desc:"10 common questions answered for your product — great for SEO"},
+      {id:"sh_about",          icon:"home", label:"About Us Page",         desc:"Brand story that builds trust and converts first-time visitors"},
     ]
   },
   {
-    id:"sh_analytics", label:"📊 Analytics", color:C.teal,
+    id:"sh_analytics", label:"Analytics", icon:"barchart", color:C.teal,
     tools:[
-      {id:"sh_shopify_report", icon:"📊", label:"Shopify Report in Plain English", desc:"Paste your store numbers — get what they mean and what to do"},
-      {id:"sh_cro_audit",      icon:"🔬", label:"Conversion Rate Audit",          desc:"Describe your store — get your top 3 conversion killers identified"},
-      {id:"sh_ads_report",     icon:"📈", label:"Ad Performance Explainer",       desc:"Paste your Meta or Google ad numbers — get plain English analysis"},
+      {id:"sh_shopify_report", icon:"barchart", label:"Shopify Report in Plain English", desc:"Paste your store numbers — get what they mean and what to do"},
+      {id:"sh_cro_audit",      icon:"search", label:"Conversion Rate Audit",          desc:"Describe your store — get your top 3 conversion killers identified"},
+      {id:"sh_ads_report",     icon:"barchart", label:"Ad Performance Explainer",       desc:"Paste your Meta or Google ad numbers — get plain English analysis"},
     ]
   },
   {
-    id:"sh_growth", label:"🚀 Growth", color:C.green,
+    id:"sh_growth", label:"Growth", icon:"rocket", color:C.green,
     tools:[
-      {id:"sh_influencer",     icon:"🤝", label:"Influencer Outreach Email", desc:"The perfect pitch to send micro-influencers about your product"},
-      {id:"sh_referral",       icon:"👥", label:"Referral Program Builder",  desc:"Complete 'tell a friend' system with store credit and discount codes"},
-      {id:"sh_loyalty",        icon:"👑", label:"Loyalty Program Copy",      desc:"Points system, VIP tiers and how to communicate them to customers"},
-      {id:"sh_sale_campaign",  icon:"🗓️", label:"Sale Campaign Kit",         desc:"Black Friday, Christmas, EOFY — full campaign pack for any sale"},
+      {id:"sh_influencer",     icon:"users", label:"Influencer Outreach Email", desc:"The perfect pitch to send micro-influencers about your product"},
+      {id:"sh_referral",       icon:"users", label:"Referral Program Builder",  desc:"Complete 'tell a friend' system with store credit and discount codes"},
+      {id:"sh_loyalty",        icon:"award", label:"Loyalty Program Copy",      desc:"Points system, VIP tiers and how to communicate them to customers"},
+      {id:"sh_sale_campaign",  icon:"calendar", label:"Sale Campaign Kit",         desc:"Black Friday, Christmas, EOFY — full campaign pack for any sale"},
     ]
   },
 ];
@@ -332,7 +332,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
     ];
     const s = steps[setupStep];
     return (
-      <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Inter',system-ui,sans-serif"}}>
         <div style={{background:"linear-gradient(135deg,#0D1117 0%,#1A2235 100%)",padding:"14px 20px"}}>
           <span style={{color:"#fff",fontWeight:900,fontSize:"1.05em"}}>
             <span style={{color:biz.bizType==="shopify"?"#A78BFA":"#60A5FA"}}>⚡</span> Akus
@@ -387,7 +387,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
   const leads     = customers.filter(c=>c.tag==="lead").length;
   const needsFollowUp = customers.filter(c=>daysSince(c.lastVisit)>=30||c.tag==="lead").length;
   const isShopify = biz.bizType==="shopify";
-  const accent    = isShopify ? "#7C3AED" : "#2563EB";
+  const accent    = isShopify ? "#7C3AED" : "#0284C7";
   const accentGlow= isShopify ? "rgba(124,58,237,0.3)" : "rgba(37,99,235,0.3)";
 
   // Health score for sidebar
@@ -402,38 +402,38 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
 
   // Nav items
   const localNav = [
-    {id:"marketing", icon:"📣", label:"Marketing",    badge:null},
-    {id:"reviews",   icon:"⭐", label:"Reviews",       badge:null},
-    {id:"business",  icon:"🏢", label:"Business",     badge:null},
-    {id:"crm",       icon:"👥", label:"Customers",    badge:needsFollowUp>0?needsFollowUp:null},
-    {id:"grow",      icon:"🚀", label:"Grow",          badge:null},
-    {id:"health",    icon:"💚", label:"Health Score",  badge:null},
-    {id:"network",   icon:"🔗", label:"Network",       badge:networkMembers.length},
-    {id:"help",      icon:"❓", label:"Help",           badge:null},
+    {id:"marketing", icon:"megaphone", label:"Marketing",    badge:null},
+    {id:"reviews",   icon:"starfilled", label:"Reviews",       badge:null},
+    {id:"business",  icon:"briefcase", label:"Business",     badge:null},
+    {id:"crm",       icon:"users", label:"Customers",    badge:needsFollowUp>0?needsFollowUp:null},
+    {id:"grow",      icon:"rocket", label:"Grow",          badge:null},
+    {id:"health",    icon:"heart", label:"Health Score",  badge:null},
+    {id:"network",   icon:"link", label:"Network",       badge:networkMembers.length},
+    {id:"help",      icon:"helpcircle", label:"Help",           badge:null},
   ];
   const shopifyNav = [
-    {id:"products",    icon:"🛍️", label:"Products",    badge:null},
-    {id:"sh_emails",   icon:"📧", label:"Emails",      badge:null},
-    {id:"sh_social",   icon:"📱", label:"Social & Ads",badge:null},
-    {id:"sh_reviews",  icon:"⭐", label:"Reviews",      badge:null},
-    {id:"sh_seo",      icon:"🔍", label:"SEO",          badge:null},
-    {id:"sh_analytics",icon:"📊", label:"Analytics",   badge:null},
-    {id:"sh_growth",   icon:"🚀", label:"Growth",       badge:null},
-    {id:"help",        icon:"❓", label:"Help",          badge:null},
+    {id:"products",    icon:"shoppingbag", label:"Products",    badge:null},
+    {id:"sh_emails",   icon:"mail", label:"Emails",      badge:null},
+    {id:"sh_social",   icon:"messagecircle", label:"Social & Ads",badge:null},
+    {id:"sh_reviews",  icon:"starfilled", label:"Reviews",      badge:null},
+    {id:"sh_seo",      icon:"search", label:"SEO",          badge:null},
+    {id:"sh_analytics",icon:"barchart", label:"Analytics",   badge:null},
+    {id:"sh_growth",   icon:"rocket", label:"Growth",       badge:null},
+    {id:"help",        icon:"helpcircle", label:"Help",          badge:null},
   ];
   const navItems = isShopify ? shopifyNav : localNav;
 
   return (
     <div style={{
       display:"flex", minHeight:"100vh",
-      fontFamily:"'Segoe UI',system-ui,sans-serif",
+      fontFamily:"'Inter',system-ui,sans-serif",
       background:"#0A0D14",
     }}>
 
       {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
       <div style={{
         width:"240px", flexShrink:0,
-        background:"linear-gradient(180deg,#0D1117 0%,#111827 100%)",
+        background:"linear-gradient(180deg,#0D1117 0%,#0F172A 100%)",
         borderRight:"1px solid rgba(255,255,255,0.06)",
         display:"flex", flexDirection:"column",
         position:"sticky", top:0, height:"100vh", overflowY:"auto",
@@ -522,7 +522,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
                 style={{
                   display:"flex",alignItems:"center",gap:"10px",
                   padding:"10px 12px",borderRadius:"10px",border:"none",
-                  background:active?`rgba(${isShopify?"124,58,237":"37,99,235"},0.15)`:"transparent",
+                  background:active?`rgba(${isShopify?"124,58,237":"2,132,199"},0.15)`:"transparent",
                   color:active?"#fff":"rgba(255,255,255,0.45)",
                   cursor:"pointer",textAlign:"left",width:"100%",
                   transition:"all 0.12s",fontFamily:"inherit",
@@ -531,7 +531,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
                 onMouseEnter={e=>{if(!active)e.currentTarget.style.background="rgba(255,255,255,0.05)";}}
                 onMouseLeave={e=>{if(!active)e.currentTarget.style.background="transparent";}}
               >
-                <span style={{fontSize:"1em",width:"20px",textAlign:"center",flexShrink:0}}>{item.icon}</span>
+                <span style={{width:"20px",textAlign:"center",flexShrink:0,display:"inline-flex",justifyContent:"center"}}><Icon name={item.icon} size={17}/></span>
                 <span style={{fontSize:"0.85em",fontWeight:active?700:500,flex:1}}>{item.label}</span>
                 {item.badge && (
                   <span style={{
@@ -563,33 +563,35 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
       </div>
 
       {/* ── MAIN CONTENT ────────────────────────────────────────────────── */}
-      <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,background:"#F7F8FA",overflowY:"auto"}}>
+      <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,background:"#F7F9FC",overflowY:"auto"}}>
 
         {/* Top bar */}
         <div style={{
           background:"#fff",
-          borderBottom:"1px solid #E5E7EB",
+          borderBottom:"1px solid #E5E9F0",
+          boxShadow:"0 1px 3px rgba(15,23,42,0.04)",
           padding:"0 28px",
           display:"flex",alignItems:"center",justifyContent:"space-between",
           height:"60px",flexShrink:0,
           position:"sticky",top:0,zIndex:40,
         }}>
           <div>
-            <div style={{fontWeight:800,fontSize:"1em",color:"#111827",letterSpacing:"-0.01em"}}>
+            <div style={{fontWeight:800,fontSize:"1em",color:"#0F172A",letterSpacing:"-0.01em"}}>
               {greeting}, {biz.owner||"there"} 👋
             </div>
-            <div style={{fontSize:"0.74em",color:"#9CA3AF",fontWeight:500}}>
+            <div style={{fontSize:"0.74em",color:"#94A3B8",fontWeight:500}}>
               {dayName} · {navItems.find(n=>n.id===activeTab)?.label}
             </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
             <button onClick={()=>{setShowTour(true);setTourStep(0);}} style={{
-              background:"#F3F4F6",border:"1px solid #E5E7EB",
-              color:"#6B7280",borderRadius:"8px",
+              background:"#F1F5F9",border:"1px solid #E5E9F0",
+              color:"#64748B",borderRadius:"8px",
               padding:"7px 12px",fontSize:"0.78em",cursor:"pointer",
               fontFamily:"inherit",fontWeight:600,
+              display:"flex",alignItems:"center",gap:"6px",
             }}>
-              🎬 Tour
+              <Icon name="video" size={14}/> Tour
             </button>
           </div>
         </div>
@@ -650,7 +652,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
                 background:"linear-gradient(135deg,#1A2E05 0%,#166534 100%)",
                 display:"flex",alignItems:"center",gap:"14px",
               }}>
-                <div style={{fontSize:"1.8em"}}>✏️</div>
+                <div style={{color:"#6EE7B7"}}><Icon name="pen" size={26}/></div>
                 <div style={{flex:1}}>
                   <div style={{color:"#fff",fontWeight:800,fontSize:"0.95em",marginBottom:"2px"}}>Edit My Website</div>
                   <div style={{color:"rgba(255,255,255,0.55)",fontSize:"0.78em"}}>Describe what you want changed — AI updates and redeploys in ~30 seconds</div>
@@ -659,8 +661,9 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
               </button>
             )}
             <ToolGrid group={TOOL_GROUPS[0]} results={results} onSelect={setActiveTool}/>
-            <div style={{marginTop:"10px",background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"9px",padding:"12px 15px",fontSize:"0.8em",color:"#92400E"}}>
-              💡 <strong>Tip:</strong> After creating content, switch to <strong>👥 Customers</strong> and use "Generate Message" to send it to specific customers personally.
+            <div style={{marginTop:"10px",background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"9px",padding:"12px 15px",fontSize:"0.8em",color:"#92400E",display:"flex",alignItems:"flex-start",gap:"8px"}}>
+              <span style={{flexShrink:0,marginTop:"1px"}}><Icon name="sparkles" size={14}/></span>
+              <span><strong>Tip:</strong> After creating content, switch to <strong>Customers</strong> and use "Generate Message" to send it to specific customers personally.</span>
             </div>
           </>
         )}
@@ -689,7 +692,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
         {activeTab==="reviews" && !activeTool && (
           <>
             <div style={{background:C.amberLt,border:`1px solid #FDE68A`,borderRadius:"12px",padding:"16px 18px",marginBottom:"20px"}}>
-              <div style={{fontWeight:700,color:C.amber,marginBottom:"2px"}}>⭐ Google Reviews — Your Secret Weapon</div>
+              <div style={{fontWeight:700,color:C.amber,marginBottom:"2px",display:"flex",alignItems:"center",gap:"7px"}}><Icon name="starfilled" size={16}/> Google Reviews — Your Secret Weapon</div>
               <div style={{fontSize:"0.83em",color:"#92400E",lineHeight:1.6}}>Businesses with 4.5+ stars get 3× more enquiries from Google. These tools help you get more reviews, respond to all of them, and turn bad ones into trust-builders.</div>
             </div>
             <ToolGrid group={TOOL_GROUPS[1]} results={results} onSelect={setActiveTool}/>
@@ -707,7 +710,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
         {activeTab==="business" && !activeTool && (
           <>
             <div style={{background:C.tealLt,border:`1px solid #99F6E4`,borderRadius:"12px",padding:"16px 18px",marginBottom:"20px"}}>
-              <div style={{fontWeight:700,color:C.teal,marginBottom:"2px"}}>🏢 Business Tools</div>
+              <div style={{fontWeight:700,color:C.teal,marginBottom:"2px",display:"flex",alignItems:"center",gap:"7px"}}><Icon name="briefcase" size={16}/> Business Tools</div>
               <div style={{fontSize:"0.83em",color:"#0F766E",lineHeight:1.6}}>Tools to help you understand your performance and find the right people for your team.</div>
             </div>
             <ToolGrid group={TOOL_GROUPS[2]} results={results} onSelect={setActiveTool}/>
@@ -761,9 +764,14 @@ function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, s
                 SHOPIFY_TOOL_GROUPS.find(g=>g.id==="products");
 
   const groupLabels = {
-    products:"🛍️ Product Content", sh_emails:"📧 Email Flows", sh_social:"📱 Social & Ads",
-    sh_reviews:"⭐ Reviews & Trust", sh_seo:"🔍 SEO & Content",
-    sh_analytics:"📊 Store Analytics", sh_growth:"🚀 Growth",
+    products:"Product Content", sh_emails:"Email Flows", sh_social:"Social & Ads",
+    sh_reviews:"Reviews & Trust", sh_seo:"SEO & Content",
+    sh_analytics:"Store Analytics", sh_growth:"Growth",
+  };
+  const groupIcons = {
+    products:"shoppingbag", sh_emails:"mail", sh_social:"messagecircle",
+    sh_reviews:"starfilled", sh_seo:"search",
+    sh_analytics:"barchart", sh_growth:"rocket",
   };
   const groupDescs = {
     products:"Write product descriptions, titles, meta tags and collection copy that rank and convert.",
@@ -780,7 +788,7 @@ function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, s
       {!activeTool && group && (
         <>
           <div style={{background:C.purpleLt,border:`1px solid #DDD6FE`,borderRadius:"12px",padding:"16px 18px",marginBottom:"20px"}}>
-            <div style={{fontWeight:700,color:C.purple,marginBottom:"2px"}}>{groupLabels[activeTab]||group.label}</div>
+            <div style={{fontWeight:700,color:C.purple,marginBottom:"2px",display:"flex",alignItems:"center",gap:"7px"}}><Icon name={groupIcons[activeTab]||group.icon} size={16}/> {groupLabels[activeTab]||group.label}</div>
             <div style={{fontSize:"0.83em",color:"#4C1D95",lineHeight:1.6}}>{groupDescs[activeTab]||""}</div>
           </div>
           {activeTab==="products" && biz.bizType==="shopify" && (
@@ -789,7 +797,7 @@ function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, s
               background:"linear-gradient(135deg,#0D1117 0%,#1A2235 100%)",
               display:"flex",alignItems:"center",gap:"14px",
             }}>
-              <div style={{fontSize:"1.8em"}}>🛍️</div>
+              <div style={{color:"#A78BFA"}}><Icon name="shoppingbag" size={26}/></div>
               <div style={{flex:1}}>
                 <div style={{color:"#fff",fontWeight:800,fontSize:"0.95em",marginBottom:"2px"}}>Connect My Shopify Store</div>
                 <div style={{color:"rgba(255,255,255,0.55)",fontSize:"0.78em"}}>Sync products automatically — or start a store if you don't have one yet</div>
@@ -1460,7 +1468,7 @@ function ToolGrid({group,results,onSelect,accentColor,accentLt}) {
   const ac = accentColor||C.brand;
   const al = accentLt||C.brandLt;
   return (
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:"12px",marginBottom:"12px"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:"14px",marginBottom:"12px"}}>
       {group.tools.map(tool=>{
         const done = !!results[tool.id];
         return (
@@ -1468,21 +1476,21 @@ function ToolGrid({group,results,onSelect,accentColor,accentLt}) {
             key={tool.id}
             onClick={()=>onSelect(tool.id)}
             style={{
-              padding:"22px 20px",borderRadius:"14px",textAlign:"left",
+              padding:"22px 20px",borderRadius:"16px",textAlign:"left",
               border:`1.5px solid ${done?"#BBF7D0":C.border}`,
               background:done?"#F0FDF4":"#fff",
               cursor:"pointer",
-              boxShadow:done?"0 2px 12px rgba(22,163,74,0.08)":"0 2px 8px rgba(0,0,0,0.04)",
-              transition:"all 0.15s",
+              boxShadow:done?"0 2px 12px rgba(22,163,74,0.08)":"0 1px 2px rgba(15,23,42,0.04)",
+              transition:"all 0.18s",
             }}
             onMouseEnter={e=>{
-              e.currentTarget.style.transform="translateY(-2px)";
-              e.currentTarget.style.boxShadow=done?"0 6px 20px rgba(22,163,74,0.12)":"0 6px 20px rgba(0,0,0,0.09)";
+              e.currentTarget.style.transform="translateY(-3px)";
+              e.currentTarget.style.boxShadow=done?"0 10px 24px rgba(22,163,74,0.14)":`0 10px 24px ${ac}1c`;
               e.currentTarget.style.borderColor=done?"#86EFAC":ac;
             }}
             onMouseLeave={e=>{
               e.currentTarget.style.transform="translateY(0)";
-              e.currentTarget.style.boxShadow=done?"0 2px 12px rgba(22,163,74,0.08)":"0 2px 8px rgba(0,0,0,0.04)";
+              e.currentTarget.style.boxShadow=done?"0 2px 12px rgba(22,163,74,0.08)":"0 1px 2px rgba(15,23,42,0.04)";
               e.currentTarget.style.borderColor=done?"#BBF7D0":C.border;
             }}
           >
@@ -1492,9 +1500,9 @@ function ToolGrid({group,results,onSelect,accentColor,accentLt}) {
                 background:done?"rgba(22,163,74,0.1)":`${ac}12`,
                 border:`1px solid ${done?"#BBF7D0":`${ac}25`}`,
                 display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:"1.4em",flexShrink:0,
+                color:done?"#16A34A":ac,flexShrink:0,
               }}>
-                {tool.icon}
+                <Icon name={tool.icon} size={20}/>
               </div>
               {done
                 ? <span style={{fontSize:"0.65em",background:"#16A34A",color:"#fff",padding:"3px 8px",borderRadius:"99px",fontWeight:800}}>✓ Done</span>
@@ -1543,7 +1551,7 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
       <button onClick={onBack} style={{...backBtn,marginBottom:"14px"}}>← Back</button>
       <div style={{background:"#fff",borderRadius:"13px",border:`1px solid ${C.border}`,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
         <div style={{padding:"16px 18px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:"11px"}}>
-          <span style={{fontSize:"1.7em"}}>{tool?.icon}</span>
+          <span style={{color:C.brand}}><Icon name={tool?.icon} size={26}/></span>
           <div>
             <div style={{fontWeight:800,fontSize:"1em",color:C.text}}>{tool?.label}</div>
             <div style={{fontSize:"0.76em",color:C.muted}}>{tool?.desc}</div>
@@ -1640,7 +1648,7 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
 // ═════════════════════════════════════════════════════════════════════════════
 function ExtraFields({toolId,biz,extra,setExtra}) {
   const set = (k,v)=>setExtra(e=>({...e,[k]:v}));
-  const ib = (text)=>(<div style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:"8px",padding:"11px 13px",fontSize:"0.83em",color:"#1E40AF",lineHeight:1.6,marginBottom:"12px"}}>{text}</div>);
+  const ib = (text)=>(<div style={{background:"#F0F9FF",border:"1px solid #BFDBFE",borderRadius:"8px",padding:"11px 13px",fontSize:"0.83em",color:"#1E40AF",lineHeight:1.6,marginBottom:"12px"}}>{text}</div>);
 
   if(toolId==="website") return (<div style={{display:"flex",flexDirection:"column",gap:"12px"}}>{ib(`Building a complete website for ${biz.name} in ${biz.suburb}.`)}<Field label="Phone"><input value={extra.phone||""} onChange={e=>set("phone",e.target.value)} placeholder="02 4229 1234" style={inputSt}/></Field><Field label="Opening hours"><input value={extra.hours||""} onChange={e=>set("hours",e.target.value)} placeholder="Mon–Fri 7am–5pm, Sat 8am–2pm" style={inputSt}/></Field><Field label="Address (optional)"><input value={extra.address||""} onChange={e=>set("address",e.target.value)} placeholder="42 Crown St, Wollongong" style={inputSt}/></Field><Field label="Anything special customers should know?"><textarea value={extra.special||""} onChange={e=>set("special",e.target.value)} placeholder="Free parking, dog-friendly, 20 years in business..." rows={2} style={{...inputSt,resize:"vertical"}}/></Field></div>);
 
@@ -1941,7 +1949,7 @@ function SitePreviewCard({ liveUrl, compact }) {
           background:"linear-gradient(135deg,#0D1117,#1E3A5F)",
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"12px",
         }}>
-          <div style={{fontSize:"2.5em"}}>🌐</div>
+          <div style={{color:"#fff"}}><Icon name="globe" size={36}/></div>
           <div style={{fontWeight:800,color:"#fff",fontSize:"0.95em"}}>Your website is live</div>
           <div style={{fontSize:"0.8em",color:"rgba(255,255,255,0.5)",maxWidth:"240px",textAlign:"center",lineHeight:1.6,wordBreak:"break-all"}}>
             {liveUrl}
@@ -2025,7 +2033,7 @@ function ConnectDomainPanel({ liveUrl }) {
     }}
     onMouseEnter={e=>{e.currentTarget.style.borderColor=C.brand;e.currentTarget.style.background=C.brandLt;}}
     onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background="#fff";}}>
-      <span style={{fontSize:"1.3em"}}>🌐</span>
+      <span style={{color:C.brand}}><Icon name="globe" size={20}/></span>
       <div style={{flex:1}}>
         <div style={{fontWeight:700,fontSize:"0.88em",color:C.text}}>Connect your own domain</div>
         <div style={{fontSize:"0.75em",color:C.muted}}>e.g. yourbusiness.com.au — we'll set it up for you step by step</div>
@@ -2278,7 +2286,7 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
       {/* Header */}
       <div style={{background:"linear-gradient(135deg,#0D1117 0%,#1A2235 100%)",borderRadius:"14px",padding:"20px",marginBottom:"16px"}}>
         <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
-          <span style={{fontSize:"1.8em"}}>🌐</span>
+          <span style={{color:"#38BDF8"}}><Icon name="globe" size={26}/></span>
           <div>
             <div style={{fontWeight:800,fontSize:"1em",color:"#fff",marginBottom:"2px"}}>
               {liveUrl ? "Your Live Website" : "Build My Website"}
@@ -2299,46 +2307,46 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
               <div>
-                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Business name <span style={{color:C.red}}>*</span></label>
+                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Business name <span style={{color:C.red}}>*</span></label>
                 <input value={bizName} onChange={e=>setBizName(e.target.value)} placeholder="e.g. Sandy's Café" style={inputSt}/>
               </div>
               <div>
-                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Owner name</label>
+                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Owner name</label>
                 <input value={ownerName} onChange={e=>setOwnerName(e.target.value)} placeholder="e.g. Sandra" style={inputSt}/>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
               <div>
-                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Suburb <span style={{color:C.red}}>*</span></label>
+                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Suburb <span style={{color:C.red}}>*</span></label>
                 <input value={suburb} onChange={e=>setSuburb(e.target.value)} placeholder="e.g. Wollongong NSW" style={inputSt}/>
               </div>
               <div>
-                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Phone</label>
+                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Phone</label>
                 <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 0412 345 678" style={inputSt}/>
               </div>
             </div>
             <div>
-              <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Email</label>
+              <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Email</label>
               <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="e.g. hello@sandyscafe.com.au" style={inputSt}/>
             </div>
             <div>
-              <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>What do you do? <span style={{color:C.red}}>*</span></label>
+              <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>What do you do? <span style={{color:C.red}}>*</span></label>
               <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="e.g. Family café open 7 days, great coffee and breakfast. Known for our eggs benny and friendly staff." rows={2} style={{...inputSt,resize:"vertical"}}/>
             </div>
             <div style={{borderTop:`1px solid ${C.border}`,paddingTop:"10px",display:"flex",flexDirection:"column",gap:"10px"}}>
               <div style={{fontSize:"0.75em",color:C.muted,fontWeight:600}}>Optional — adds more detail</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
                 <div>
-                  <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Opening hours</label>
+                  <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Opening hours</label>
                   <input value={hours} onChange={e=>setHours(e.target.value)} placeholder="e.g. Mon–Fri 7am–5pm" style={inputSt}/>
                 </div>
                 <div>
-                  <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Street address</label>
+                  <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Street address</label>
                   <input value={address} onChange={e=>setAddress(e.target.value)} placeholder="e.g. 42 Crown St" style={inputSt}/>
                 </div>
               </div>
               <div>
-                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#374151",marginBottom:"4px"}}>Anything special customers should know?</label>
+                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Anything special customers should know?</label>
                 <input value={special} onChange={e=>setSpecial(e.target.value)} placeholder="Free parking, dog-friendly, 20 years in business, award-winning..." style={inputSt}/>
               </div>
             </div>
@@ -2421,7 +2429,7 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
           disabled={!hasCritical}
           style={{
             width:"100%",padding:"16px",borderRadius:"12px",border:"none",
-            background:hasCritical?"linear-gradient(135deg,#1E40AF,#2563EB)":C.border,
+            background:hasCritical?"linear-gradient(135deg,#1E40AF,#0284C7)":C.border,
             color:hasCritical?"#fff":C.muted,
             fontWeight:800,fontSize:"0.95em",cursor:hasCritical?"pointer":"not-allowed",
             fontFamily:"inherit",transition:"all 0.2s",
@@ -2474,7 +2482,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
   return (
     <div style={{
       minHeight:"100vh", background:"#03050A",
-      fontFamily:"'Segoe UI',system-ui,sans-serif",
+      fontFamily:"'Inter',system-ui,sans-serif",
       display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
       padding:"24px",
     }}>
@@ -2502,7 +2510,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
 
           {isCancelled && (
             <>
-              <div style={{fontSize:"2em",marginBottom:"12px"}}>😢</div>
+              <div style={{color:"#38BDF8",marginBottom:"12px"}}><Icon name="heart" size={32}/></div>
               <h2 style={{fontSize:"1.4em",fontWeight:900,color:"#fff",marginBottom:"8px",letterSpacing:"-0.03em"}}>Your subscription has ended</h2>
               <p style={{fontSize:"0.9em",color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:"28px"}}>
                 We'd love to have you back. Resubscribe to get full access to all your marketing tools instantly.
@@ -2512,7 +2520,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
 
           {isPastDue && (
             <>
-              <div style={{fontSize:"2em",marginBottom:"12px"}}>💳</div>
+              <div style={{color:"#38BDF8",marginBottom:"12px"}}><Icon name="card" size={32}/></div>
               <h2 style={{fontSize:"1.4em",fontWeight:900,color:"#fff",marginBottom:"8px",letterSpacing:"-0.03em"}}>Payment failed</h2>
               <p style={{fontSize:"0.9em",color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:"28px"}}>
                 We couldn't process your last payment. Update your billing details to restore access.
@@ -2522,7 +2530,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
 
           {!isCancelled && !isPastDue && (
             <>
-              <div style={{fontSize:"2em",marginBottom:"12px"}}>⏰</div>
+              <div style={{color:"#38BDF8",marginBottom:"12px"}}><Icon name="clock" size={32}/></div>
               <h2 style={{fontSize:"1.4em",fontWeight:900,color:"#fff",marginBottom:"8px",letterSpacing:"-0.03em"}}>Your free trial has ended</h2>
               <p style={{fontSize:"0.9em",color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:"28px"}}>
                 Hope you loved it! Subscribe now to keep your website live and access all your marketing tools.
@@ -2564,8 +2572,9 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
             {loading ? "Loading checkout..." : isCancelled||isPastDue ? "Resubscribe → $50/month" : "Subscribe now → $50/month"}
           </button>
 
-          <div style={{fontSize:"0.75em",color:"rgba(255,255,255,0.25)",marginTop:"12px"}}>
-            🏆 30-day money-back guarantee · If you don't save $500 in your first month we'll refund every cent
+          <div style={{fontSize:"0.75em",color:"rgba(255,255,255,0.25)",marginTop:"12px",display:"flex",alignItems:"flex-start",justifyContent:"center",gap:"6px"}}>
+            <span style={{flexShrink:0,marginTop:"1px"}}><Icon name="award" size={13}/></span>
+            <span>30-day money-back guarantee · If you don't save $500 in your first month we'll refund every cent</span>
           </div>
         </div>
 

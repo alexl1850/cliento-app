@@ -1,15 +1,67 @@
 import { useState } from "react";
 import { authHeaders } from "./supabase.js";
 
+// ─── Icon set — minimal stroke icons, replaces emoji in the dashboard chrome ──
+const ICONS = {
+  phone: `<path d="M6.6 10.8c1.5 3 4 5.4 7 7l2.3-2.3c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1v3.4c0 .6-.4 1-1 1C10.4 21.3 2.7 13.6 2.7 3.5c0-.6.4-1 1-1H7c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.3 0 .7-.2 1L6.6 10.8Z"/>`,
+  mail: `<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>`,
+  mappin: `<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>`,
+  clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
+  starfilled: `<path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3Z" fill="currentColor" stroke="none"/>`,
+  check: `<path d="M20 6 9 17l-5-5"/>`,
+  checkcircle: `<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.3 2.3 4.7-5"/>`,
+  heart: `<path d="M12 20.5s-7.5-4.6-9.8-9.4C.7 7.6 2.3 4.5 5.4 4c2-.3 3.7.7 4.6 2.3.5-1.6 2.6-2.6 4.6-2.3 3.1.5 4.7 3.6 3.2 7.1-2.3 4.8-9.8 9.4-9.8 9.4Z"/>`,
+  calendar: `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>`,
+  users: `<circle cx="9" cy="8" r="3.3"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c2.6.4 4.5 2.4 4.5 5.3"/>`,
+  award: `<circle cx="12" cy="8" r="5.3"/><path d="m8.5 12.8-1.3 7 4.8-2.6 4.8 2.6-1.3-7"/>`,
+  sparkles: `<path d="M12 3v4M12 17v4M4 12h4M16 12h4M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2"/>`,
+  briefcase: `<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>`,
+  messagecircle: `<path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.5-5A8.5 8.5 0 1 1 21 11.5Z"/>`,
+  clipboardlist: `<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M8.5 11h.01M8.5 15h.01M11.5 11h5M11.5 15h5"/>`,
+  alert: `<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/>`,
+  globe: `<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>`,
+  target: `<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>`,
+  rocket: `<path d="M12 2c3 2 5 6 5 10 0 2-1 4-1 4l-4 2-4-2s-1-2-1-4c0-4 2-8 5-10Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9 16l-2 4 3-1M15 16l2 4-3-1"/>`,
+  pen: `<path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z"/><path d="M14 7l3 3"/>`,
+  shield: `<path d="M12 3 4.5 6v6c0 5 3.4 8 7.5 9 4.1-1 7.5-4 7.5-9V6L12 3Z"/>`,
+  home: `<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>`,
+  megaphone: `<path d="M3 11v2a2 2 0 0 0 2 2h1l1 5h2l-1-5h1l9 4V7l-9 4H6a2 2 0 0 0-2 2Z"/><path d="M17 8.5v7"/>`,
+  gift: `<rect x="3" y="9" width="18" height="4" rx="1"/><rect x="5" y="13" width="14" height="8" rx="1"/><path d="M12 9v12"/><path d="M12 9C10 9 8 7.5 8 5.8 8 4.5 9 3.5 10.2 3.5 11.5 3.5 12 6 12 9Z"/><path d="M12 9c2 0 4-1.5 4-3.2 0-1.3-1-2.3-2.2-2.3C12.5 3.5 12 6 12 9Z"/>`,
+  link: `<path d="M9.5 14.5 14.5 9.5"/><path d="M11 6.5 13 4.5a3.5 3.5 0 0 1 5 5l-2 2"/><path d="M13 17.5 11 19.5a3.5 3.5 0 0 1-5-5l2-2"/>`,
+  search: `<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/>`,
+  barchart: `<path d="M4 20V10M11 20V4M18 20v-7"/>`,
+  shoppingbag: `<path d="M6 8h12l1 12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>`,
+  tag: `<path d="M3 11.5V5a1 1 0 0 1 1-1h6.5a1 1 0 0 1 .7.3l9 9a1 1 0 0 1 0 1.4l-6.5 6.5a1 1 0 0 1-1.4 0l-9-9a1 1 0 0 1-.3-.7Z"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/>`,
+  folder: `<path d="M3 6.5a1 1 0 0 1 1-1h5l2 2.5h9a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/>`,
+  cart: `<circle cx="9.5" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/><path d="M2.5 3h2l2.2 11.5a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H6"/>`,
+  box: `<path d="M3.5 8 12 3.5 20.5 8 12 12.5 3.5 8Z"/><path d="M3.5 8v9L12 21.5 20.5 17V8"/><path d="M12 12.5v9"/>`,
+  refresh: `<path d="M4 12a8 8 0 0 1 14-5.3L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-14 5.3L4 16"/><path d="M4 20v-4h4"/>`,
+  zap: `<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/>`,
+  camera: `<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="14" r="3.5"/>`,
+  video: `<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10.5 5-3v9l-5-3Z"/>`,
+  helpcircle: `<circle cx="12" cy="12" r="9"/><path d="M9.3 9.2a2.7 2.7 0 1 1 3.9 2.4c-.9.5-1.2.9-1.2 1.9"/><path d="M12 17h.01"/>`,
+  wrench: `<path d="M15 6a4.5 4.5 0 0 0-6 4.9L3 17v4h4l6-6a4.5 4.5 0 0 0 5-7.4l-3.2 3.2-2.6-.9-.9-2.6L14.6 4c-.2 0-.4 0-.6 0Z"/>`,
+  card: `<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19"/><path d="M6 14.5h4"/>`,
+};
+function Icon({ name, size = 18, style }) {
+  const path = ICONS[name] || ICONS.sparkles;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+      strokeLinecap="round" strokeLinejoin="round"
+      style={{ verticalAlign: "-3px", flexShrink: 0, ...style }}
+      dangerouslySetInnerHTML={{ __html: path }} />
+  );
+}
+
 // ─── Shared constants ─────────────────────────────────────────────────────────
 const C = {
-  brand:"#2563EB", brandLt:"#EFF6FF",
+  brand:"#0284C7", brandLt:"#F0F9FF",
   green:"#16A34A", greenLt:"#F0FDF4",
   amber:"#D97706", amberLt:"#FFFBEB",
   red:"#DC2626",   redLt:"#FEF2F2",
   purple:"#7C3AED",purpleLt:"#F5F3FF",
   teal:"#0D9488",  tealLt:"#F0FDFA",
-  border:"#E5E7EB", text:"#111827", muted:"#6B7280", light:"#F8F9FA",
+  border:"#E5E9F0", text:"#0F172A", muted:"#64748B", light:"#F1F5F9",
 };
 
 function daysSince(dateStr) {
@@ -64,8 +116,8 @@ export function GrowPanel({biz, industry, customers}) {
       {/* Section selector */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"20px"}}>
         {[
-          {id:"winback",  icon:"🔄", title:"Win Back Lost Customers",  desc:"Bring back customers who haven't visited in a while"},
-          {id:"referral", icon:"🤝", title:"Referral Program Builder",  desc:"Get happy customers to bring their friends in"},
+          {id:"winback",  icon:"refresh", title:"Win Back Lost Customers",  desc:"Bring back customers who haven't visited in a while"},
+          {id:"referral", icon:"users", title:"Referral Program Builder",  desc:"Get happy customers to bring their friends in"},
         ].map(s=>(
           <button key={s.id} onClick={()=>{setActiveSection(s.id);setOutput("");}} style={{
             padding:"16px",borderRadius:"12px",textAlign:"left",cursor:"pointer",
@@ -73,7 +125,7 @@ export function GrowPanel({biz, industry, customers}) {
             background:activeSection===s.id?C.greenLt:"#fff",
             transition:"all 0.15s",
           }}>
-            <div style={{fontSize:"1.4em",marginBottom:"6px"}}>{s.icon}</div>
+            <div style={{marginBottom:"6px",color:activeSection===s.id?C.green:C.muted}}><Icon name={s.icon} size={22}/></div>
             <div style={{fontWeight:700,fontSize:"0.88em",color:activeSection===s.id?C.green:C.text,marginBottom:"3px"}}>{s.title}</div>
             <div style={{fontSize:"0.75em",color:C.muted,lineHeight:1.4}}>{s.desc}</div>
           </button>
@@ -201,13 +253,13 @@ export function HealthPanel({biz, industry, customers, results}) {
   const totalTools = 15;
 
   const scoreData = [
-    {label:"Website",        done:!!safeResults.website,  points:15, icon:"🌐"},
-    {label:"Social Posts",   done:!!safeResults.posts,    points:15, icon:"📱"},
-    {label:"Google Reviews", done:!!safeResults.review_request||!!safeResults.review_respond, points:20, icon:"⭐"},
-    {label:"Email Campaign", done:!!safeResults.emails,   points:10, icon:"📧"},
-    {label:"Blog Post",      done:!!safeResults.blog,     points:20, icon:"✍️"},
-    {label:"Google Post",    done:!!safeResults.gbp,      points:10, icon:"📍"},
-    {label:"Ad Running",     done:!!safeResults.ads,      points:10, icon:"🎯"},
+    {label:"Website",        done:!!safeResults.website,  points:15, icon:"globe"},
+    {label:"Social Posts",   done:!!safeResults.posts,    points:15, icon:"messagecircle"},
+    {label:"Google Reviews", done:!!safeResults.review_request||!!safeResults.review_respond, points:20, icon:"starfilled"},
+    {label:"Email Campaign", done:!!safeResults.emails,   points:10, icon:"mail"},
+    {label:"Blog Post",      done:!!safeResults.blog,     points:20, icon:"pen"},
+    {label:"Google Post",    done:!!safeResults.gbp,      points:10, icon:"mappin"},
+    {label:"Ad Running",     done:!!safeResults.ads,      points:10, icon:"target"},
   ];
   const score = scoreData.reduce((a,s) => a + (s.done ? s.points : 0), 0);
   const scoreColor = score >= 70 ? C.green : score >= 40 ? C.amber : C.red;
@@ -253,8 +305,8 @@ export function HealthPanel({biz, industry, customers, results}) {
         <div style={{display:"flex",flexDirection:"column",gap:"7px"}}>
           {scoreData.map(s=>(
             <div key={s.label} style={{display:"flex",alignItems:"center",gap:"10px"}}>
-              <span style={{fontSize:"0.9rem",width:"20px",textAlign:"center"}}>{s.icon}</span>
-              <div style={{flex:1,background:"#F3F4F6",borderRadius:"99px",height:"8px",overflow:"hidden"}}>
+              <span style={{width:"20px",textAlign:"center",display:"inline-flex",justifyContent:"center",color:s.done?C.green:C.muted}}><Icon name={s.icon} size={15}/></span>
+              <div style={{flex:1,background:"#F1F5F9",borderRadius:"99px",height:"8px",overflow:"hidden"}}>
                 <div style={{width:s.done?"100%":"0%",height:"100%",background:s.done?C.green:"transparent",borderRadius:"99px",transition:"width 0.5s"}}/>
               </div>
               <div style={{fontSize:"0.75em",fontWeight:600,width:"90px",color:s.done?C.green:C.muted}}>
@@ -408,7 +460,7 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
   return (
     <div>
       {/* Explainer */}
-      <div style={{background:"linear-gradient(135deg,#F0FDFA,#EFF6FF)",border:"1px solid #99F6E4",borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
+      <div style={{background:"linear-gradient(135deg,#F0FDFA,#F0F9FF)",border:"1px solid #99F6E4",borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
         <div style={{fontWeight:800,color:C.teal,fontSize:"1em",marginBottom:"6px"}}>🔗 The Akus Backlink Network</div>
         <div style={{fontSize:"0.84em",color:"#0F766E",lineHeight:1.7,marginBottom:"12px"}}>
           Every Akus member has a real website. When you mention another local member in your blog posts or on your website, and they mention you in theirs, Google sees both businesses as locally trusted and boosts your rankings. <strong>Agencies charge $500–$2,000/month for link building.</strong> You get it free as part of being a Akus member.
@@ -476,7 +528,7 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
                   disabled={generating}
                   style={{
                     padding:"10px 8px",borderRadius:"9px",border:`1.5px solid ${C.border}`,
-                    background: generating&&selectedMember?.id===member.id&&selectedMember?.postType===pt.type ? C.tealLt : "#F8F9FA",
+                    background: generating&&selectedMember?.id===member.id&&selectedMember?.postType===pt.type ? C.tealLt : "#F1F5F9",
                     color:C.text,cursor:generating?"not-allowed":"pointer",
                     fontSize:"0.76em",fontWeight:700,fontFamily:"inherit",
                     display:"flex",flexDirection:"column",alignItems:"center",gap:"3px",
@@ -584,8 +636,8 @@ Sound like a real person reaching out, not a template. Warm and direct.`;
 // PRODUCT TOUR — first-login interactive walkthrough
 // ═════════════════════════════════════════════════════════════════════════════
 export function ProductTour({ step, setStep, onClose, isShopify, ownerName }) {
-  const accent = isShopify ? "#7C3AED" : "#2563EB";
-  const accentLt = isShopify ? "#F5F3FF" : "#EFF6FF";
+  const accent = isShopify ? "#7C3AED" : "#0284C7";
+  const accentLt = isShopify ? "#F5F3FF" : "#F0F9FF";
 
   const localSteps = [
     { icon:"👋", title:`Welcome to Akus, ${ownerName||"there"}!`, body:"This is a 60-second tour to show you around. You can skip it any time — and revisit it later by tapping the ? icon in the top bar." },
@@ -614,7 +666,7 @@ export function ProductTour({ step, setStep, onClose, isShopify, ownerName }) {
   return (
     <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(7,9,14,0.65)",backdropFilter:"blur(3px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
       <div style={{background:"#fff",borderRadius:"20px",maxWidth:"420px",width:"100%",overflow:"hidden",boxShadow:"0 24px 64px rgba(0,0,0,0.3)"}}>
-        <div style={{background:`linear-gradient(135deg,${accent},${isShopify?"#5B21B6":"#1D4ED8"})`,padding:"32px 28px 24px",textAlign:"center"}}>
+        <div style={{background:`linear-gradient(135deg,${accent},${isShopify?"#5B21B6":"#075985"})`,padding:"32px 28px 24px",textAlign:"center"}}>
           <div style={{fontSize:"2.6em",marginBottom:"8px"}}>{s.icon}</div>
           <div style={{display:"flex",justifyContent:"center",gap:"5px",marginTop:"4px"}}>
             {steps.map((_,i)=>(
@@ -623,10 +675,10 @@ export function ProductTour({ step, setStep, onClose, isShopify, ownerName }) {
           </div>
         </div>
         <div style={{padding:"24px 28px 28px"}}>
-          <h3 style={{fontSize:"1.15em",fontWeight:800,color:"#111827",margin:"0 0 10px",lineHeight:1.3}}>{s.title}</h3>
-          <p style={{fontSize:"0.9em",color:"#4B5563",lineHeight:1.65,margin:"0 0 24px"}}>{s.body}</p>
+          <h3 style={{fontSize:"1.15em",fontWeight:800,color:"#0F172A",margin:"0 0 10px",lineHeight:1.3}}>{s.title}</h3>
+          <p style={{fontSize:"0.9em",color:"#475569",lineHeight:1.65,margin:"0 0 24px"}}>{s.body}</p>
           <div style={{display:"flex",gap:"8px"}}>
-            <button onClick={onClose} style={{padding:"11px 16px",borderRadius:"9px",border:"1px solid #E5E7EB",background:"#fff",color:"#6B7280",cursor:"pointer",fontSize:"0.85em",fontWeight:600}}>
+            <button onClick={onClose} style={{padding:"11px 16px",borderRadius:"9px",border:"1px solid #E5E9F0",background:"#fff",color:"#64748B",cursor:"pointer",fontSize:"0.85em",fontWeight:600}}>
               Skip tour
             </button>
             <button onClick={()=>isLast?onClose():setStep(s=>s+1)} style={{flex:1,padding:"11px 16px",borderRadius:"9px",border:"none",background:accent,color:"#fff",cursor:"pointer",fontSize:"0.88em",fontWeight:700}}>
@@ -962,26 +1014,26 @@ export function ConnectShopify({ biz, onBack }) {
 export function HelpCentre({ isShopify, onStartTour }) {
   const [openSection, setOpenSection] = useState("getting-started");
   const [openFaq, setOpenFaq] = useState(null);
-  const accent = isShopify ? "#7C3AED" : "#2563EB";
-  const accentLt = isShopify ? "#F5F3FF" : "#EFF6FF";
+  const accent = isShopify ? "#7C3AED" : "#0284C7";
+  const accentLt = isShopify ? "#F5F3FF" : "#F0F9FF";
 
   const toggle = (id) => setOpenFaq(openFaq===id?null:id);
 
   const sections = [
-    { id:"getting-started", icon:"🚀", label:"Getting Started" },
-    { id:"connections",     icon:"🔌", label:"What Do I Need to Connect?" },
-    { id:"tools",           icon:"🛠️", label:"How Each Tool Works" },
-    { id:"faq",             icon:"❓", label:"Common Questions" },
-    { id:"contact",         icon:"💬", label:"Still Stuck?" },
+    { id:"getting-started", icon:"rocket", label:"Getting Started" },
+    { id:"connections",     icon:"zap", label:"What Do I Need to Connect?" },
+    { id:"tools",           icon:"wrench", label:"How Each Tool Works" },
+    { id:"faq",             icon:"helpcircle", label:"Common Questions" },
+    { id:"contact",         icon:"messagecircle", label:"Still Stuck?" },
   ];
 
   const FaqItem = ({id, q, a}) => (
-    <div onClick={()=>toggle(id)} style={{borderBottom:"1px solid #F3F4F6",padding:"14px 0",cursor:"pointer"}}>
+    <div onClick={()=>toggle(id)} style={{borderBottom:"1px solid #F1F5F9",padding:"14px 0",cursor:"pointer"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"12px"}}>
-        <span style={{fontSize:"0.88em",fontWeight:700,color:"#111827"}}>{q}</span>
+        <span style={{fontSize:"0.88em",fontWeight:700,color:"#0F172A"}}>{q}</span>
         <span style={{fontSize:"0.8em",color:accent,transform:openFaq===id?"rotate(180deg)":"none",transition:"transform 0.2s",flexShrink:0}}>▾</span>
       </div>
-      {openFaq===id && <p style={{fontSize:"0.84em",color:"#4B5563",lineHeight:1.65,marginTop:"10px",marginBottom:0}}>{a}</p>}
+      {openFaq===id && <p style={{fontSize:"0.84em",color:"#475569",lineHeight:1.65,marginTop:"10px",marginBottom:0}}>{a}</p>}
     </div>
   );
 
@@ -990,14 +1042,14 @@ export function HelpCentre({ isShopify, onStartTour }) {
       {/* Quick actions */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"20px"}}>
         <button onClick={onStartTour} style={{padding:"16px",borderRadius:"12px",border:`1.5px solid ${accent}33`,background:accentLt,cursor:"pointer",textAlign:"left"}}>
-          <div style={{fontSize:"1.3em",marginBottom:"6px"}}>🎬</div>
+          <div style={{marginBottom:"6px",color:accent}}><Icon name="video" size={20}/></div>
           <div style={{fontWeight:700,fontSize:"0.85em",color:accent}}>Replay the tour</div>
-          <div style={{fontSize:"0.72em",color:"#6B7280",marginTop:"2px"}}>60-second walkthrough</div>
+          <div style={{fontSize:"0.72em",color:"#64748B",marginTop:"2px"}}>60-second walkthrough</div>
         </button>
-        <a href="mailto:support@akus.com.au" style={{padding:"16px",borderRadius:"12px",border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",textAlign:"left",textDecoration:"none",display:"block"}}>
-          <div style={{fontSize:"1.3em",marginBottom:"6px"}}>✉️</div>
-          <div style={{fontWeight:700,fontSize:"0.85em",color:"#111827"}}>Email support</div>
-          <div style={{fontSize:"0.72em",color:"#6B7280",marginTop:"2px"}}>We reply within a day</div>
+        <a href="mailto:support@akus.com.au" style={{padding:"16px",borderRadius:"12px",border:"1.5px solid #E5E9F0",background:"#fff",cursor:"pointer",textAlign:"left",textDecoration:"none",display:"block"}}>
+          <div style={{marginBottom:"6px",color:"#0F172A"}}><Icon name="mail" size={20}/></div>
+          <div style={{fontWeight:700,fontSize:"0.85em",color:"#0F172A"}}>Email support</div>
+          <div style={{fontSize:"0.72em",color:"#64748B",marginTop:"2px"}}>We reply within a day</div>
         </a>
       </div>
 
@@ -1006,19 +1058,20 @@ export function HelpCentre({ isShopify, onStartTour }) {
         {sections.map(s=>(
           <button key={s.id} onClick={()=>setOpenSection(s.id)} style={{
             padding:"8px 14px",borderRadius:"20px",border:"none",cursor:"pointer",whiteSpace:"nowrap",
-            background:openSection===s.id?accent:"#F3F4F6",
-            color:openSection===s.id?"#fff":"#4B5563",
+            background:openSection===s.id?accent:"#F1F5F9",
+            color:openSection===s.id?"#fff":"#475569",
             fontSize:"0.78em",fontWeight:600,flexShrink:0,
+            display:"inline-flex",alignItems:"center",gap:"6px",
           }}>
-            {s.icon} {s.label}
+            <Icon name={s.icon} size={14}/> {s.label}
           </button>
         ))}
       </div>
 
       {/* GETTING STARTED */}
       {openSection==="getting-started" && (
-        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
-          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 14px"}}>Getting started with Akus</h3>
+        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E9F0",padding:"22px"}}>
+          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#0F172A",margin:"0 0 14px"}}>Getting started with Akus</h3>
           {[
             ["1","Set up your business profile","Done at signup — your name, business details, and what you offer. Akus uses this to personalise everything."],
             ["2", isShopify?"Try your first product description":"Try your first piece of content","Head to "+(isShopify?"Products → Product Description":"Marketing → My Website")+" and generate something. It takes about 60 seconds and you'll immediately see what Akus can do."],
@@ -1029,8 +1082,8 @@ export function HelpCentre({ isShopify, onStartTour }) {
             <div key={num} style={{display:"flex",gap:"14px",marginBottom:"16px"}}>
               <div style={{width:"26px",height:"26px",borderRadius:"50%",background:accent,color:"#fff",fontWeight:800,fontSize:"0.75em",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{num}</div>
               <div>
-                <div style={{fontWeight:700,fontSize:"0.88em",color:"#111827",marginBottom:"3px"}}>{title}</div>
-                <div style={{fontSize:"0.82em",color:"#6B7280",lineHeight:1.6}}>{desc}</div>
+                <div style={{fontWeight:700,fontSize:"0.88em",color:"#0F172A",marginBottom:"3px"}}>{title}</div>
+                <div style={{fontSize:"0.82em",color:"#64748B",lineHeight:1.6}}>{desc}</div>
               </div>
             </div>
           ))}
@@ -1039,9 +1092,9 @@ export function HelpCentre({ isShopify, onStartTour }) {
 
       {/* CONNECTIONS — honest about what's manual vs automatic */}
       {openSection==="connections" && (
-        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
-          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 6px"}}>What do I need to connect?</h3>
-          <p style={{fontSize:"0.83em",color:"#6B7280",lineHeight:1.6,margin:"0 0 18px"}}>Short answer: nothing is required to start. Akus works today by you copying content where it needs to go. Here's exactly what's available now vs what's coming.</p>
+        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E9F0",padding:"22px"}}>
+          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#0F172A",margin:"0 0 6px"}}>What do I need to connect?</h3>
+          <p style={{fontSize:"0.83em",color:"#64748B",lineHeight:1.6,margin:"0 0 18px"}}>Short answer: nothing is required to start. Akus works today by you copying content where it needs to go. Here's exactly what's available now vs what's coming.</p>
 
           <div style={{marginBottom:"16px"}}>
             <div style={{fontSize:"0.7em",fontWeight:800,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:"10px"}}>✅ Works today — no setup needed</div>
@@ -1052,7 +1105,7 @@ export function HelpCentre({ isShopify, onStartTour }) {
               "Weekly Health Score reports",
               isShopify?"Connect My Shopify Store — guided setup, plus help starting one if you don't have it yet":"Publish My Website — get a free web address instantly, or guided help connecting your own domain",
             ].map(t=>(
-              <div key={t} style={{display:"flex",gap:"8px",fontSize:"0.83em",color:"#374151",padding:"6px 0"}}>
+              <div key={t} style={{display:"flex",gap:"8px",fontSize:"0.83em",color:"#475569",padding:"6px 0"}}>
                 <span style={{color:"#16A34A"}}>✓</span>{t}
               </div>
             ))}
@@ -1065,20 +1118,20 @@ export function HelpCentre({ isShopify, onStartTour }) {
               "Pulling numbers for the Analytics tool (copy from Google Analytics / Shopify dashboard)",
               "Sending emails (paste into Mailchimp, Klaviyo or your email tool)",
             ].map(t=>(
-              <div key={t} style={{display:"flex",gap:"8px",fontSize:"0.83em",color:"#374151",padding:"6px 0"}}>
+              <div key={t} style={{display:"flex",gap:"8px",fontSize:"0.83em",color:"#475569",padding:"6px 0"}}>
                 <span style={{color:"#D97706"}}>→</span>{t}
               </div>
             ))}
           </div>
 
           <div>
-            <div style={{fontSize:"0.7em",fontWeight:800,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:"10px"}}>🔜 Coming soon — direct connections</div>
+            <div style={{fontSize:"0.7em",fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:"10px"}}>🔜 Coming soon — direct connections</div>
             {[
               "Google Analytics connected directly — numbers pulled in automatically",
               "Google Business Profile connected directly — post with one click",
               isShopify&&"Full Shopify product sync — automatic two-way updates",
             ].filter(Boolean).map(t=>(
-              <div key={t} style={{display:"flex",gap:"8px",fontSize:"0.83em",color:"#9CA3AF",padding:"6px 0"}}>
+              <div key={t} style={{display:"flex",gap:"8px",fontSize:"0.83em",color:"#94A3B8",padding:"6px 0"}}>
                 <span>○</span>{t}
               </div>
             ))}
@@ -1091,8 +1144,8 @@ export function HelpCentre({ isShopify, onStartTour }) {
 
       {/* HOW EACH TOOL WORKS */}
       {openSection==="tools" && (
-        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
-          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 14px"}}>How each tool works</h3>
+        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E9F0",padding:"22px"}}>
+          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#0F172A",margin:"0 0 14px"}}>How each tool works</h3>
           {(isShopify ? [
             ["🛍️ Products","Fill in the product name, key features, and target customer. Akus writes a description, then you copy it into your Shopify product page."],
             ["📧 Emails","Pick the email type (abandoned cart, post-purchase, win-back). Answer 2-3 questions. Get a full sequence ready to paste into Klaviyo, Mailchimp, or Shopify Email."],
@@ -1110,9 +1163,9 @@ export function HelpCentre({ isShopify, onStartTour }) {
             ["💚 Health Score","Automatically scores based on what you've used in Akus. Tap 'Get My Weekly Report' for a fresh set of priorities any time."],
             ["🔗 Network","Browse other local Akus members, generate a natural mention of their business for your blog, and email them to ask for the same in return."],
           ]).map(([title,desc])=>(
-            <div key={title} style={{marginBottom:"16px",paddingBottom:"16px",borderBottom:"1px solid #F3F4F6"}}>
-              <div style={{fontWeight:700,fontSize:"0.88em",color:"#111827",marginBottom:"4px"}}>{title}</div>
-              <div style={{fontSize:"0.82em",color:"#6B7280",lineHeight:1.6}}>{desc}</div>
+            <div key={title} style={{marginBottom:"16px",paddingBottom:"16px",borderBottom:"1px solid #F1F5F9"}}>
+              <div style={{fontWeight:700,fontSize:"0.88em",color:"#0F172A",marginBottom:"4px"}}>{title}</div>
+              <div style={{fontSize:"0.82em",color:"#64748B",lineHeight:1.6}}>{desc}</div>
             </div>
           ))}
         </div>
@@ -1120,8 +1173,8 @@ export function HelpCentre({ isShopify, onStartTour }) {
 
       {/* FAQ */}
       {openSection==="faq" && (
-        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px"}}>
-          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 8px"}}>Common questions</h3>
+        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E9F0",padding:"22px"}}>
+          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#0F172A",margin:"0 0 8px"}}>Common questions</h3>
           <FaqItem id="f1" q="Do I need any tech skills to use this?" a="None at all. If you can send a text message, you can use Akus. Everything is point, click, and copy-paste." />
           <FaqItem id="f2" q="Will Akus publish things automatically?" a="No. Akus never publishes anything on your behalf. You always read, approve, and copy content yourself before it goes anywhere." />
           <FaqItem id="f3" q="Can I edit what Akus writes?" a="Always. Everything generated is a starting point — copy it anywhere and change as much as you like. Hit 'Redo' for a completely different version any time." />
@@ -1135,10 +1188,10 @@ export function HelpCentre({ isShopify, onStartTour }) {
 
       {/* CONTACT */}
       {openSection==="contact" && (
-        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E7EB",padding:"22px",textAlign:"center"}}>
+        <div style={{background:"#fff",borderRadius:"14px",border:"1px solid #E5E9F0",padding:"22px",textAlign:"center"}}>
           <div style={{fontSize:"2em",marginBottom:"10px"}}>💬</div>
-          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#111827",margin:"0 0 8px"}}>We're a small team and we read every message</h3>
-          <p style={{fontSize:"0.85em",color:"#6B7280",lineHeight:1.65,margin:"0 0 20px",maxWidth:"380px",marginLeft:"auto",marginRight:"auto"}}>
+          <h3 style={{fontSize:"1.05em",fontWeight:800,color:"#0F172A",margin:"0 0 8px"}}>We're a small team and we read every message</h3>
+          <p style={{fontSize:"0.85em",color:"#64748B",lineHeight:1.65,margin:"0 0 20px",maxWidth:"380px",marginLeft:"auto",marginRight:"auto"}}>
             Stuck on something, found a bug, or just want to tell us what you'd love to see next? Email us — we typically reply within one business day.
           </p>
           <a href="mailto:support@akus.com.au" style={{display:"inline-block",padding:"12px 28px",borderRadius:"10px",background:accent,color:"#fff",textDecoration:"none",fontWeight:700,fontSize:"0.88em"}}>
@@ -1150,12 +1203,12 @@ export function HelpCentre({ isShopify, onStartTour }) {
   );
 }
 
-const inputSt = {width:"100%",padding:"10px 12px",borderRadius:"8px",border:"1.5px solid #D1D5DB",fontSize:"0.9em",color:"#111827",outline:"none",boxSizing:"border-box",fontFamily:"inherit",background:"#fff"};
-const btnPrimary = {padding:"13px 24px",borderRadius:"8px",border:"none",background:"#2563EB",color:"#fff",fontSize:"0.9em",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 12px rgba(37,99,235,0.25)",transition:"all 0.15s"};
-const backBtn = {background:"none",border:"none",color:"#2563EB",cursor:"pointer",fontSize:"0.86em",fontWeight:600,padding:0,display:"flex",alignItems:"center",gap:"4px"};
+const inputSt = {width:"100%",padding:"10px 12px",borderRadius:"9px",border:"1.5px solid #D8DEE9",fontSize:"0.9em",color:"#0F172A",outline:"none",boxSizing:"border-box",fontFamily:"inherit",background:"#fff",transition:"border-color 0.15s"};
+const btnPrimary = {padding:"13px 24px",borderRadius:"9px",border:"none",background:"#0284C7",color:"#fff",fontSize:"0.9em",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 14px rgba(2,132,199,0.25)",transition:"all 0.15s"};
+const backBtn = {background:"none",border:"none",color:"#0284C7",cursor:"pointer",fontSize:"0.86em",fontWeight:600,padding:0,display:"flex",alignItems:"center",gap:"4px"};
 
 function Field({label,children}) {
-  return (<div><label style={{display:"block",fontWeight:600,fontSize:"0.83em",color:"#374151",marginBottom:"5px"}}>{label}</label>{children}</div>);
+  return (<div><label style={{display:"block",fontWeight:600,fontSize:"0.83em",color:"#475569",marginBottom:"5px"}}>{label}</label>{children}</div>);
 }
 
-export { inputSt, btnPrimary, backBtn, Field };
+export { inputSt, btnPrimary, backBtn, Field, Icon };

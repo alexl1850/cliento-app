@@ -104,7 +104,7 @@ export default function App() {
   if (loading) return (
     <div style={{
       minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-      background:'#F8F9FA', fontFamily:"'Segoe UI',system-ui,sans-serif",
+      background:'#F8F9FA', fontFamily:"'Inter',system-ui,sans-serif",
       flexDirection:'column', gap:'12px',
     }}>
       <div style={{fontSize:'1.8rem', fontWeight:900, letterSpacing:'-0.04em'}}>
@@ -122,7 +122,7 @@ export default function App() {
           background:'linear-gradient(135deg,#052E16,#166534)',
           padding:'14px 24px',
           textAlign:'center',
-          fontFamily:"'Segoe UI',system-ui,sans-serif",
+          fontFamily:"'Inter',system-ui,sans-serif",
           fontSize:'0.88rem',
           color:'#fff',
           fontWeight:600,

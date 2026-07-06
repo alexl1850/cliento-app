@@ -9,7 +9,7 @@ const C = {
   red:"#DC2626",   redLt:"#FEF2F2",
   border:"#E5E7EB", text:"#111827", muted:"#6B7280", light:"#F8F9FA",
 };
-const ff = "'Segoe UI', system-ui, sans-serif";
+const ff = "'Inter', system-ui, sans-serif";
 const inp = {
   width:"100%", padding:"16px 18px", borderRadius:"12px",
   border:`2px solid ${C.border}`, fontSize:"1em", color:C.text,

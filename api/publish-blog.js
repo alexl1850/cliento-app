@@ -1,5 +1,16 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 
+// ── Icon set — minimal stroke icons, replaces emoji ──
+const ICONS = {
+  pen: `<path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z"/><path d="M14 7l3 3"/>`,
+  calendar: `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>`,
+  mappin: `<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>`,
+};
+function svgIcon(name, size = 16) {
+  const path = ICONS[name] || ICONS.pen;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;flex-shrink:0">${path}</svg>`;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -143,15 +154,15 @@ footer a:hover{color:rgba(255,255,255,0.6)}
 
 <section class="post-hero">
   <div class="post-hero-inner">
-    <div class="post-category">📝 ${biz?.suburb || 'Local'} Business Blog</div>
+    <div class="post-category">${svgIcon('pen',13)} ${biz?.suburb || 'Local'} Business Blog</div>
     <h1>${post.title}</h1>
     <div class="post-meta">
       <div class="post-meta-item">
         <div class="post-author-avatar">${(biz?.owner || 'A')[0]}</div>
         <span>${biz?.owner || 'The Team'} at ${biz?.name || 'us'}</span>
       </div>
-      <div class="post-meta-item">📅 ${publishDate}</div>
-      <div class="post-meta-item">📍 ${biz?.suburb || ''}</div>
+      <div class="post-meta-item">${svgIcon('calendar',14)} ${publishDate}</div>
+      <div class="post-meta-item">${svgIcon('mappin',14)} ${biz?.suburb || ''}</div>
     </div>
   </div>
 </section>
