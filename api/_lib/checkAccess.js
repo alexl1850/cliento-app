@@ -51,3 +51,39 @@ export async function requireActiveAccount(req) {
 
   return { ok: true, userId };
 }
+
+// Verifies the caller is authenticated AND their email is on the admin
+// allowlist (ADMIN_EMAILS env var, comma-separated, server-side only —
+// never exposed to the frontend bundle). Used to gate the admin panel
+// endpoints that can read/act on every customer's data.
+export async function requireAdmin(req) {
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return { ok: false, status: 401, error: 'Not authenticated' };
+
+  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!userRes.ok) return { ok: false, status: 401, error: 'Invalid or expired session' };
+  const user = await userRes.json();
+  const userId = user?.id;
+  const email = (user?.email || '').toLowerCase();
+  if (!userId || !email) return { ok: false, status: 401, error: 'Invalid or expired session' };
+
+  const allowlist = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (!allowlist.includes(email)) {
+    return { ok: false, status: 403, error: 'Not authorized' };
+  }
+
+  return { ok: true, userId, email };
+}

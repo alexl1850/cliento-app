@@ -102,3 +102,22 @@ SELECT
   EXTRACT(DAY FROM (p.trial_ends - NOW())) AS days_remaining,
   p.created_at AS joined_at
 FROM profiles p;
+
+-- ─── ADMIN PANEL ──────────────────────────────────────────────────
+-- No RLS policies here on purpose: this table is only ever read/written
+-- via the admin API endpoints using the service-role key, never from the
+-- browser client, so there is no auth.uid() to check against.
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  admin_user_id  UUID NOT NULL,
+  admin_email    TEXT NOT NULL,
+  target_user_id UUID NOT NULL,
+  target_email   TEXT,
+  action         TEXT NOT NULL,   -- e.g. 'impersonate'
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
+-- Intentionally no policies added: with RLS enabled and zero policies,
+-- PostgREST denies all access through the anon/authenticated roles, so this
+-- table is reachable only via the service-role key (which bypasses RLS).

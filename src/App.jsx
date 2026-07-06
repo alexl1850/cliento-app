@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { supabase } from './supabase.js'
+import { supabase, authHeaders } from './supabase.js'
 import AuthScreen from './AuthScreen.jsx'
 import Dashboard from './DashboardA.jsx'
 import Journey from './Journey.jsx'
+import AdminPanel from './AdminPanel.jsx'
+
+const ADMIN_RETURN_KEY = 'akus_admin_return_session'
 
 // Check for demo params from homepage
 const urlParams = new URLSearchParams(window.location.search);
@@ -17,6 +20,9 @@ export default function App() {
   const [loading,         setLoading]         = useState(true)
   const [profile,         setProfile]         = useState(null)
   const [journeyComplete, setJourneyComplete] = useState(false)
+  const [isAdmin,         setIsAdmin]         = useState(false)
+  const [showAdminPanel,  setShowAdminPanel]  = useState(false)
+  const [impersonating,   setImpersonating]   = useState(() => !!sessionStorage.getItem(ADMIN_RETURN_KEY))
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,6 +39,57 @@ export default function App() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // Quietly check admin status once we have a session — a 200 means this
+  // account is on the ADMIN_EMAILS allowlist server-side. Not a security
+  // boundary itself (that's enforced per-request in the API), just decides
+  // whether to show the "Admin" entry point in the UI.
+  useEffect(() => {
+    if (!session) { setIsAdmin(false); return }
+    (async () => {
+      try {
+        const headers = await authHeaders()
+        const res = await fetch('/api/admin-list-customers', { headers })
+        setIsAdmin(res.ok)
+      } catch {
+        setIsAdmin(false)
+      }
+    })()
+  }, [session])
+
+  const impersonate = async (targetUserId) => {
+    const headers = await authHeaders()
+    const res = await fetch('/api/admin-impersonate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ targetUserId }),
+    })
+    const json = await res.json()
+    if (!res.ok) { alert(json.error || 'Could not open that customer\'s dashboard.'); return }
+
+    // Stash the admin's own session so "exit impersonation" can restore it
+    // without needing them to sign in again.
+    const { data: { session: adminSession } } = await supabase.auth.getSession()
+    if (adminSession) {
+      sessionStorage.setItem(ADMIN_RETURN_KEY, JSON.stringify({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      }))
+    }
+    setShowAdminPanel(false)
+    setImpersonating(true)
+    await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token })
+  }
+
+  const exitImpersonation = async () => {
+    const stashed = sessionStorage.getItem(ADMIN_RETURN_KEY)
+    sessionStorage.removeItem(ADMIN_RETURN_KEY)
+    setImpersonating(false)
+    if (stashed) {
+      const { access_token, refresh_token } = JSON.parse(stashed)
+      await supabase.auth.setSession({ access_token, refresh_token })
+    }
+  }
 
   const loadProfile = async (userId) => {
     setLoading(true)
@@ -134,19 +191,49 @@ export default function App() {
     </div>
   )
 
+  // Admin viewing the customer directory
+  if (showAdminPanel) return (
+    <AdminPanel onClose={() => setShowAdminPanel(false)} onImpersonate={impersonate} />
+  )
+
+  const impersonationBanner = impersonating && (
+    <div style={{
+      background: '#1E293B', color: '#fff', padding: '10px 24px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+      fontFamily: "'Inter',system-ui,sans-serif", fontSize: '0.85em', fontWeight: 600,
+      position: 'sticky', top: 0, zIndex: 999,
+    }}>
+      <span>👀 Viewing as {profile?.biz_name || 'this customer'}</span>
+      <button onClick={exitImpersonation} style={{
+        background: '#fff', color: '#1E293B', border: 'none', borderRadius: '6px',
+        padding: '5px 12px', fontSize: '0.9em', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+      }}>
+        Exit to admin
+      </button>
+    </div>
+  )
+
   // New user — show the guided journey
   if (!journeyComplete) return (
-    <Journey onComplete={handleJourneyComplete} session={session}/>
+    <>
+      {impersonationBanner}
+      <Journey onComplete={handleJourneyComplete} session={session}/>
+    </>
   )
 
   // Returning user — show the full dashboard
   return (
-    <Dashboard
-      session={session}
-      profile={profile}
-      onSaveProfile={saveProfile}
-      onSignOut={signOut}
-      supabase={supabase}
-    />
+    <>
+      {impersonationBanner}
+      <Dashboard
+        session={session}
+        profile={profile}
+        onSaveProfile={saveProfile}
+        onSignOut={signOut}
+        supabase={supabase}
+        isAdmin={isAdmin && !impersonating}
+        onOpenAdmin={() => setShowAdminPanel(true)}
+      />
+    </>
   )
 }

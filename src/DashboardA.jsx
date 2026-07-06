@@ -178,7 +178,7 @@ const SAMPLE_CUSTOMERS = [
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN APP
 // ═════════════════════════════════════════════════════════════════════════════
-export default function Dashboard({ session, profile, onSaveProfile, onSignOut }) {
+export default function Dashboard({ session, profile, onSaveProfile, onSignOut, isAdmin, onOpenAdmin }) {
   const profileToBiz = (p) => p ? {
     owner:       p.owner       || '',
     name:        p.biz_name    || '',
@@ -547,7 +547,18 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut }
         </nav>
 
         {/* Sign out at bottom */}
-        <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",flexDirection:"column",gap:"8px"}}>
+          {isAdmin && onOpenAdmin && (
+            <button onClick={onOpenAdmin} style={{
+              width:"100%",padding:"9px",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px",
+              background:"rgba(2,132,199,0.12)",
+              border:"1px solid rgba(2,132,199,0.25)",
+              color:"#7DD3FC",fontSize:"0.78em",
+              cursor:"pointer",fontFamily:"inherit",fontWeight:700,
+            }}>
+              <Icon name="shield" size={14}/> Admin
+            </button>
+          )}
           {onSignOut && (
             <button onClick={onSignOut} style={{
               width:"100%",padding:"9px",borderRadius:"8px",
