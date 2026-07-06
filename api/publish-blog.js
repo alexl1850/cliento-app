@@ -211,11 +211,29 @@ footer a:hover{color:rgba(255,255,255,0.6)}
 
     // ── 6. Update the homepage to include latest posts ────────────────────────
     let updatedHomepageUrl = null;
+    let homepageSkippedReason = homepageUrl ? null : 'no_website';
     if (homepageUrl) {
       try {
-        // Fetch current homepage
-        const homeFetch = await fetch(homepageUrl);
-        let homeHTML = await homeFetch.text();
+        // Fetch current homepage — a site edited/rebuilt moments ago can
+        // briefly 404 while Vercel finishes propagating it, so retry once
+        // after a short wait rather than immediately giving up (or worse,
+        // treating an error page's HTML as the real homepage and redeploying
+        // that as the new site — hence the .ok and content sanity checks).
+        const fetchHomepage = async () => {
+          const r = await fetch(homepageUrl);
+          if (!r.ok) return null;
+          const text = await r.text();
+          return /<html[\s>]/i.test(text) ? text : null;
+        };
+        let homeHTML = await fetchHomepage();
+        if (!homeHTML) {
+          await new Promise(r => setTimeout(r, 2500));
+          homeHTML = await fetchHomepage();
+        }
+        if (!homeHTML) {
+          homepageSkippedReason = 'fetch_failed';
+          throw new Error('Could not fetch a valid homepage to update');
+        }
 
         // Build the new post card
         const newPost = {
@@ -258,14 +276,33 @@ footer a:hover{color:rgba(255,255,255,0.6)}
           homeHTML = homeHTML.replace('<footer', blogSectionHTML + '\n<footer');
         }
 
-        // Redeploy homepage
+        // Redeploy homepage — must re-include sitemap.xml/robots.txt, since a
+        // Vercel deployment replaces the whole file set rather than patching
+        // it; without these, publishing a blog post would silently wipe them
+        // off the customer's site.
         const homeSlug = (biz?.name || 'my-business').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+        const siteUrl = homepageUrl.replace(/\/$/, '');
+        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${siteUrl}/</loc>
+    <lastmod>${new Date().toISOString().slice(0,10)}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+        const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
+
         const homeDeployRes = await fetch('https://api.vercel.com/v13/deployments', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: `akus-${homeSlug}`,
-            files: [{ file: 'index.html', data: Buffer.from(homeHTML).toString('base64'), encoding: 'base64' }],
+            files: [
+              { file: 'index.html', data: Buffer.from(homeHTML).toString('base64'), encoding: 'base64' },
+              { file: 'sitemap.xml', data: Buffer.from(sitemapXml).toString('base64'), encoding: 'base64' },
+              { file: 'robots.txt', data: Buffer.from(robotsTxt).toString('base64'), encoding: 'base64' },
+            ],
             projectSettings: { framework: null },
             target: 'production',
           })
@@ -273,16 +310,21 @@ footer a:hover{color:rgba(255,255,255,0.6)}
         const homeDeployData = await homeDeployRes.json();
         if (!homeDeployData.error) {
           updatedHomepageUrl = `https://${homeDeployData.alias?.[0] || homeDeployData.url}`;
+        } else {
+          homepageSkippedReason = 'deploy_failed';
         }
       } catch(e) {
         console.error('Homepage update failed:', e.message);
-        // Don't fail the whole request — post still published
+        // Don't fail the whole request — post still published on its own
+        // page, just not linked from the homepage yet.
       }
     }
 
     return res.status(200).json({
       success: true,
       postUrl,
+      homepageUpdated: !!updatedHomepageUrl,
+      homepageSkippedReason: updatedHomepageUrl ? null : homepageSkippedReason,
       updatedHomepageUrl,
       post: {
         title: post.title,

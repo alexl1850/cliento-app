@@ -1594,7 +1594,7 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
         <div style={{padding:"18px"}}>
           {phase==="form"&&(
             <div>
-              <ExtraFields toolId={toolId} biz={biz} extra={extra} setExtra={setExtra}/>
+              <ExtraFields toolId={toolId} biz={biz} industry={industry} extra={extra} setExtra={setExtra}/>
               {error&&<div style={{margin:"12px 0",padding:"11px",background:C.redLt,border:`1px solid #FECACA`,borderRadius:"8px",color:C.red,fontSize:"0.83em"}}>{error}</div>}
               {toolId!=="blog"&&toolId!=="sh_blog"&&<button onClick={generate} style={{...btnPrimary,width:"100%",marginTop:"18px",background:toolId==="seasonal"||toolId==="analytics"||toolId==="jobad"?C.teal:toolId.startsWith("sh_")?C.purple:C.brand}}>
                 {toolId==="seasonal"?"🗓️ Build My Seasonal Campaign →"
@@ -1680,7 +1680,7 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
 // ═════════════════════════════════════════════════════════════════════════════
 // EXTRA FIELDS (per tool)
 // ═════════════════════════════════════════════════════════════════════════════
-function ExtraFields({toolId,biz,extra,setExtra}) {
+function ExtraFields({toolId,biz,industry,extra,setExtra}) {
   const set = (k,v)=>setExtra(e=>({...e,[k]:v}));
   const ib = (text)=>(<div style={{background:"#F0F9FF",border:"1px solid #BFDBFE",borderRadius:"8px",padding:"11px 13px",fontSize:"0.83em",color:"#1E40AF",lineHeight:1.6,marginBottom:"12px"}}>{text}</div>);
 
@@ -2704,6 +2704,8 @@ function BlogPublishButton({ output, biz, extra }) {
   const [liveUrl, setLiveUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
+  const [homepageUpdated, setHomepageUpdated] = useState(false);
+  const [homepageSkippedReason, setHomepageSkippedReason] = useState(null);
 
   // Extract title from the blog post output
   const extractTitle = (text) => {
@@ -2754,6 +2756,8 @@ function BlogPublishButton({ output, biz, extra }) {
       if (d.error) throw new Error(d.error);
 
       setLiveUrl(d.postUrl);
+      setHomepageUpdated(!!d.homepageUpdated);
+      setHomepageSkippedReason(d.homepageSkippedReason || null);
       setPhase("done");
 
       // Save to localStorage for next publish
@@ -2815,7 +2819,11 @@ function BlogPublishButton({ output, biz, extra }) {
         </button>
       </div>
       <div style={{fontSize:"0.72em",color:C.muted,marginTop:"8px",lineHeight:1.5}}>
-        💡 Your homepage has been updated with this post in the "Latest from our blog" section.
+        {homepageUpdated
+          ? '💡 Your homepage has been updated with this post in the "Latest from our blog" section.'
+          : homepageSkippedReason === 'no_website'
+          ? "⚠️ This post is live at its own link, but your homepage hasn't been built yet — build your website first, then publish this post again to add it to your homepage."
+          : "⚠️ This post is live at its own link, but we couldn't update your homepage this time — try publishing again in a minute."}
       </div>
     </div>
   );
