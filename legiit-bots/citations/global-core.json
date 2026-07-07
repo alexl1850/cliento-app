@@ -1,0 +1,15 @@
+{
+  "scope": "global-core",
+  "note": "Submitted for every client regardless of country. Compiled from published reference lists, cross-checked across multiple sources -- not yet confirmed via an actual live submission (see README).",
+  "directories": [
+    { "name": "Google Business Profile", "url": "https://business.google.com/create", "confidence": "high" },
+    { "name": "Bing Places for Business",  "url": "https://www.bingplaces.com",        "confidence": "high" },
+    { "name": "Facebook Business Pages",   "url": "https://www.facebook.com/business", "confidence": "high" },
+    { "name": "Apple Business Connect",    "url": "https://businessconnect.apple.com", "confidence": "high" },
+    { "name": "Foursquare",                "url": "https://foursquare.com/business",   "confidence": "high" },
+    { "name": "LinkedIn Company Pages",    "url": "https://www.linkedin.com/company/setup/new", "confidence": "high" },
+    { "name": "Hotfrog",                   "url": "https://www.hotfrog.com",            "confidence": "medium" },
+    { "name": "Brownbook",                 "url": "https://www.brownbook.net",          "confidence": "medium" },
+    { "name": "Yelp",                      "url": "https://biz.yelp.com",               "confidence": "high", "note": "Covers 30+ countries -- use the relevant country subdomain where one exists." }
+  ]
+}

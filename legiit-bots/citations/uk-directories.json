@@ -1,0 +1,16 @@
+{
+  "country": "UK",
+  "note": "Additive to global-core.json. Compiled from published reference lists -- not yet confirmed via an actual live submission.",
+  "target_count_advertised_by_competitors": 150,
+  "directories": [
+    { "name": "Yell",          "url": "https://www.yell.com",         "confidence": "high" },
+    { "name": "Yelp UK",       "url": "https://www.yelp.co.uk",       "confidence": "high" },
+    { "name": "FreeIndex",     "url": "https://www.freeindex.co.uk",  "confidence": "medium" },
+    { "name": "Thomson Local", "url": "https://www.thomsonlocal.com", "confidence": "medium" },
+    { "name": "Cylex UK",      "url": "https://www.cylex-uk.co.uk",   "confidence": "medium" },
+    { "name": "Scoot",         "url": "https://www.scoot.co.uk",      "confidence": "medium" },
+    { "name": "192.com",       "url": "https://www.192.com",          "confidence": "medium" },
+    { "name": "Bizify",        "url": "https://www.bizify.co.uk",     "confidence": "medium" },
+    { "name": "Opendi UK",     "url": "https://www.opendi.co.uk",     "confidence": "low", "note": "verify URL/signup flow before relying on it" }
+  ]
+}
