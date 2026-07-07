@@ -9,12 +9,16 @@
     { "name": "Thomson Local", "url": "https://www.thomsonlocal.com", "confidence": "medium" },
     { "name": "Cylex UK",      "url": "https://www.cylex-uk.co.uk",   "confidence": "medium" },
     { "name": "Scoot",         "url": "https://www.scoot.co.uk",      "confidence": "medium" },
-    { "name": "192.com",       "url": "https://www.192.com",          "confidence": "medium" },
+    { "name": "192.com",       "url": "https://www.192.com",          "confidence": "medium", "note": "high authority, deeply embedded in UK local search per research" },
     { "name": "Bizify",        "url": "https://www.bizify.co.uk",     "confidence": "medium" },
-    { "name": "Yalwa UK",      "url": "https://www.yalwa.co.uk",      "confidence": "low" },
+    { "name": "Yalwa UK / Locanto", "url": "https://www.locanto.co.uk", "confidence": "medium", "note": "Yalwa rebranded to Locanto in the UK market per research" },
     { "name": "Tupalo",        "url": "https://www.tupalo.com",       "confidence": "medium", "note": "Europe-wide review platform, not UK-exclusive" },
     { "name": "City Visitor",  "url": "https://www.cityvisitor.co.uk","confidence": "low" },
     { "name": "B2B Index",     "url": "https://www.b2bindex.co.uk",   "confidence": "medium", "note": "flagged as high-authority in research" },
-    { "name": "Opendi UK",     "url": "https://www.opendi.co.uk",     "confidence": "low", "note": "verify URL/signup flow before relying on it" }
-  ]
+    { "name": "Opendi UK",     "url": "https://www.opendi.co.uk",     "confidence": "low", "note": "verify URL/signup flow before relying on it" },
+    { "name": "Fyple UK",      "url": "https://www.fyple.co.uk",      "confidence": "medium", "note": "strong usability for small-business self-managed listings per research" },
+    { "name": "Hotfrog UK",    "url": "https://www.hotfrog.co.uk",    "confidence": "medium" },
+    { "name": "Brownbook",     "url": "https://www.brownbook.net",    "confidence": "medium", "note": "already in global-core -- listed here as a reminder it has strong UK coverage specifically (2.2M+ UK businesses per research)" }
+  ],
+  "research_note": "~200 general UK listing sites exist per research, plus niche/specialist directories (professional bodies, chambers of commerce, networking groups) that are genuinely industry-specific rather than general-purpose. General search is now surfacing repeats rather than new names -- further growth needs either a real delivered report or working through full paginated lists this session can't fetch directly."
 }

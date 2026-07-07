@@ -10,7 +10,10 @@
     { "name": "Cylex",         "url": "https://www.cylex.com",        "confidence": "medium", "note": "international directory, country-specific subdomains" },
     { "name": "Tupalo",        "url": "https://www.tupalo.com",       "confidence": "medium", "note": "Europe-focused but accepts global listings" },
     { "name": "Fyple",         "url": "https://www.fyple.com",        "confidence": "medium", "note": "has country-specific sections" },
-    { "name": "Cybo",          "url": "https://www.cybo.com",         "confidence": "low" }
+    { "name": "Cybo",          "url": "https://www.cybo.com",         "confidence": "medium", "note": "400M+ businesses across 50 languages per research" },
+    { "name": "Infobel",       "url": "https://www.infobel.com",      "confidence": "medium", "note": "164M+ records across 73 countries per research" },
+    { "name": "Yalwa",         "url": "https://www.yalwa.com",        "confidence": "medium", "note": "operates in 25 countries per research" },
+    { "name": "2FindLocal",    "url": "https://www.2findlocal.com",   "confidence": "low" }
   ],
-  "gap_note": "8 solid global-only entries beyond global-core so far -- still well short of the ~85 competitors advertise. This needs a further research pass, ideally per-region (Asia, Middle East, Latin America, Africa each likely have their own major aggregators not yet researched), before the 'special country' tier can credibly match that number."
+  "gap_note": "11 solid global-only entries beyond global-core -- better than the last pass but still well short of the ~85 competitors advertise. General search is now surfacing mostly repeat names, which is itself informative: closing this gap further likely needs region-specific research (Asia, Middle East, Latin America, Africa each have their own major local aggregators not yet covered here) rather than more general 'global directory' queries."
 }
