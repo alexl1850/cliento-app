@@ -260,5 +260,127 @@
       "verified_live": true,
       "excluded_reason": "file-sharing site, not a business directory"
     }
-  ]
+  ],
+  "directories_supplementary_unverified": [
+    {
+      "url": "https://www.aussieweb.com.au"
+    },
+    {
+      "url": "https://www.yellowpages.com.au",
+      "note": "major AU directory -- Yellow Pages Australia"
+    },
+    {
+      "url": "https://www.truelocal.com.au",
+      "note": "one of the biggest AU directories per prior research"
+    },
+    {
+      "url": "https://www.hotfrog.com.au"
+    },
+    {
+      "url": "https://www.bloo.com.au"
+    },
+    {
+      "url": "https://www.yelp.com.au",
+      "note": "Yelp's AU market, growing especially in food/hospitality"
+    },
+    {
+      "url": "https://www.australianplanet.com"
+    },
+    {
+      "url": "https://www.startlocal.com.au",
+      "note": "established AU small-business directory"
+    },
+    {
+      "url": "https://www.yourcity.com.au"
+    },
+    {
+      "url": "https://www.yalwa.com.au"
+    },
+    {
+      "url": "https://www.australianguide.net.au"
+    },
+    {
+      "url": "https://www.dlook.com.au"
+    },
+    {
+      "url": "https://www.aubiz.org"
+    },
+    {
+      "url": "https://www.pinkpages.com.au"
+    },
+    {
+      "url": "https://www.superpages.com.au",
+      "note": "AU-specific -- distinct from the US superpages.com already in the USA list"
+    },
+    {
+      "url": "https://www.localstore.com.au"
+    },
+    {
+      "url": "https://www.cylex.com.au"
+    },
+    {
+      "url": "https://www.local.com.au"
+    },
+    {
+      "url": "https://www.australianonlineadvertising.com.au"
+    },
+    {
+      "url": "https://www.comeonaussie.com"
+    },
+    {
+      "url": "https://au.enrollbusiness.com"
+    },
+    {
+      "url": "https://www.misterwhat-au.com"
+    },
+    {
+      "url": "https://www.savvysme.com.au"
+    },
+    {
+      "url": "https://www.businesslistingnow.com.au"
+    },
+    {
+      "url": "https://www.flyingsolo.com.au"
+    },
+    {
+      "url": "https://www.findlocal.com"
+    },
+    {
+      "url": "https://www.purelocal.com.au"
+    },
+    {
+      "url": "https://www.combodirectoryaustralia.info"
+    },
+    {
+      "url": "https://www.business.com.au"
+    },
+    {
+      "url": "https://www.aussiesrus.com.au"
+    },
+    {
+      "url": "https://www.iti.com.au"
+    },
+    {
+      "url": "https://www.aroundyou.com.au"
+    },
+    {
+      "url": "https://www.downunderindex.com"
+    },
+    {
+      "url": "https://www.shopwhere.com.au"
+    },
+    {
+      "url": "https://www.abdo.com.au"
+    },
+    {
+      "url": "https://www.ozbusiness.com.au"
+    },
+    {
+      "url": "https://www.livepages.com.au"
+    },
+    {
+      "url": "https://www.joelocal.com.au"
+    }
+  ],
+  "note_on_supplementary": "Added from a plain domain list (no DA scores, no live-verification) supplied directly -- distinct confidence tier from the 47 confirmed-Live entries above. 6 within-list duplicates removed (aussieweb.com.au x3, australianplanet.com x3, bloo.com.au/dlook.com.au/aubiz.org x2 each), and 3 more excluded as already covered: womo.com.au (= wordofmouth.com.au, already in the real 47), brownbook.net (already in global-core.json), infobel.com (already in global-other.json)."
 }
