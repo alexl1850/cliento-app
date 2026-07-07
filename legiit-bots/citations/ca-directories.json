@@ -3,21 +3,740 @@
   "note": "Additive to global-core.json. Compiled from published reference lists (multiple search passes) -- not yet confirmed via an actual live submission.",
   "target_count_advertised_by_competitors": 150,
   "directories": [
-    { "name": "Yelp Canada",                "url": "https://www.yelp.ca",                    "confidence": "high" },
-    { "name": "Yellow Pages Canada (YP.ca)","url": "https://www.yellowpages.ca",             "confidence": "high" },
-    { "name": "Canada411",                  "url": "https://www.canada411.ca",               "confidence": "medium" },
-    { "name": "411.ca",                     "url": "https://411.ca",                          "confidence": "medium" },
-    { "name": "Canadian Business Directory","url": "http://www.canadianbusinessdirectory.ca","confidence": "medium" },
-    { "name": "FreeBizAds",                 "url": "https://www.freebizads.ca",              "confidence": "medium" },
-    { "name": "n49",                        "url": "https://www.n49.com",                    "confidence": "medium", "note": "comprehensive Canadian search portal, strong geographic/category organization" },
-    { "name": "Cylex Canada",               "url": "https://www.cylex-canada.ca",             "confidence": "medium", "note": "acts as a data aggregator -- listing here can feed several partner directories automatically" },
-    { "name": "Hotfrog Canada",             "url": "https://www.hotfrog.ca",                  "confidence": "medium" },
-    { "name": "fyple Canada",               "url": "https://www.fyple.ca",                    "confidence": "low", "note": "verify URL/signup flow before relying on it" },
-    { "name": "CanPages",                   "url": "https://www.canpages.ca",                 "confidence": "low", "note": "Canadian-owned-business focused; verify URL/signup flow before relying on it" },
-    { "name": "Yalwa Canada",               "url": "https://m.yalwa.ca",                       "confidence": "medium", "note": "2M+ local businesses listed per research" },
-    { "name": "Manta (Canada listings)",    "url": "https://www.manta.com/world/North+America/Canada", "confidence": "medium" },
-    { "name": "CanadaWebDir",               "url": "https://www.canadawebdir.com",             "confidence": "low", "note": "verify URL/signup flow before relying on it" },
-    { "name": "Whitepages",                 "url": "https://www.whitepages.com",               "confidence": "medium", "note": "shared with USA list -- covers both US and Canada" }
+    {
+      "url": "https://www.canada-directory.net",
+      "da": 76,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.servicebasket.ca",
+      "da": 71,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.yalwa.ca",
+      "da": 68,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.profilecanada.com",
+      "da": 67,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.canbizfinder.ca",
+      "da": 67,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.cdncompanies.com",
+      "da": 67,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.cdnpages.ca",
+      "da": 66,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.goldbook.ca",
+      "da": 65,
+      "listing_type": "Free/Paid",
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.listercanada.com",
+      "da": 65,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.bowldi.ca",
+      "da": 63,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.zipleaf.ca",
+      "da": 62,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.phonepages.ca",
+      "da": 61,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.fslocal.com",
+      "da": 61,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.localsites.ca",
+      "da": 60,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.foundlocally.com",
+      "da": 58,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.trycanada.com",
+      "da": 58,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.livebusiness.ca",
+      "da": 57,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadawebdirectory.com",
+      "da": 56,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.canadabusinesslist.com",
+      "da": 56,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canada-co.com",
+      "da": 56,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadapages.com",
+      "da": 55,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.toronto.com",
+      "da": 55,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow",
+      "scope": "Toronto-specific, not general Canada-wide"
+    },
+    {
+      "url": "https://www.service.opendi.ca",
+      "da": 53,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.breken.com",
+      "da": 53,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.vendorland.ca",
+      "da": 53,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.validlaw.org",
+      "da": 51,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.legacy.411.ca",
+      "da": 49,
+      "listing_type": "Paid/Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.ourbis.ca",
+      "da": 48,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.vancouverdirectory.com",
+      "da": 47,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.clickcan.com",
+      "da": 47,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.torontomommies.net",
+      "da": 46,
+      "listing_type": "Free",
+      "backlink_type": "No-Follow",
+      "scope": "Toronto-specific, not general Canada-wide"
+    },
+    {
+      "url": "https://www.newcanadianbusiness.com",
+      "da": 45,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.bizin.ca",
+      "da": 45,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.in-toronto.ca",
+      "da": 44,
+      "listing_type": "Free/Paid",
+      "backlink_type": "Do-Follow",
+      "scope": "Toronto-specific, not general Canada-wide"
+    },
+    {
+      "url": "https://www.advertisingincanada.com",
+      "da": 44,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.toronto.prepky.ca",
+      "da": 43,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow",
+      "scope": "Toronto-specific, not general Canada-wide"
+    },
+    {
+      "url": "https://www.ukrcanada.com",
+      "da": 43,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.directory.northernontariobusiness.com",
+      "da": 43,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canlinks.net",
+      "da": 42,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([47, 36]) -- averaged"
+    },
+    {
+      "url": "https://www.ontarioyellowpage.com",
+      "da": 42,
+      "listing_type": "Paid/Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.bigwhitelist.com",
+      "da": 42,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.biztha.com",
+      "da": 42,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.yukoncanadadirectory.com",
+      "da": 42,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.shopincanada.com",
+      "da": 41,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.kikoja.ca",
+      "da": 41,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.allcompanies.ca",
+      "da": 40,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([44, 43, 33]) -- averaged"
+    },
+    {
+      "url": "https://www.onlinedirectoryca.org",
+      "da": 39,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.cibd.ca",
+      "da": 38,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.b2b-directory.ca",
+      "da": 37,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.calocalbiz.com",
+      "da": 37,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.techhelp.ca",
+      "da": 37,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.metrodirectory.ca",
+      "da": 37,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.hometowncanada.com",
+      "da": 36,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.contactcanada.com",
+      "da": 36,
+      "listing_type": "paid",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.torontobizhub.ca",
+      "da": 36,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.smallbizpages.ca",
+      "da": 36,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.buyitcanada.com",
+      "da": 35,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.localstore.ca",
+      "da": 35,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.localtorontobusiness.ca",
+      "da": 34,
+      "listing_type": "Free",
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([36, 31]) -- averaged",
+      "scope": "Toronto-specific, not general Canada-wide"
+    },
+    {
+      "url": "https://www.calooks.com",
+      "da": 34,
+      "listing_type": "Paid/Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.businesseye.ca",
+      "da": 34,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.strictly.ca",
+      "da": 34,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.goodcanada.com",
+      "da": 34,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.smallcanadianorg.com",
+      "da": 33,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.daccanomics.com",
+      "da": 32,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow",
+      "note": "DA varied across source rows ([53, 11]) -- averaged"
+    },
+    {
+      "url": "https://www.localontariodirectory.com",
+      "da": 32,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadianculture.com",
+      "da": 32,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.bigcanadiandirectory.com",
+      "da": 31,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadianorglist.com",
+      "da": 31,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.elocal.ca",
+      "da": 31,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.montrealyellowpage.com",
+      "da": 31,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.411canadayellowpages.ca",
+      "da": 30,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.druze.net",
+      "da": 30,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadiancompaniesdirectory.com",
+      "da": 29,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow",
+      "note": "DA varied across source rows ([26, 32]) -- averaged"
+    },
+    {
+      "url": "https://www.canadageo.com",
+      "da": 29,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadasmelisting.com",
+      "da": 28,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.companylisterca.com",
+      "da": 27,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.websites.ca",
+      "da": 27,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.armenianbusinessdirectory.ca",
+      "da": 27,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.findhere.ca",
+      "da": 27,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.relevantdirectory.ca",
+      "da": 26,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.libertyvillagebia.com",
+      "da": 25,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.vancouverbusinesslisting.ca",
+      "da": 25,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.mydotca.ca",
+      "da": 25,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.directoryws.com",
+      "da": 24,
+      "listing_type": "free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.onlineshoppers.ca",
+      "da": 24,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.incanada24.ca",
+      "da": 24,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.canadianonlineradionetwork.com",
+      "da": 23,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.fivestarscenter.com",
+      "da": 23,
+      "listing_type": "free/paid",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.freedirectory.ca",
+      "da": 23,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.businesscatalogue.ca",
+      "da": 23,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.directory4petowners.com",
+      "da": 23,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.cabusinessdirectory.com",
+      "da": 22,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.indocanadianbusinesspages.com",
+      "da": 22,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.forlocations.ca",
+      "da": 22,
+      "listing_type": "free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.nriincanada.com",
+      "da": 22,
+      "listing_type": "paid",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canadasmallbiz.com",
+      "da": 21,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.just4funcanada.com",
+      "da": 21,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.fxdirectory.ca",
+      "da": 19,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.lookupcanadian.com",
+      "da": 18,
+      "listing_type": "Free",
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.smallbizlist.com",
+      "da": 17,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.waterloobusinesslist.ca",
+      "da": 16,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.listingc.com",
+      "da": 16,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.canucklinks.com",
+      "da": 14,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.deepriver.ca",
+      "da": 13,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.businessplacemontreal.com",
+      "da": 12,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "url": "https://www.montreallocaldirectory.com",
+      "da": 11,
+      "listing_type": "Free",
+      "backlink_type": "Do-follow"
+    },
+    {
+      "name": "Yelp Canada",
+      "url": "https://www.yelp.ca",
+      "confidence": "high"
+    },
+    {
+      "name": "Yellow Pages Canada (YP.ca)",
+      "url": "https://www.yellowpages.ca",
+      "confidence": "high"
+    },
+    {
+      "name": "Canada411",
+      "url": "https://www.canada411.ca",
+      "confidence": "medium"
+    },
+    {
+      "name": "411.ca",
+      "url": "https://411.ca",
+      "confidence": "medium"
+    },
+    {
+      "name": "Canadian Business Directory",
+      "url": "http://www.canadianbusinessdirectory.ca",
+      "confidence": "medium"
+    },
+    {
+      "name": "FreeBizAds",
+      "url": "https://www.freebizads.ca",
+      "confidence": "medium"
+    },
+    {
+      "name": "n49",
+      "url": "https://www.n49.com",
+      "confidence": "medium",
+      "note": "comprehensive Canadian search portal, strong geographic/category organization"
+    },
+    {
+      "name": "Cylex Canada",
+      "url": "https://www.cylex-canada.ca",
+      "confidence": "medium",
+      "note": "acts as a data aggregator -- listing here can feed several partner directories automatically"
+    },
+    {
+      "name": "Hotfrog Canada",
+      "url": "https://www.hotfrog.ca",
+      "confidence": "medium"
+    },
+    {
+      "name": "fyple Canada",
+      "url": "https://www.fyple.ca",
+      "confidence": "low",
+      "note": "verify URL/signup flow before relying on it"
+    },
+    {
+      "name": "CanPages",
+      "url": "https://www.canpages.ca",
+      "confidence": "low",
+      "note": "Canadian-owned-business focused; verify URL/signup flow before relying on it"
+    },
+    {
+      "name": "Yalwa Canada",
+      "url": "https://m.yalwa.ca",
+      "confidence": "medium",
+      "note": "2M+ local businesses listed per research"
+    },
+    {
+      "name": "Manta (Canada listings)",
+      "url": "https://www.manta.com/world/North+America/Canada",
+      "confidence": "medium"
+    },
+    {
+      "name": "CanadaWebDir",
+      "url": "https://www.canadawebdir.com",
+      "confidence": "low",
+      "note": "verify URL/signup flow before relying on it"
+    },
+    {
+      "name": "Whitepages",
+      "url": "https://www.whitepages.com",
+      "confidence": "medium",
+      "note": "shared with USA list -- covers both US and Canada"
+    }
   ],
-  "research_note": "This pass surfaced mostly names already known rather than new ones -- approaching the ceiling of what general search turns up for CA specifically. Closing the gap to 150 further would need either a real delivered report (like the AU one) or working through the full paginated lists on BrightLocal/citationbuilderpro directly, which this session can't fetch."
+  "research_note": "122 total now, 46 of which clear DA 40+. 5 entries are flagged Toronto-specific rather than general Canada-wide -- useful for Toronto-based clients specifically, not a general submission. One data-quality flag: daccanomics.com had DA readings of 53 and 11 across two source rows -- averaged to 32 but worth verifying directly before relying on it, that gap is unusually wide."
 }
