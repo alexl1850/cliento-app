@@ -4,11 +4,10 @@
   "target_count_advertised_by_competitors": 150,
   "directories": [
     {
-      "name": "Yell",
-      "url": "https://www.yell.com",
-      "confidence": "high",
-      "da": 79,
-      "link_type": "usually nofollow"
+      "url": "https://www.business.linkedin.com",
+      "da": 95,
+      "backlink_type": "No-follow",
+      "listing_type": "Free"
     },
     {
       "name": "Yelp UK",
@@ -18,11 +17,125 @@
       "link_type": "usually nofollow"
     },
     {
-      "name": "FreeIndex",
-      "url": "https://www.freeindex.co.uk",
+      "url": "https://www.mapsconnect.apple.com",
+      "da": 89,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "name": "Yell",
+      "url": "https://www.yell.com",
       "confidence": "high",
-      "da": 54,
-      "link_type": "often dofollow/mixed by page type"
+      "da": 79,
+      "link_type": "usually nofollow"
+    },
+    {
+      "url": "https://www.businessmagnet.co.uk",
+      "da": 78,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.locallife.co.uk",
+      "da": 74,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.free4london.co.uk",
+      "da": 74,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.souldatafirms.co.uk",
+      "da": 72,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.architecturefirms.co.uk",
+      "da": 72,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.carryonsurfing.co.uk",
+      "da": 72,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.zagat.com",
+      "da": 72,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ents24.com",
+      "da": 72,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.mumsnet.com",
+      "da": 71,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.pininthemap.com",
+      "da": 71,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.gateuk.com",
+      "da": 70,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.businessdirectory-uk.com",
+      "da": 69,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.web-design-directory-uk.co.uk",
+      "da": 69,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.in.enrollbusiness.com",
+      "da": 68,
+      "backlink_type": "Do-follow",
+      "listing_type": "Paid/Free"
+    },
+    {
+      "url": "https://www.foodplaces.co.uk",
+      "da": 68,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.gogobot.com",
+      "da": 68,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.localdatasearch.com",
+      "da": 67,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "name": "192.com",
+      "url": "https://www.192.com",
+      "confidence": "high",
+      "note": "high authority, deeply embedded in UK local search per research",
+      "da": 66,
+      "link_type": "usually nofollow"
+    },
+    {
+      "url": "https://www.tipped.co.uk",
+      "da": 66,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.mindiam.co.uk",
+      "da": 66,
+      "backlink_type": "No-Follow"
     },
     {
       "name": "Thomson Local",
@@ -32,11 +145,134 @@
       "link_type": "usually nofollow"
     },
     {
-      "name": "Cylex UK",
-      "url": "https://www.cylex-uk.co.uk",
-      "confidence": "high",
-      "da": 48,
-      "link_type": "often dofollow/mixed"
+      "url": "https://www.recommendedcompany.co.uk",
+      "da": 65,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.ilondon.co.uk",
+      "da": 65,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.tradesfinder.co.uk",
+      "da": 65,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.yourlocallink.co.uk",
+      "da": 64,
+      "backlink_type": "No-follow",
+      "listing_type": "Paid/Free",
+      "note": "DA varied across source rows ([71, 56]) -- averaged"
+    },
+    {
+      "url": "https://www.mysheriff.co.uk",
+      "da": 64,
+      "backlink_type": "Do-follow",
+      "listing_type": "Paid/Free"
+    },
+    {
+      "url": "https://www.greatbritainandnorthernireland.co",
+      "da": 64,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.secretsalons.com",
+      "da": 64,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.localsecrets.com",
+      "da": 63,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.expatads.com",
+      "da": 63,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.yellowleaf.co.uk",
+      "da": 63,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.britishfirms.co.uk",
+      "da": 62,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.netmums.com",
+      "da": 62,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.business.eastnorthants.co.uk",
+      "da": 62,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.spoke.com",
+      "da": 62,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([51, 72]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.ukpartydirectory.com",
+      "da": 62,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukwebdir.com",
+      "da": 61,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.fancyapint.com",
+      "da": 61,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.directory.im",
+      "da": 61,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.uk.myhuckleberry.com",
+      "da": 61,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.uk-locate.co.uk",
+      "da": 60,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free",
+      "note": "DA varied across source rows ([52, 67]) -- averaged"
+    },
+    {
+      "url": "https://www.businessspread.co.uk",
+      "da": 60,
+      "backlink_type": "No-Follow",
+      "note": "DA varied across source rows ([53, 66]) -- averaged"
+    },
+    {
+      "url": "https://www.fastfinders.co.uk",
+      "da": 59,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.bigguide.co.uk",
+      "da": 59,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukebiz.com",
+      "da": 59,
+      "backlink_type": "Do-Follow"
     },
     {
       "name": "Scoot",
@@ -46,12 +282,895 @@
       "link_type": "usually nofollow"
     },
     {
-      "name": "192.com",
-      "url": "https://www.192.com",
+      "url": "https://www.buryfocus.co.uk",
+      "da": 58,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.starreviews.co.uk",
+      "da": 58,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.thetradefinder.com",
+      "da": 58,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.thediscdirectory.co.uk",
+      "da": 58,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.snaplocal.com",
+      "da": 58,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.asianplaza.co.uk",
+      "da": 57,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.thebigdirectory.co.uk",
+      "da": 57,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.enquira.co.uk",
+      "da": 57,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.highlandsandislands.co",
+      "da": 56,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.searchme4.co.uk",
+      "da": 56,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([46, 67]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.ukbizs.com",
+      "da": 56,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.visit-dorset.org.uk",
+      "da": 55,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free",
+      "note": "DA varied across source rows ([54, 56]) -- averaged"
+    },
+    {
+      "url": "https://www.maplandia.com",
+      "da": 55,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([42, 68]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.localblox.com",
+      "da": 55,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.localpeople.co.uk",
+      "da": 55,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "name": "FreeIndex",
+      "url": "https://www.freeindex.co.uk",
       "confidence": "high",
-      "note": "high authority, deeply embedded in UK local search per research",
-      "da": 66,
-      "link_type": "usually nofollow"
+      "da": 54,
+      "link_type": "often dofollow/mixed by page type"
+    },
+    {
+      "url": "https://www.businessvibes.com",
+      "da": 54,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.dentons.net",
+      "da": 54,
+      "backlink_type": "No-follow",
+      "note": "DA varied across source rows ([43, 65]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.yalwa.co.uk",
+      "da": 54,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "name": "Hotfrog UK",
+      "url": "https://www.hotfrog.co.uk",
+      "confidence": "high",
+      "da": 53,
+      "link_type": "mixed/often citation-focused"
+    },
+    {
+      "url": "https://www.yfs.co.uk",
+      "da": 53,
+      "backlink_type": "Do-follow",
+      "listing_type": "Paid/Free"
+    },
+    {
+      "url": "https://www.talkbusinessdirectory.com",
+      "da": 53,
+      "backlink_type": "Do-follow",
+      "listing_type": "Free"
+    },
+    {
+      "url": "https://www.bview.co.uk",
+      "da": 53,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.mylocalservices.co.uk",
+      "da": 53,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([66, 40]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.go2net.co.uk",
+      "da": 53,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.bedford.co.uk",
+      "da": 52,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.directory.thesun.co.uk",
+      "da": 52,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([41, 62]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.findtheuk.co.uk",
+      "da": 52,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.biznessdirect.co.uk",
+      "da": 51,
+      "backlink_type": "No-follow",
+      "listing_type": "Paid/Free",
+      "note": "DA varied across source rows ([56, 67, 35, 47]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.firstfriday-network.co.uk",
+      "da": 51,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.biz-find.co.uk",
+      "da": 51,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.toplocallistings.co.uk",
+      "da": 51,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.fonolive.com",
+      "da": 51,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.mapme.com",
+      "da": 51,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.professionalsecurity.co.uk",
+      "da": 51,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.directoryuk.net",
+      "da": 51,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.tagtagcity.com",
+      "da": 51,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.colourpages.com",
+      "da": 50,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukforbusiness.co.uk",
+      "da": 50,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([42, 57]) -- averaged"
+    },
+    {
+      "url": "https://www.digibritain.co.uk",
+      "da": 50,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([49, 50]) -- averaged"
+    },
+    {
+      "url": "https://www.deeplinkdirectory.co.uk",
+      "da": 50,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.vendora.com",
+      "da": 50,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.barexchange.com",
+      "da": 50,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukdirectory.co.uk",
+      "da": 50,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.bizfo.co.uk",
+      "da": 49,
+      "backlink_type": "No-follow",
+      "note": "DA varied across source rows ([60, 44, 42]) -- averaged"
+    },
+    {
+      "url": "https://www.londondirectory.co.uk",
+      "da": 49,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([67, 31]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.the-shops.co.uk",
+      "da": 49,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([34, 64]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.localstore.co.uk",
+      "da": 49,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([30, 68]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.britishwebdirectory.com",
+      "da": 49,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.uk-directory.biz",
+      "da": 49,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.uk-local-search.co.uk",
+      "da": 49,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "name": "Cylex UK",
+      "url": "https://www.cylex-uk.co.uk",
+      "confidence": "high",
+      "da": 48,
+      "link_type": "often dofollow/mixed"
+    },
+    {
+      "name": "TouchLocal",
+      "url": "https://www.touchlocal.com",
+      "da": 48,
+      "link_type": "citation-focused",
+      "confidence": "high",
+      "note": "local business discovery"
+    },
+    {
+      "url": "https://www.view.co.uk",
+      "da": 48,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([73, 23]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.directory.independent.co.uk",
+      "da": 48,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([41, 55]) -- averaged"
+    },
+    {
+      "url": "https://www.ukwebuk.co.uk",
+      "da": 48,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "name": "Brownbook",
+      "url": "https://www.brownbook.net",
+      "confidence": "high",
+      "note": "already in global-core -- listed here as a reminder it has strong UK coverage specifically (2.2M+ UK businesses per research)",
+      "da": 47,
+      "link_type": "citation-focused"
+    },
+    {
+      "url": "https://www.near.co.uk",
+      "da": 47,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([59, 35]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.masterdirectory.co.uk",
+      "da": 47,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.londonbusinessdirectory.net",
+      "da": 47,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "name": "Local.co.uk",
+      "url": "https://www.local.co.uk",
+      "da": 46,
+      "link_type": "citation-focused",
+      "confidence": "high"
+    },
+    {
+      "url": "https://www.businessnetwork.co.uk",
+      "da": 46,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([37, 56]) -- averaged"
+    },
+    {
+      "url": "https://www.in.uk.com",
+      "da": 46,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.uksearch247.com",
+      "da": 45,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.applegate.co.uk",
+      "da": 45,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.townpages.co.uk",
+      "da": 45,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.gransnet.com",
+      "da": 45,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([23, 67]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.angloinfo.com",
+      "da": 45,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.beanhunter.com",
+      "da": 45,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.tomalocal.com",
+      "da": 44,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([42, 45]) -- averaged"
+    },
+    {
+      "url": "https://www.smallbizpages.co.uk",
+      "da": 44,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.4networking.biz",
+      "da": 43,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.thelocalweb.net",
+      "da": 43,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.kentfind.co.uk",
+      "da": 42,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([37, 48]) -- averaged"
+    },
+    {
+      "url": "https://www.onlyuncle.com",
+      "da": 42,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukmoz.com",
+      "da": 42,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.visitlondon.com",
+      "da": 42,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.b99.co.uk",
+      "da": 42,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.wikiglow.com",
+      "da": 42,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.4ni.co.uk",
+      "da": 41,
+      "backlink_type": "No-follow",
+      "note": "DA varied across source rows ([34, 48]) -- averaged"
+    },
+    {
+      "url": "https://www.bizwiki.co.uk",
+      "da": 41,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.directorybay.co.uk",
+      "da": 41,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.b2b-uk.com",
+      "da": 40,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.vodski.co.uk",
+      "da": 40,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([62, 18]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.pestcontrolportal.com",
+      "da": 40,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.primeplaces.here.com",
+      "da": 40,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.approvedbusiness.co.uk",
+      "da": 39,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([38, 52, 27]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.linkbyme.co.uk",
+      "da": 39,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.hebd.co.uk",
+      "da": 38,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.flavors.me",
+      "da": 38,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([46, 30]) -- averaged"
+    },
+    {
+      "url": "https://www.browzit.com",
+      "da": 38,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.crunchbase.com",
+      "da": 37,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([39, 35]) -- averaged"
+    },
+    {
+      "url": "https://www.list.co.uk",
+      "da": 37,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukwebuk.com",
+      "da": 37,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.business-portal.co.uk",
+      "da": 36,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.towntalk.co.uk",
+      "da": 36,
+      "backlink_type": "No-follow",
+      "note": "DA varied across source rows ([43, 30]) -- averaged"
+    },
+    {
+      "url": "https://www.communitywalk.com",
+      "da": 36,
+      "backlink_type": "No-follow",
+      "note": "DA varied across source rows ([45, 28]) -- averaged"
+    },
+    {
+      "url": "https://www.az-uk.com",
+      "da": 36,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.tripadvisor.in",
+      "da": 36,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.scottishhub.co.uk",
+      "da": 36,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.london.directory",
+      "da": 35,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.inuklocal.co.uk",
+      "da": 35,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.placestars.com",
+      "da": 35,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.webdirectorylondon.co.uk",
+      "da": 34,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.buyinthebay.co.uk",
+      "da": 34,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.businesslinks.co.uk",
+      "da": 34,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.misterwhat.co.uk",
+      "da": 34,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.uknation.co.uk",
+      "da": 34,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.britainbusinessdirectory.com",
+      "da": 34,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.bromleybusinessdirectory.co.uk",
+      "da": 33,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.construction.co.uk",
+      "da": 33,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukpages.co.uk",
+      "da": 33,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.cateringcentral.co.uk",
+      "da": 33,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.localpages.co.uk",
+      "da": 32,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.openstreetmap.org",
+      "da": 32,
+      "backlink_type": "No-follow",
+      "note": "DA varied across source rows ([19, 46]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.projectword.co.uk",
+      "da": 32,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.wheresbest.co.uk",
+      "da": 32,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([46, 19]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.free-london-business-directory.co.uk",
+      "da": 31,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukwebindex.co.uk",
+      "da": 31,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([43, 19]) -- averaged",
+      "low_reliability": true
+    },
+    {
+      "url": "https://www.free-business-listing.co.uk",
+      "da": 31,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.uklistings.org",
+      "da": 31,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.lynkos.com",
+      "da": 31,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.internetdirectoryuk.com",
+      "da": 31,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.advertising.theigroup.co.uk",
+      "da": 30,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([29, 32]) -- averaged"
+    },
+    {
+      "url": "https://www.uksmallbusinessdirectory.co.uk",
+      "da": 30,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.businessdirectory.me.uk",
+      "da": 29,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.dir.me.uk",
+      "da": 29,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.1stdirectory.co.uk",
+      "da": 28,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.rooplex.com",
+      "da": 28,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.listedin.co.uk",
+      "da": 28,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.thetradefinder.co.uk",
+      "da": 28,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.businessunitedkingdom.com",
+      "da": 28,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.open-directory.co.uk",
+      "da": 28,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.smallbusinessdirectoryuk.co.uk",
+      "da": 28,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.connect2business.co.uk",
+      "da": 27,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.bestbrandsworldwide.com",
+      "da": 27,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([25, 29]) -- averaged"
+    },
+    {
+      "url": "https://www.thebestof.co.uk",
+      "da": 27,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.hantsbusinessdirectory.co.uk",
+      "da": 26,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.business-directory-uk.co.uk",
+      "da": 26,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.aboutmyarea.co.uk",
+      "da": 26,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.wwwi.co.uk",
+      "da": 26,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([28, 25]) -- averaged"
+    },
+    {
+      "url": "https://www.doggiepubs.org.uk",
+      "da": 26,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukgardening-directory.co.uk",
+      "da": 25,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.britaine.co.uk",
+      "da": 25,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([32, 18]) -- averaged"
+    },
+    {
+      "url": "https://www.whatsoninlondon.co.uk",
+      "da": 25,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.busybits.co.uk",
+      "da": 25,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.find-uk.com",
+      "da": 24,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ratemyarea.com",
+      "da": 24,
+      "backlink_type": "No-Follow"
+    },
+    {
+      "url": "https://www.ukdirectorylist.co.uk",
+      "da": 24,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.citylocal.co.uk",
+      "da": 24,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.gig-guide.co.uk",
+      "da": 24,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.tuugo.co.uk",
+      "da": 23,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.local-business.co.uk",
+      "da": 23,
+      "backlink_type": "No-follow"
+    },
+    {
+      "url": "https://www.factual.com",
+      "da": 23,
+      "backlink_type": "Do-Follow",
+      "note": "DA varied across source rows ([22, 24]) -- averaged"
+    },
+    {
+      "url": "https://www.foodfever.com",
+      "da": 23,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ukcampsite.co.uk",
+      "da": 22,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.company.fm",
+      "da": 22,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.webdirectoryuk.co.uk",
+      "da": 21,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.indexuk.net",
+      "da": 21,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.hotelaccommodationuk.co.uk",
+      "da": 21,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.keytolondon.co.uk",
+      "da": 20,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.ibizbook.com",
+      "da": 20,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.metromanager.com",
+      "da": 20,
+      "backlink_type": "Do-Follow"
+    },
+    {
+      "url": "https://www.eclickd.co.uk",
+      "da": 17,
+      "backlink_type": "Do-Follow"
     },
     {
       "name": "Bizify",
@@ -92,38 +1211,8 @@
       "url": "https://www.fyple.co.uk",
       "confidence": "medium",
       "note": "strong usability for small-business self-managed listings per research"
-    },
-    {
-      "name": "Hotfrog UK",
-      "url": "https://www.hotfrog.co.uk",
-      "confidence": "high",
-      "da": 53,
-      "link_type": "mixed/often citation-focused"
-    },
-    {
-      "name": "Brownbook",
-      "url": "https://www.brownbook.net",
-      "confidence": "high",
-      "note": "already in global-core -- listed here as a reminder it has strong UK coverage specifically (2.2M+ UK businesses per research)",
-      "da": 47,
-      "link_type": "citation-focused"
-    },
-    {
-      "name": "TouchLocal",
-      "url": "https://www.touchlocal.com",
-      "da": 48,
-      "link_type": "citation-focused",
-      "confidence": "high",
-      "note": "local business discovery"
-    },
-    {
-      "name": "Local.co.uk",
-      "url": "https://www.local.co.uk",
-      "da": 46,
-      "link_type": "citation-focused",
-      "confidence": "high"
     }
   ],
-  "research_note": "~200 general UK listing sites exist per research, plus niche/specialist directories (professional bodies, chambers of commerce, networking groups) that are genuinely industry-specific rather than general-purpose. General search is now surfacing repeats rather than new names -- further growth needs either a real delivered report or working through full paginated lists this session can't fetch directly.",
+  "research_note": "221 total now, 136 clear DA 40+. 18 entries flagged low_reliability (DA spread of 20+ points across source rows for the same domain) -- biznessdirect.co.uk is the worst offender, with four different DA readings from 35 to 67 across two separate supplied lists. Worth spot-checking those before relying on them for a premium tier.",
   "note_on_link_type": "Nofollow doesn't disqualify a citation -- for local SEO, citations work mainly as NAP-consistency/trust signals rather than pure link-equity passes, so nofollow entries here are still worth having, just don't expect them to carry direct ranking 'link juice' the way a dofollow backlink would."
 }
