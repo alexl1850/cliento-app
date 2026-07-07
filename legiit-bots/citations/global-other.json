@@ -3,10 +3,14 @@
   "note": "For the 'special country' tier (anywhere outside USA/AU/CA/UK) -- used on top of global-core.json when there's no dedicated country file. Country-specific local directories still need researching per target country; this list is the global/worldwide fallback only.",
   "target_count_advertised_by_competitors": "~85 global (plus ~15 local, researched per-country as needed)",
   "directories": [
-    { "name": "Kompass",       "url": "https://www.kompass.com",     "confidence": "medium" },
+    { "name": "Kompass",       "url": "https://www.kompass.com",     "confidence": "medium", "note": "57M+ companies across 70+ countries" },
     { "name": "EuroPages",     "url": "https://www.europages.co.uk", "confidence": "medium", "note": "Europe-weighted but accepts listings globally" },
     { "name": "B2BMAP",        "url": "https://b2bmap.com",           "confidence": "low" },
-    { "name": "Businessabc",   "url": "https://businessabc.net",      "confidence": "low" }
+    { "name": "Businessabc",   "url": "https://businessabc.net",      "confidence": "low" },
+    { "name": "Cylex",         "url": "https://www.cylex.com",        "confidence": "medium", "note": "international directory, country-specific subdomains" },
+    { "name": "Tupalo",        "url": "https://www.tupalo.com",       "confidence": "medium", "note": "Europe-focused but accepts global listings" },
+    { "name": "Fyple",         "url": "https://www.fyple.com",        "confidence": "medium", "note": "has country-specific sections" },
+    { "name": "Cybo",          "url": "https://www.cybo.com",         "confidence": "low" }
   ],
-  "gap_note": "Only 4 solid global-only entries beyond global-core so far -- well short of the ~85 competitors advertise. This needs a further research pass before the 'special country' tier can credibly match that number; don't quote 85 to a client until it's actually built."
+  "gap_note": "8 solid global-only entries beyond global-core so far -- still well short of the ~85 competitors advertise. This needs a further research pass, ideally per-region (Asia, Middle East, Latin America, Africa each likely have their own major aggregators not yet researched), before the 'special country' tier can credibly match that number."
 }

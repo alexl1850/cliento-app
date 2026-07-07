@@ -1,15 +1,18 @@
 {
   "country": "CA",
-  "note": "Additive to global-core.json. Compiled from published reference lists -- not yet confirmed via an actual live submission.",
+  "note": "Additive to global-core.json. Compiled from published reference lists (multiple search passes) -- not yet confirmed via an actual live submission.",
   "target_count_advertised_by_competitors": 150,
   "directories": [
     { "name": "Yelp Canada",                "url": "https://www.yelp.ca",                    "confidence": "high" },
     { "name": "Yellow Pages Canada (YP.ca)","url": "https://www.yellowpages.ca",             "confidence": "high" },
     { "name": "Canada411",                  "url": "https://www.canada411.ca",               "confidence": "medium" },
-    { "name": "411.ca",                     "url": "https://411.ca",                          "confidence": "medium" },
+    { "name": "411.ca",                     "url": "https://411.ca",                          "confidence": "medium", "note": "Yellow Pages-owned, cleaner interface, younger user base" },
     { "name": "Canadian Business Directory","url": "http://www.canadianbusinessdirectory.ca","confidence": "medium" },
     { "name": "FreeBizAds",                 "url": "https://www.freebizads.ca",              "confidence": "medium" },
+    { "name": "n49",                        "url": "https://www.n49.com",                    "confidence": "medium", "note": "comprehensive Canadian search portal, strong geographic/category organization" },
+    { "name": "Cylex Canada",               "url": "https://www.cylex-canada.ca",             "confidence": "medium", "note": "acts as a data aggregator -- listing here can feed several partner directories automatically" },
+    { "name": "Hotfrog Canada",             "url": "https://www.hotfrog.ca",                  "confidence": "medium" },
     { "name": "fyple Canada",               "url": "https://www.fyple.ca",                    "confidence": "low", "note": "verify URL/signup flow before relying on it" },
-    { "name": "CanPages",                   "url": "https://www.canpages.ca",                 "confidence": "low", "note": "verify URL/signup flow before relying on it" }
+    { "name": "CanPages",                   "url": "https://www.canpages.ca",                 "confidence": "low", "note": "Canadian-owned-business focused; verify URL/signup flow before relying on it" }
   ]
 }

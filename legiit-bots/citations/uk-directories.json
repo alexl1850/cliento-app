@@ -1,6 +1,6 @@
 {
   "country": "UK",
-  "note": "Additive to global-core.json. Compiled from published reference lists -- not yet confirmed via an actual live submission.",
+  "note": "Additive to global-core.json. Compiled from published reference lists (multiple search passes) -- not yet confirmed via an actual live submission.",
   "target_count_advertised_by_competitors": 150,
   "directories": [
     { "name": "Yell",          "url": "https://www.yell.com",         "confidence": "high" },
@@ -11,6 +11,10 @@
     { "name": "Scoot",         "url": "https://www.scoot.co.uk",      "confidence": "medium" },
     { "name": "192.com",       "url": "https://www.192.com",          "confidence": "medium" },
     { "name": "Bizify",        "url": "https://www.bizify.co.uk",     "confidence": "medium" },
+    { "name": "Yalwa UK",      "url": "https://www.yalwa.co.uk",      "confidence": "low" },
+    { "name": "Tupalo",        "url": "https://www.tupalo.com",       "confidence": "medium", "note": "Europe-wide review platform, not UK-exclusive" },
+    { "name": "City Visitor",  "url": "https://www.cityvisitor.co.uk","confidence": "low" },
+    { "name": "B2B Index",     "url": "https://www.b2bindex.co.uk",   "confidence": "medium", "note": "flagged as high-authority in research" },
     { "name": "Opendi UK",     "url": "https://www.opendi.co.uk",     "confidence": "low", "note": "verify URL/signup flow before relying on it" }
   ]
 }
