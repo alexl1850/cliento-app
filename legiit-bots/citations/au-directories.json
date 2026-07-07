@@ -1,0 +1,264 @@
+{
+  "country": "AU",
+  "source": "Real delivered citation report purchased from Legiit seller 'citationexpert' for JTS Innovations (Campbelltown, NSW) -- extracted 2026-07-07",
+  "package_note": "This was a smaller package than the '150 AU citations' tier advertised -- 50 directories delivered, all confirmed Live at time of report.",
+  "directories": [
+    {
+      "id": 1,
+      "url": "https://www.wordofmouth.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 2,
+      "url": "http://www.localbusinessguide.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 3,
+      "url": "https://nearfinderau.com/",
+      "verified_live": true
+    },
+    {
+      "id": 4,
+      "url": "http://www.dalby.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 5,
+      "url": "http://www.fyple.biz/",
+      "verified_live": true
+    },
+    {
+      "id": 6,
+      "url": "http://www.businesslistings.net.au/",
+      "verified_live": true
+    },
+    {
+      "id": 7,
+      "url": "https://au.zenbu.org/",
+      "verified_live": true
+    },
+    {
+      "id": 8,
+      "url": "https://poi-australia.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 9,
+      "url": "http://tuugo.biz",
+      "verified_live": true
+    },
+    {
+      "id": 10,
+      "url": "https://www.theloop.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 11,
+      "url": "https://www.localitylist.com.au/local-community-business-directory",
+      "verified_live": true
+    },
+    {
+      "id": 12,
+      "url": "https://www.smea.org.au/join",
+      "verified_live": true
+    },
+    {
+      "id": 13,
+      "url": "https://www.openinghours-au.com/",
+      "verified_live": true
+    },
+    {
+      "id": 14,
+      "url": "https://www.auseka.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 15,
+      "url": "http://www.addify.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 16,
+      "url": "adoodau.com",
+      "verified_live": true
+    },
+    {
+      "id": 17,
+      "url": "http://www.localbd.com.au/",
+      "verified_live": true
+    },
+    {
+      "id": 18,
+      "url": "https://qld-state.cataloxy.net/",
+      "verified_live": true
+    },
+    {
+      "id": 19,
+      "url": "https://www.whodoyou.com/",
+      "verified_live": true
+    },
+    {
+      "id": 20,
+      "url": "https://www.find-us-here.com/",
+      "verified_live": true
+    },
+    {
+      "id": 21,
+      "url": "http://tupalo.com",
+      "verified_live": true
+    },
+    {
+      "id": 22,
+      "url": "http://www.askmap.net/",
+      "verified_live": true
+    },
+    {
+      "id": 23,
+      "url": "https://www.callupcontact.com/",
+      "verified_live": true
+    },
+    {
+      "id": 24,
+      "url": "http://www.storeboard.com",
+      "verified_live": true
+    },
+    {
+      "id": 25,
+      "url": "http://www.adpost.com/",
+      "verified_live": true
+    },
+    {
+      "id": 26,
+      "url": "http://www.add-page.com",
+      "verified_live": true
+    },
+    {
+      "id": 28,
+      "url": "http://businesslistingplus.com/",
+      "verified_live": true
+    },
+    {
+      "id": 29,
+      "url": "http://www.place123.net/",
+      "verified_live": true
+    },
+    {
+      "id": 30,
+      "url": "https://www.webwiki.com/",
+      "verified_live": true
+    },
+    {
+      "id": 31,
+      "url": "https://www.startus.cc/",
+      "verified_live": true
+    },
+    {
+      "id": 32,
+      "url": "http://www.linkcentre.com/",
+      "verified_live": true
+    },
+    {
+      "id": 33,
+      "url": "http://ezwebdirectory.com/",
+      "verified_live": true
+    },
+    {
+      "id": 34,
+      "url": "http://www.b2bco.com",
+      "verified_live": true
+    },
+    {
+      "id": 35,
+      "url": "https://www.localstar.org/",
+      "verified_live": true
+    },
+    {
+      "id": 36,
+      "url": "arabfinder.net",
+      "verified_live": true
+    },
+    {
+      "id": 37,
+      "url": "https://www.localbusinesslisting.org/",
+      "verified_live": true
+    },
+    {
+      "id": 38,
+      "url": "http://www.addonbiz.com/",
+      "verified_live": true
+    },
+    {
+      "id": 39,
+      "url": "http://www.fidofindit.com/",
+      "verified_live": true
+    },
+    {
+      "id": 40,
+      "url": "http://www.travelful.net/",
+      "verified_live": true
+    },
+    {
+      "id": 41,
+      "url": "https://www.a-zbusinessfinder.com/",
+      "verified_live": true
+    },
+    {
+      "id": 42,
+      "url": "http://www.aunetads.com/",
+      "verified_live": true
+    },
+    {
+      "id": 43,
+      "url": "http://prsync.com",
+      "verified_live": true
+    },
+    {
+      "id": 44,
+      "url": "https://www.dennisdemo.com/",
+      "verified_live": true
+    },
+    {
+      "id": 47,
+      "url": "peeplocal.com",
+      "verified_live": true
+    },
+    {
+      "id": 48,
+      "url": "quponing.com",
+      "verified_live": true,
+      "review_note": "reads as a coupon/deals aggregator rather than a business directory -- verify before relying on it"
+    },
+    {
+      "id": 49,
+      "url": "announceamerica.com",
+      "verified_live": true,
+      "review_note": "name suggests a US-specific platform reused for an AU submission -- verify it's actually indexing/serving AU business data"
+    },
+    {
+      "id": 50,
+      "url": "eagleswing.org",
+      "verified_live": true
+    }
+  ],
+  "excluded": [
+    {
+      "id": 27,
+      "url": "http://www.scoop.it/",
+      "verified_live": true,
+      "excluded_reason": "content-curation platform, not a business directory"
+    },
+    {
+      "id": 45,
+      "url": "https://www.tripadvisor.com/",
+      "verified_live": true,
+      "excluded_reason": "travel/review platform, not a general local-business directory"
+    },
+    {
+      "id": 46,
+      "url": "https://www.4shared.com/",
+      "verified_live": true,
+      "excluded_reason": "file-sharing site, not a business directory"
+    }
+  ]
+}
