@@ -1,61 +1,806 @@
 {
   "country": "USA",
-  "note": "Additive to global-core.json. Compiled from published reference lists (multiple search passes, cross-checked across sources) -- not yet confirmed via an actual live submission.",
+  "note": "Primary list is a real, DA-ranked dataset (143 entries) supplied directly, cross-checked and flagged for country mismatches, global-core overlaps, paid platforms, aggregators, and vertical-specific fit. Supplementary list is from earlier search-compiled research, kept where it added names not present in the DA-ranked list.",
   "target_count_advertised_by_competitors": 350,
-  "expert_guidance_found": "Multiple independent sources (not just one) converge on the same advice: focus on 20-50 high-quality, relevant directories rather than hundreds of low-quality ones. That's worth weighing against chasing the competitor's 350 number for its own sake.",
+  "expert_guidance_found": "Multiple independent sources converge on 20-50 high-quality directories over hundreds -- worth weighing against the DA<40 tail of this list (36 of 143 entries) before deciding what to actually automate.",
+  "flags_summary": {
+    "country_mismatch": "True Local (AU), Yell (UK), N49 (CA), Justdial (India) -- not USA sites, already covered in their real country files",
+    "already_in_global_core": "Facebook, Google, Bing, LinkedIn, Foursquare -- don't double-submit",
+    "vertical_specific": "16 entries (travel/booking, wedding, senior care, auto, healthcare, legal, home-services, restaurant) -- only relevant per client industry, not general-purpose",
+    "data_aggregators": "Data Axle, Neustar Localeze -- these work by propagation over weeks, not a one-off form submission like the rest of the list; matches the aggregator route already recommended and priced out (~$30/yr each)",
+    "paid_platform": "Yext -- the $199-999/yr platform already ruled out for this business model's economics",
+    "b2b_data_platforms": "Zoominfo, Cortera, D&B -- legitimate but oriented at B2B/credit data rather than consumer local search"
+  },
   "directories": [
-    { "name": "Better Business Bureau", "url": "https://www.bbb.org",            "confidence": "high" },
-    { "name": "Yellow Pages USA",       "url": "https://www.yellowpages.com",   "confidence": "high" },
-    { "name": "Angi",                   "url": "https://www.angi.com",           "confidence": "high" },
-    { "name": "Manta",                  "url": "https://www.manta.com",          "confidence": "high" },
-    { "name": "Nextdoor Business",      "url": "https://business.nextdoor.com", "confidence": "high" },
-    { "name": "Trustpilot",             "url": "https://business.trustpilot.com","confidence": "high" },
-    { "name": "Superpages",             "url": "https://www.superpages.com",     "confidence": "medium" },
-    { "name": "MerchantCircle",         "url": "https://www.merchantcircle.com", "confidence": "medium" },
-    { "name": "Local.com",              "url": "https://www.local.com",          "confidence": "medium" },
-    { "name": "EZlocal",                "url": "https://www.ezlocal.com",        "confidence": "medium" },
-    { "name": "Yellowbook",             "url": "https://www.yellowbook.com",     "confidence": "medium" },
-    { "name": "ShowMeLocal",            "url": "https://www.showmelocal.com",    "confidence": "medium" },
-    { "name": "Kudzu",                  "url": "https://www.kudzu.com",          "confidence": "medium" },
-    { "name": "Yellowbot",              "url": "https://www.yellowbot.com",      "confidence": "medium" },
-    { "name": "eBusinessPages",         "url": "https://www.ebusinesspages.com", "confidence": "medium" },
-    { "name": "JudysBook",              "url": "https://www.judysbook.com",      "confidence": "low" },
-    { "name": "eLocal",                 "url": "https://www.elocal.com",         "confidence": "medium" },
-    { "name": "GetFave",                "url": "https://www.getfave.com",        "confidence": "low" },
-    { "name": "iBegin",                 "url": "https://www.ibegin.com",         "confidence": "medium" },
-    { "name": "Best of the Web",        "url": "https://botw.org",               "confidence": "medium" },
-    { "name": "City Squares",           "url": "https://www.citysquares.com",    "confidence": "medium" },
-    { "name": "GoLocal247",             "url": "https://www.golocal247.com",     "confidence": "medium" },
-    { "name": "Storeboard",             "url": "https://www.storeboard.com",     "confidence": "medium", "note": "DA ~63 per research" },
-    { "name": "Spoke",                  "url": "https://www.spoke.com",          "confidence": "low" },
-    { "name": "Cylex USA",              "url": "https://www.cylex.us.com",       "confidence": "medium", "note": "DA ~45 per research" },
-    { "name": "Fyple USA",              "url": "https://www.fyple.com",          "confidence": "medium", "note": "DA ~42 per research" },
-    { "name": "Yalwa USA",              "url": "https://www.yalwa.com",          "confidence": "low" },
-    { "name": "YaSabe",                 "url": "https://www.yasabe.com",         "confidence": "medium", "note": "US Hispanic-market focused, strong reach in that segment" },
-    { "name": "Opendi USA",             "url": "https://usa.opendi.us",          "confidence": "low", "note": "verify URL before relying on it" },
-    { "name": "US Info / us-business.info", "url": "https://us-business.info",   "confidence": "low" },
-    { "name": "Central Index",          "url": "https://us.centralindex.com",    "confidence": "low" },
-    { "name": "Local Chamber of Commerce", "url": null, "confidence": "high", "note": "No single URL -- join the client's actual local chamber; carries real local authority, worth doing manually per client rather than automating." }
+    {
+      "name": "Facebook",
+      "url": "https://www.facebook.com/",
+      "da": 100,
+      "already_in_global_core": true
+    },
+    {
+      "name": "Places on Apple Maps",
+      "url": "https://register.apple.com/placesonmaps/",
+      "da": 99
+    },
+    {
+      "name": "LinkedIn",
+      "url": "https://www.linkedin.com/directory/companies/",
+      "da": 99,
+      "already_in_global_core": true
+    },
+    {
+      "name": "Google",
+      "url": "https://www.google.com/",
+      "da": 94,
+      "already_in_global_core": true
+    },
+    {
+      "name": "Booking",
+      "url": "https://www.booking.com/",
+      "da": 94,
+      "vertical_specific": "travel/accommodation booking"
+    },
+    {
+      "name": "Yelp",
+      "url": "https://www.yelp.com/",
+      "da": 93
+    },
+    {
+      "name": "Tripadvisor",
+      "url": "https://www.tripadvisor.com/",
+      "da": 93,
+      "vertical_specific": "travel/review, restaurant-hospitality vertical only"
+    },
+    {
+      "name": "Bing",
+      "url": "https://www.bing.com/",
+      "da": 93,
+      "already_in_global_core": true
+    },
+    {
+      "name": "Yahoo",
+      "url": "https://search.yahoo.com/",
+      "da": 93,
+      "vertical_specific": "general search engine, not a directory listing per se"
+    },
+    {
+      "name": "Foursquare",
+      "url": "https://foursquare.com/",
+      "da": 92,
+      "already_in_global_core": true
+    },
+    {
+      "name": "BizJournals",
+      "url": "https://www.bizjournals.com/",
+      "da": 91
+    },
+    {
+      "name": "BBB",
+      "url": "https://www.bbb.org/",
+      "da": 90
+    },
+    {
+      "name": "Patch",
+      "url": "https://patch.com/",
+      "da": 90
+    },
+    {
+      "name": "MapQuest",
+      "url": "https://www.mapquest.com/",
+      "da": 89
+    },
+    {
+      "name": "Here",
+      "url": "https://www.here.com/",
+      "da": 87
+    },
+    {
+      "name": "OpenTable",
+      "url": "https://www.opentable.com/",
+      "da": 86,
+      "vertical_specific": "restaurant vertical"
+    },
+    {
+      "name": "Yellowpages",
+      "url": "https://www.yellowpages.com/",
+      "da": 86
+    },
+    {
+      "name": "City Data",
+      "url": "https://www.city-data.com/profiles/add",
+      "da": 85
+    },
+    {
+      "name": "Hotels",
+      "url": "https://www.hotels.com/",
+      "da": 83,
+      "vertical_specific": "travel/accommodation"
+    },
+    {
+      "name": "Kayak",
+      "url": "https://www.kayak.com/",
+      "da": 83,
+      "vertical_specific": "travel/flights"
+    },
+    {
+      "name": "True Local",
+      "url": "https://www.truelocal.com.au",
+      "da": 82,
+      "country_mismatch": "AU -- already in au-directories.json"
+    },
+    {
+      "name": "Angie's List",
+      "url": "https://www.angieslist.com/",
+      "da": 82
+    },
+    {
+      "name": "Priceline",
+      "url": "https://www.priceline.com/",
+      "da": 80,
+      "vertical_specific": "travel booking"
+    },
+    {
+      "name": "Manta",
+      "url": "https://www.manta.com/",
+      "da": 80
+    },
+    {
+      "name": "TomTom",
+      "url": "https://www.tomtom.com/",
+      "da": 79
+    },
+    {
+      "name": "Business",
+      "url": "https://www.business.com/",
+      "da": 79
+    },
+    {
+      "name": "HomeAdvisor",
+      "url": "https://www.homeadvisor.com/",
+      "da": 79,
+      "vertical_specific": "home services vertical"
+    },
+    {
+      "name": "SiteJabber",
+      "url": "https://www.sitejabber.com/",
+      "da": 78
+    },
+    {
+      "name": "Just Landed",
+      "url": "https://directory.justlanded.com/en/list_my_company",
+      "da": 76
+    },
+    {
+      "name": "Thumbtack",
+      "url": "https://www.thumbtack.com/",
+      "da": 74,
+      "vertical_specific": "home/local services vertical"
+    },
+    {
+      "name": "Merchant Circle",
+      "url": "https://www.merchantcircle.com/",
+      "da": 74
+    },
+    {
+      "name": "City Search",
+      "url": "http://www.citysearch.com/world",
+      "da": 74
+    },
+    {
+      "name": "Zoominfo",
+      "url": "https://www.zoominfo.com/",
+      "da": 73,
+      "type": "b2b_data_platform"
+    },
+    {
+      "name": "Frommer's",
+      "url": "https://www.frommers.com/",
+      "da": 73,
+      "vertical_specific": "travel guide"
+    },
+    {
+      "name": "WhitePages",
+      "url": "https://www.whitepages.com/",
+      "da": 73
+    },
+    {
+      "name": "Yell",
+      "url": "https://www.yell.com/",
+      "da": 72,
+      "country_mismatch": "UK -- already in uk-directories.json"
+    },
+    {
+      "name": "Avvo",
+      "url": "https://www.avvo.com/",
+      "da": 72,
+      "vertical_specific": "legal vertical"
+    },
+    {
+      "name": "Yext",
+      "url": "https://www.yext.com/",
+      "da": 71,
+      "paid_platform": "the $199-999/yr per-location platform we already priced out and ruled against for this business model"
+    },
+    {
+      "name": "Healthgrades",
+      "url": "https://www.healthgrades.com/",
+      "da": 70,
+      "vertical_specific": "healthcare vertical"
+    },
+    {
+      "name": "Wedding Wire",
+      "url": "https://www.weddingwire.com/",
+      "da": 70,
+      "vertical_specific": "wedding vertical"
+    },
+    {
+      "name": "Company",
+      "url": "https://www.company.com/",
+      "da": 70
+    },
+    {
+      "name": "Super Pages",
+      "url": "https://www.superpages.com/",
+      "da": 68
+    },
+    {
+      "name": "Local",
+      "url": "http://www.local.com/",
+      "da": 67
+    },
+    {
+      "name": "Hot Frog",
+      "url": "https://www.hotfrog.com/",
+      "da": 67
+    },
+    {
+      "name": "Batch Geo",
+      "url": "https://batchgeo.com/",
+      "da": 67
+    },
+    {
+      "name": "Caring",
+      "url": "https://www.caring.com/",
+      "da": 65,
+      "vertical_specific": "senior care vertical"
+    },
+    {
+      "name": "Vitals",
+      "url": "http://www.vitals.com/",
+      "da": 65
+    },
+    {
+      "name": "eLocal",
+      "url": "https://www.elocal.com/",
+      "da": 65
+    },
+    {
+      "name": "DandDB",
+      "url": "https://www.dandb.com/",
+      "da": 63,
+      "type": "b2b_data_platform"
+    },
+    {
+      "name": "Justdial",
+      "url": "https://www.justdial.com/",
+      "da": 61,
+      "country_mismatch": "India's major directory, not a US site"
+    },
+    {
+      "name": "AmericanTowns",
+      "url": "https://www.americantowns.com/",
+      "da": 60
+    },
+    {
+      "name": "BrownBook",
+      "url": "http://www.brownbook.net/",
+      "da": 59
+    },
+    {
+      "name": "Chamber of Commerce",
+      "url": "https://www.chamberofcommerce.com/",
+      "da": 59
+    },
+    {
+      "name": "Dealer Rater",
+      "url": "https://www.dealerrater.com/",
+      "da": 58,
+      "vertical_specific": "auto dealer vertical"
+    },
+    {
+      "name": "Yellowbot",
+      "url": "https://www.yellowbot.com/",
+      "da": 58
+    },
+    {
+      "name": "Apartment Ratings",
+      "url": "https://www.apartmentratings.com",
+      "da": 58,
+      "vertical_specific": "rental/apartment vertical"
+    },
+    {
+      "name": "CheckBook",
+      "url": "https://www.checkbook.org/",
+      "da": 58
+    },
+    {
+      "name": "Lacartes",
+      "url": "http://www.lacartes.com/",
+      "da": 58
+    },
+    {
+      "name": "Infobel",
+      "url": "https://www.infobel.com/",
+      "da": 58
+    },
+    {
+      "name": "Wellness",
+      "url": "https://www.wellness.com/",
+      "da": 57
+    },
+    {
+      "name": "Insider Pages",
+      "url": "http://www.insiderpages.com/",
+      "da": 57
+    },
+    {
+      "name": "InfoUSA",
+      "url": "https://www.infousa.com/",
+      "da": 56
+    },
+    {
+      "name": "Tupalo",
+      "url": "http://tupalo.com/",
+      "da": 56
+    },
+    {
+      "name": "EZlocal",
+      "url": "https://ezlocal.com/",
+      "da": 56
+    },
+    {
+      "name": "Best of the Web Local",
+      "url": "https://local.botw.org/",
+      "da": 56
+    },
+    {
+      "name": "DemandForce",
+      "url": "https://www.demandforce.com/",
+      "da": 55
+    },
+    {
+      "name": "eBusiness Pages",
+      "url": "https://ebusinesspages.com/",
+      "da": 54
+    },
+    {
+      "name": "Data Axle",
+      "url": "https://www.data-axle.com/",
+      "da": 53,
+      "type": "data_aggregator"
+    },
+    {
+      "name": "411",
+      "url": "https://www.411.com/",
+      "da": 53
+    },
+    {
+      "name": "Judy's Book",
+      "url": "https://www.judysbook.com/",
+      "da": 52
+    },
+    {
+      "name": "Cortera",
+      "url": "https://www.cortera.com",
+      "da": 52,
+      "type": "b2b_data_platform"
+    },
+    {
+      "name": "Open WiFi Spots",
+      "url": "http://www.openwifispots.com/",
+      "da": 51
+    },
+    {
+      "name": "Showmelocal",
+      "url": "https://www.showmelocal.com/",
+      "da": 51
+    },
+    {
+      "name": "Tuugo",
+      "url": "https://www.tuugo.us/",
+      "da": 51
+    },
+    {
+      "name": "Area Connect",
+      "url": "https://www.areaconnect.com/",
+      "da": 51
+    },
+    {
+      "name": "Sales Spider",
+      "url": "https://www.salespider.com/",
+      "da": 50
+    },
+    {
+      "name": "Call Up Contact",
+      "url": "https://www.callupcontact.com/",
+      "da": 50
+    },
+    {
+      "name": "iBegin",
+      "url": "https://www.ibegin.com/",
+      "da": 50
+    },
+    {
+      "name": "Bing \u2013 Places for Business",
+      "url": "https://www.bingplaces.com/",
+      "da": 50
+    },
+    {
+      "name": "City Squares",
+      "url": "https://citysquares.com/",
+      "da": 49
+    },
+    {
+      "name": "Wow City",
+      "url": "https://wowcity.com/",
+      "da": 49
+    },
+    {
+      "name": "Addresses",
+      "url": "https://www.addresses.com/",
+      "da": 49
+    },
+    {
+      "name": "Neustar Localaze",
+      "url": "https://www.neustarlocaleze.biz/",
+      "da": 48,
+      "type": "data_aggregator"
+    },
+    {
+      "name": "N49",
+      "url": "https://www.n49.com/",
+      "da": 48,
+      "country_mismatch": "CA -- already in ca-directories.json"
+    },
+    {
+      "name": "2 Find Local",
+      "url": "https://www.2findlocal.com/",
+      "da": 47
+    },
+    {
+      "name": "Enroll Business",
+      "url": "https://us.enrollbusiness.com/",
+      "da": 46
+    },
+    {
+      "name": "Cylex US",
+      "url": "https://www.cylex.us.com/",
+      "da": 46
+    },
+    {
+      "name": "Party Pop",
+      "url": "http://www.partypop.com/list-your-business",
+      "da": 46
+    },
+    {
+      "name": "YaSabe",
+      "url": "https://www.yasabe.com/",
+      "da": 46
+    },
+    {
+      "name": "Three Best Places",
+      "url": "https://threebestrated.com/",
+      "da": 45
+    },
+    {
+      "name": "Biz Votes",
+      "url": "http://www.bizvotes.com/",
+      "da": 45
+    },
+    {
+      "name": "CityFos",
+      "url": "https://www.cityfos.com/index.htm",
+      "da": 45
+    },
+    {
+      "name": "Mac Raes Blue Book",
+      "url": "https://www.macraesbluebook.com",
+      "da": 44
+    },
+    {
+      "name": "Discover Our Town",
+      "url": "http://www.discoverourtown.com/",
+      "da": 44
+    },
+    {
+      "name": "Find Us Local",
+      "url": "https://www.finduslocal.com/",
+      "da": 43
+    },
+    {
+      "name": "Find Us Here",
+      "url": "https://www.find-us-here.com/",
+      "da": 43
+    },
+    {
+      "name": "USCity.net",
+      "url": "https://uscity.net/",
+      "da": 43
+    },
+    {
+      "name": "Yellow",
+      "url": "https://www.yellow.com/",
+      "da": 43
+    },
+    {
+      "name": "Open DI",
+      "url": "https://www.opendi.us/",
+      "da": 43
+    },
+    {
+      "name": "Wherez It",
+      "url": "http://www.wherezit.com/",
+      "da": 42
+    },
+    {
+      "name": "Yalwa",
+      "url": "https://www.yalwa.com/",
+      "da": 42
+    },
+    {
+      "name": "Fyple",
+      "url": "https://www.fyple.com/",
+      "da": 41
+    },
+    {
+      "name": "Local 6 qube",
+      "url": "https://local.6qube.com/",
+      "da": 41
+    },
+    {
+      "name": "Local Pages",
+      "url": "https://localpages.com/",
+      "da": 41
+    },
+    {
+      "name": "SmartGuy",
+      "url": "https://www.smartguy.com/",
+      "da": 41
+    },
+    {
+      "name": "My Huckle Berry",
+      "url": "http://www.myhuckleberry.com/",
+      "da": 41
+    },
+    {
+      "name": "City Grid",
+      "url": "http://www.citygrid.com/",
+      "da": 40
+    },
+    {
+      "name": "B2BYellowPages",
+      "url": "https://www.b2byellowpages.com/",
+      "da": 39
+    },
+    {
+      "name": "BizHWY",
+      "url": "https://www.bizhwy.com/",
+      "da": 39
+    },
+    {
+      "name": "AllPages",
+      "url": "https://www.allpages.com/",
+      "da": 39
+    },
+    {
+      "name": "Ziplocala",
+      "url": "https://ziplocal.com/",
+      "da": 38
+    },
+    {
+      "name": "Jayde",
+      "url": "https://jayde.com/",
+      "da": 38
+    },
+    {
+      "name": "Cmac.ws",
+      "url": "https://www.cmac.ws/",
+      "da": 38
+    },
+    {
+      "name": "My Locally",
+      "url": "https://www.mylocally.com/",
+      "da": 38
+    },
+    {
+      "name": "My Local Services",
+      "url": "https://www.mylocalservices.com/",
+      "da": 37
+    },
+    {
+      "name": "JoeAnt",
+      "url": "http://www.joeant.com/",
+      "da": 37
+    },
+    {
+      "name": "Open List",
+      "url": "https://www.openlist.com/",
+      "da": 37
+    },
+    {
+      "name": "Dmoz",
+      "url": "https://dmoz-odp.org/",
+      "da": 37
+    },
+    {
+      "name": "AB Local",
+      "url": "https://ablocal.com/",
+      "da": 36
+    },
+    {
+      "name": "City Insider",
+      "url": "http://cityinsider.com/",
+      "da": 36
+    },
+    {
+      "name": "Directory.AC",
+      "url": "https://directory.ac/",
+      "da": 36
+    },
+    {
+      "name": "Page Insider",
+      "url": "https://www.pageinsider.com/",
+      "da": 36
+    },
+    {
+      "name": "Express Update",
+      "url": "https://www.expressupdate.com/search",
+      "da": 35
+    },
+    {
+      "name": "iGotBiz",
+      "url": "https://www.igotbiz.com/",
+      "da": 34
+    },
+    {
+      "name": "Find Open",
+      "url": "https://find-open.com/",
+      "da": 34
+    },
+    {
+      "name": "Wand",
+      "url": "https://www.wand.com/",
+      "da": 34
+    },
+    {
+      "name": "Yellow Moxie",
+      "url": "http://www.yellowmoxie.com/",
+      "da": 33
+    },
+    {
+      "name": "Zip Leaf",
+      "url": "https://www.zipleaf.com/",
+      "da": 33
+    },
+    {
+      "name": "Zip Hip",
+      "url": "https://www.ziphip.com/",
+      "da": 33
+    },
+    {
+      "name": "We Go Places",
+      "url": "http://www.wegoplaces.com/",
+      "da": 33
+    },
+    {
+      "name": "Get Free Listing",
+      "url": "https://getfreelisting.com/",
+      "da": 32
+    },
+    {
+      "name": "Local Searchlight",
+      "url": "https://www.localsearchlight.com/",
+      "da": 32
+    },
+    {
+      "name": "Yellowise",
+      "url": "https://www.yellowise.com/",
+      "da": 31
+    },
+    {
+      "name": "Power Profiles",
+      "url": "http://www.powerprofiles.com/",
+      "da": 30
+    },
+    {
+      "name": "GO My Local",
+      "url": "https://www.gomylocal.com/",
+      "da": 30
+    },
+    {
+      "name": "City Star",
+      "url": "http://citystar.com/",
+      "da": 29
+    },
+    {
+      "name": "Make it Local",
+      "url": "https://www.makeitlocal.com/",
+      "da": 28
+    },
+    {
+      "name": "City Slick",
+      "url": "https://cityslick.net/",
+      "da": 27
+    },
+    {
+      "name": "Citiservi",
+      "url": "https://www.citiservi.com/",
+      "da": 27
+    },
+    {
+      "name": "Company List",
+      "url": "https://companylist.org/",
+      "da": 27
+    },
+    {
+      "name": "Cornerstones World",
+      "url": "http://www.cornerstonesworld.com",
+      "da": 25
+    },
+    {
+      "name": "Home Owners Circle",
+      "url": "http://homeownerscircle.com/",
+      "da": 20
+    },
+    {
+      "name": "Shop Locally",
+      "url": "https://shoplocally.com/",
+      "da": 20
+    }
   ],
-  "vertical_specific_optional": {
-    "note": "Only add these if relevant to the client's industry -- not part of the general/core count.",
-    "home_services": [
-      { "name": "Houzz",       "url": "https://www.houzz.com" },
-      { "name": "Thumbtack",   "url": "https://www.thumbtack.com" },
-      { "name": "HomeAdvisor", "url": "https://www.homeadvisor.com" }
-    ],
-    "legal": [
-      { "name": "Avvo",     "url": "https://www.avvo.com" },
-      { "name": "Justia",   "url": "https://www.justia.com" },
-      { "name": "FindLaw",  "url": "https://www.findlaw.com" }
-    ],
-    "health": [
-      { "name": "Healthgrades", "url": "https://www.healthgrades.com" },
-      { "name": "Zocdoc",       "url": "https://www.zocdoc.com" }
-    ],
-    "restaurants_hospitality": [
-      { "name": "OpenTable", "url": "https://www.opentable.com" },
-      { "name": "TripAdvisor", "url": "https://www.tripadvisor.com", "caution": "travel/review focused, not a general citation source -- restaurant/hospitality vertical only" }
-    ]
-  }
+  "supplementary_from_prior_research": [
+    {
+      "name": "Trustpilot",
+      "url": "https://business.trustpilot.com",
+      "confidence": "high",
+      "da": null
+    },
+    {
+      "name": "Nextdoor Business",
+      "url": "https://business.nextdoor.com",
+      "confidence": "high",
+      "da": null
+    },
+    {
+      "name": "Kudzu",
+      "url": "https://www.kudzu.com",
+      "confidence": "medium",
+      "da": null
+    },
+    {
+      "name": "GetFave",
+      "url": "https://www.getfave.com",
+      "confidence": "low",
+      "da": null
+    },
+    {
+      "name": "Storeboard",
+      "url": "https://www.storeboard.com",
+      "confidence": "medium",
+      "da": null
+    },
+    {
+      "name": "GoLocal247",
+      "url": "https://www.golocal247.com",
+      "confidence": "medium",
+      "da": null
+    },
+    {
+      "name": "Central Index",
+      "url": "https://us.centralindex.com",
+      "confidence": "low",
+      "da": null
+    }
+  ]
 }
