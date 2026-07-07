@@ -1,0 +1,17 @@
+{
+  "name": "seo-audit",
+  "version": "1.0.0",
+  "description": "Legiit SEO audit bot -- crawls a client site, pulls PageSpeed data, generates a scored audit report via Claude",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "audit": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "cheerio": "^1.2.0"
+  }
+}
