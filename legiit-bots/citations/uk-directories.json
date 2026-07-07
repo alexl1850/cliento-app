@@ -3,22 +3,127 @@
   "note": "Additive to global-core.json. Compiled from published reference lists (multiple search passes) -- not yet confirmed via an actual live submission.",
   "target_count_advertised_by_competitors": 150,
   "directories": [
-    { "name": "Yell",          "url": "https://www.yell.com",         "confidence": "high" },
-    { "name": "Yelp UK",       "url": "https://www.yelp.co.uk",       "confidence": "high" },
-    { "name": "FreeIndex",     "url": "https://www.freeindex.co.uk",  "confidence": "medium" },
-    { "name": "Thomson Local", "url": "https://www.thomsonlocal.com", "confidence": "medium" },
-    { "name": "Cylex UK",      "url": "https://www.cylex-uk.co.uk",   "confidence": "medium" },
-    { "name": "Scoot",         "url": "https://www.scoot.co.uk",      "confidence": "medium" },
-    { "name": "192.com",       "url": "https://www.192.com",          "confidence": "medium", "note": "high authority, deeply embedded in UK local search per research" },
-    { "name": "Bizify",        "url": "https://www.bizify.co.uk",     "confidence": "medium" },
-    { "name": "Yalwa UK / Locanto", "url": "https://www.locanto.co.uk", "confidence": "medium", "note": "Yalwa rebranded to Locanto in the UK market per research" },
-    { "name": "Tupalo",        "url": "https://www.tupalo.com",       "confidence": "medium", "note": "Europe-wide review platform, not UK-exclusive" },
-    { "name": "City Visitor",  "url": "https://www.cityvisitor.co.uk","confidence": "low" },
-    { "name": "B2B Index",     "url": "https://www.b2bindex.co.uk",   "confidence": "medium", "note": "flagged as high-authority in research" },
-    { "name": "Opendi UK",     "url": "https://www.opendi.co.uk",     "confidence": "low", "note": "verify URL/signup flow before relying on it" },
-    { "name": "Fyple UK",      "url": "https://www.fyple.co.uk",      "confidence": "medium", "note": "strong usability for small-business self-managed listings per research" },
-    { "name": "Hotfrog UK",    "url": "https://www.hotfrog.co.uk",    "confidence": "medium" },
-    { "name": "Brownbook",     "url": "https://www.brownbook.net",    "confidence": "medium", "note": "already in global-core -- listed here as a reminder it has strong UK coverage specifically (2.2M+ UK businesses per research)" }
+    {
+      "name": "Yell",
+      "url": "https://www.yell.com",
+      "confidence": "high",
+      "da": 79,
+      "link_type": "usually nofollow"
+    },
+    {
+      "name": "Yelp UK",
+      "url": "https://www.yelp.co.uk",
+      "confidence": "high",
+      "da": 93,
+      "link_type": "usually nofollow"
+    },
+    {
+      "name": "FreeIndex",
+      "url": "https://www.freeindex.co.uk",
+      "confidence": "high",
+      "da": 54,
+      "link_type": "often dofollow/mixed by page type"
+    },
+    {
+      "name": "Thomson Local",
+      "url": "https://www.thomsonlocal.com",
+      "confidence": "high",
+      "da": 65,
+      "link_type": "usually nofollow"
+    },
+    {
+      "name": "Cylex UK",
+      "url": "https://www.cylex-uk.co.uk",
+      "confidence": "high",
+      "da": 48,
+      "link_type": "often dofollow/mixed"
+    },
+    {
+      "name": "Scoot",
+      "url": "https://www.scoot.co.uk",
+      "confidence": "high",
+      "da": 58,
+      "link_type": "usually nofollow"
+    },
+    {
+      "name": "192.com",
+      "url": "https://www.192.com",
+      "confidence": "high",
+      "note": "high authority, deeply embedded in UK local search per research",
+      "da": 66,
+      "link_type": "usually nofollow"
+    },
+    {
+      "name": "Bizify",
+      "url": "https://www.bizify.co.uk",
+      "confidence": "medium"
+    },
+    {
+      "name": "Yalwa UK / Locanto",
+      "url": "https://www.locanto.co.uk",
+      "confidence": "medium",
+      "note": "Yalwa rebranded to Locanto in the UK market per research"
+    },
+    {
+      "name": "Tupalo",
+      "url": "https://www.tupalo.com",
+      "confidence": "medium",
+      "note": "Europe-wide review platform, not UK-exclusive"
+    },
+    {
+      "name": "City Visitor",
+      "url": "https://www.cityvisitor.co.uk",
+      "confidence": "low"
+    },
+    {
+      "name": "B2B Index",
+      "url": "https://www.b2bindex.co.uk",
+      "confidence": "medium",
+      "note": "flagged as high-authority in research"
+    },
+    {
+      "name": "Opendi UK",
+      "url": "https://www.opendi.co.uk",
+      "confidence": "low",
+      "note": "verify URL/signup flow before relying on it"
+    },
+    {
+      "name": "Fyple UK",
+      "url": "https://www.fyple.co.uk",
+      "confidence": "medium",
+      "note": "strong usability for small-business self-managed listings per research"
+    },
+    {
+      "name": "Hotfrog UK",
+      "url": "https://www.hotfrog.co.uk",
+      "confidence": "high",
+      "da": 53,
+      "link_type": "mixed/often citation-focused"
+    },
+    {
+      "name": "Brownbook",
+      "url": "https://www.brownbook.net",
+      "confidence": "high",
+      "note": "already in global-core -- listed here as a reminder it has strong UK coverage specifically (2.2M+ UK businesses per research)",
+      "da": 47,
+      "link_type": "citation-focused"
+    },
+    {
+      "name": "TouchLocal",
+      "url": "https://www.touchlocal.com",
+      "da": 48,
+      "link_type": "citation-focused",
+      "confidence": "high",
+      "note": "local business discovery"
+    },
+    {
+      "name": "Local.co.uk",
+      "url": "https://www.local.co.uk",
+      "da": 46,
+      "link_type": "citation-focused",
+      "confidence": "high"
+    }
   ],
-  "research_note": "~200 general UK listing sites exist per research, plus niche/specialist directories (professional bodies, chambers of commerce, networking groups) that are genuinely industry-specific rather than general-purpose. General search is now surfacing repeats rather than new names -- further growth needs either a real delivered report or working through full paginated lists this session can't fetch directly."
+  "research_note": "~200 general UK listing sites exist per research, plus niche/specialist directories (professional bodies, chambers of commerce, networking groups) that are genuinely industry-specific rather than general-purpose. General search is now surfacing repeats rather than new names -- further growth needs either a real delivered report or working through full paginated lists this session can't fetch directly.",
+  "note_on_link_type": "Nofollow doesn't disqualify a citation -- for local SEO, citations work mainly as NAP-consistency/trust signals rather than pure link-equity passes, so nofollow entries here are still worth having, just don't expect them to carry direct ranking 'link juice' the way a dofollow backlink would."
 }
