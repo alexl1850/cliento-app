@@ -3,17 +3,458 @@
   "note": "For the 'special country' tier (anywhere outside USA/AU/CA/UK) -- used on top of global-core.json when there's no dedicated country file. Country-specific local directories still need researching per target country; this list is the global/worldwide fallback only.",
   "target_count_advertised_by_competitors": "~85 global (plus ~15 local, researched per-country as needed)",
   "directories": [
-    { "name": "Kompass",       "url": "https://www.kompass.com",     "confidence": "medium", "note": "57M+ companies across 70+ countries" },
-    { "name": "EuroPages",     "url": "https://www.europages.co.uk", "confidence": "medium", "note": "Europe-weighted but accepts listings globally" },
-    { "name": "B2BMAP",        "url": "https://b2bmap.com",           "confidence": "low" },
-    { "name": "Businessabc",   "url": "https://businessabc.net",      "confidence": "low" },
-    { "name": "Cylex",         "url": "https://www.cylex.com",        "confidence": "medium", "note": "international directory, country-specific subdomains" },
-    { "name": "Tupalo",        "url": "https://www.tupalo.com",       "confidence": "medium", "note": "Europe-focused but accepts global listings" },
-    { "name": "Fyple",         "url": "https://www.fyple.com",        "confidence": "medium", "note": "has country-specific sections" },
-    { "name": "Cybo",          "url": "https://www.cybo.com",         "confidence": "medium", "note": "400M+ businesses across 50 languages per research" },
-    { "name": "Infobel",       "url": "https://www.infobel.com",      "confidence": "medium", "note": "164M+ records across 73 countries per research" },
-    { "name": "Yalwa",         "url": "https://www.yalwa.com",        "confidence": "medium", "note": "operates in 25 countries per research" },
-    { "name": "2FindLocal",    "url": "https://www.2findlocal.com",   "confidence": "low" }
+    {
+      "url": "https://www.sketchfab.com",
+      "da": 90,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.idea.informer.com",
+      "da": 90,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.zazzle.com",
+      "da": 86,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.speakerdeck.com",
+      "da": 85,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.pearltrees.com",
+      "da": 84,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.magcloud.com",
+      "da": 80,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.tumblr.com",
+      "da": 77,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.justlanded.com",
+      "da": 75,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.wakelet.com",
+      "da": 71,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.zeemaps.com",
+      "da": 68,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.provenexpert.com",
+      "da": 67,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.triberr.com",
+      "da": 61,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.40billion.com",
+      "da": 54,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.enrollbusiness.com",
+      "da": 53,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.zumvu.com",
+      "da": 53,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.dibiz.com",
+      "da": 51,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.1businessworld.com",
+      "da": 46,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.vymaps.com",
+      "da": 46,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.flokii.com",
+      "da": 45,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.bunity.com",
+      "da": 43,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.trustindex.io",
+      "da": 42,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.youbiz.com",
+      "da": 41,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.weboworld.com",
+      "da": 40,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.iformative.com",
+      "da": 39,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.app.innmind.com",
+      "da": 39,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.discover247.directoryup.com",
+      "da": 38,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.bizidex.com",
+      "da": 37,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.adfty.biz",
+      "da": 37,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.supplyautonomy.com",
+      "da": 36,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.eliteservicesnetwork.com",
+      "da": 36,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.trueen.com",
+      "da": 36,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.earthmom.org",
+      "da": 35,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.whatsyourhours.com",
+      "da": 35,
+      "confidence": "medium",
+      "note": "source list tagged this with a Switzerland-specific path -- may be more regionally focused than purely global, unconfirmed"
+    },
+    {
+      "url": "https://www.askmeclassifieds.com",
+      "da": 35,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.industryhuddle.com",
+      "da": 33,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.sayellow.com",
+      "da": 33,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.surfyourtown.com",
+      "da": 31,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.ecitybiz.com",
+      "da": 31,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.golocalezservices.com",
+      "da": 30,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.yellowpages.net",
+      "da": 30,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.successcenter.com",
+      "da": 28,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.mapfling.com",
+      "da": 28,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.wegotaguy.net",
+      "da": 26,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.letfindout.com",
+      "da": 25,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.trustburn.com",
+      "da": 24,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.bizthistown.com",
+      "da": 22,
+      "confidence": "medium",
+      "note": "source list tagged this with a Switzerland-specific path -- may be more regionally focused than purely global, unconfirmed"
+    },
+    {
+      "url": "https://www.verview.com",
+      "da": 22,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.gravitysplash.com",
+      "da": 20,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.topgoogle.com",
+      "da": 20,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.thelocal.directory",
+      "da": 19,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.b2bgrowthhub.com",
+      "da": 19,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.mapfab.com",
+      "da": 19,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.digitalageexpo.com",
+      "da": 18,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.b2bgrowthexpo.org",
+      "da": 18,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.directory9.net",
+      "da": 16,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.bizratings.com",
+      "da": 16,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.perrysplacepromotions.org",
+      "da": 16,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.pagebook.ws",
+      "da": 15,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.yoys.net",
+      "da": 14,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.globaleconnections.com",
+      "da": 13,
+      "confidence": "medium",
+      "note": "source list tagged this with a Switzerland-specific path -- may be more regionally focused than purely global, unconfirmed"
+    },
+    {
+      "url": "https://www.thedigitalbuzzmagazine.com",
+      "da": 13,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.revealbusinesses.com",
+      "da": 12,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.zipt.com",
+      "da": 12,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.speednetworkinggroup.com",
+      "da": 11,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.rateusonline.com",
+      "da": 11,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.myperfecthost.com",
+      "da": 11,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.basemaps.com",
+      "da": 10,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.mybusinessdirectorylocal.com",
+      "da": 10,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.flipmyyard.com",
+      "da": 10,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.localwebdirectori.com",
+      "da": 9,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.okservicework.com",
+      "da": 7,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.localbusinessnation.com",
+      "da": 6,
+      "confidence": "medium",
+      "note": "source list tagged this with a Switzerland-specific path -- may be more regionally focused than purely global, unconfirmed"
+    },
+    {
+      "url": "https://www.warriorbiznetwork.com",
+      "da": 6,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.lowcountryminoritybiz.com",
+      "da": 6,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.total24.online",
+      "da": 3,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.listingster.com",
+      "da": 3,
+      "confidence": "medium"
+    },
+    {
+      "url": "https://www.smartbusinesspage.com",
+      "da": 1,
+      "confidence": "medium"
+    },
+    {
+      "name": "Kompass",
+      "url": "https://www.kompass.com",
+      "confidence": "medium",
+      "note": "57M+ companies across 70+ countries"
+    },
+    {
+      "name": "EuroPages",
+      "url": "https://www.europages.co.uk",
+      "confidence": "medium",
+      "note": "Europe-weighted but accepts listings globally"
+    },
+    {
+      "name": "B2BMAP",
+      "url": "https://b2bmap.com",
+      "confidence": "low"
+    },
+    {
+      "name": "Businessabc",
+      "url": "https://businessabc.net",
+      "confidence": "low"
+    },
+    {
+      "name": "Cylex",
+      "url": "https://www.cylex.com",
+      "confidence": "medium",
+      "note": "international directory, country-specific subdomains"
+    },
+    {
+      "name": "Tupalo",
+      "url": "https://www.tupalo.com",
+      "confidence": "medium",
+      "note": "Europe-focused but accepts global listings"
+    },
+    {
+      "name": "Fyple",
+      "url": "https://www.fyple.com",
+      "confidence": "medium",
+      "note": "has country-specific sections"
+    },
+    {
+      "name": "Cybo",
+      "url": "https://www.cybo.com",
+      "confidence": "medium",
+      "note": "400M+ businesses across 50 languages per research"
+    },
+    {
+      "name": "Infobel",
+      "url": "https://www.infobel.com",
+      "confidence": "medium",
+      "note": "164M+ records across 73 countries per research"
+    },
+    {
+      "name": "Yalwa",
+      "url": "https://www.yalwa.com",
+      "confidence": "medium",
+      "note": "operates in 25 countries per research"
+    },
+    {
+      "name": "2FindLocal",
+      "url": "https://www.2findlocal.com",
+      "confidence": "low"
+    }
   ],
-  "gap_note": "11 solid global-only entries beyond global-core -- better than the last pass but still well short of the ~85 competitors advertise. General search is now surfacing mostly repeat names, which is itself informative: closing this gap further likely needs region-specific research (Asia, Middle East, Latin America, Africa each have their own major local aggregators not yet covered here) rather than more general 'global directory' queries."
+  "gap_note": "88 global-only entries now, most with real DA scores from a supplied list -- essentially at the ~85 competitor-advertised count for this tier. Quality varies widely (DA 1-90) since this was a broad supplied list rather than a curated one; worth applying the same DA-40+ discipline used elsewhere before deciding which of these are worth actually automating vs. just keeping on file."
 }
