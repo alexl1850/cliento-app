@@ -1,26 +1,75 @@
 import { requireAdmin } from './_lib/checkAccess.js';
 import { generateSiteHtml, safe } from './_lib/generateSite.js';
 import { mapWithConcurrency } from './_lib/concurrency.js';
-import { renderSequence, pluralize } from './_lib/outreachSequence.js';
+import { buildSequencePrompt, renderSequence, pluralize, REFERENCE_TEMPLATE, FOOTER } from './_lib/outreachSequence.js';
 
-// The outreach copy is now a fixed, human-written 6-email sequence (see
-// _lib/outreachSequence.js) — not AI-generated per lead. So the sample
-// review below isn't spot-checking copy quality anymore (the copy is the
-// same reviewed-once text for everyone); it's checking that this lead's
-// merge data (owner name found, competitor phrasing, the demo itself)
-// actually reads sensibly before it's exportable.
+// The AI-generated copy below is plain-text email content, not HTML — it
+// must NOT go through generateSite.js's safe(), which HTML-entity-escapes
+// quotes/angle-brackets for embedding into a web page. This sequence is
+// full of quoted phrases ("keep it", "yeah but what's the catch") that
+// would render as literal "&quot;keep it&quot;" in a real inbox if escaped
+// that way. Just coerce to a trimmed string instead.
+const plain = (s) => String(s ?? '').trim();
+
+// The sequence copy is now AI-personalized per lead (not just merge-tag
+// substitution) using the user's hand-written sequence as a style/structure
+// reference — see _lib/outreachSequence.js. So the sample review below is
+// spot-checking the actual generated copy again (does it stay on-brief,
+// does it avoid inventing false claims about the business), the same
+// reason this sampling existed for the original single-email flow.
 const REVIEW_SAMPLE_RATE = 0.05;
 
+async function generatePersonalizedSequence({ businessName, suburb, category, demoUrl, ownerFirstName }) {
+  const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
+  const { system, user } = buildSequencePrompt({ businessName, suburb, category, demoUrl, ownerFirstName });
+  const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system,
+      messages: [{ role: 'user', content: user }],
+    }),
+  });
+  const aiData = await aiRes.json();
+  if (aiData.error) throw new Error(aiData.error.message || JSON.stringify(aiData.error));
+
+  let parsed;
+  try {
+    parsed = JSON.parse(aiData.content[0].text.replace(/```json|```/g, '').trim());
+  } catch {
+    throw new Error('AI returned invalid JSON for outreach sequence');
+  }
+  if (!Array.isArray(parsed) || parsed.length !== 6) {
+    throw new Error(`AI returned ${Array.isArray(parsed) ? parsed.length : typeof parsed} steps instead of 6`);
+  }
+
+  return parsed.map((item, i) => ({
+    step: REFERENCE_TEMPLATE[i].step,
+    delayDays: REFERENCE_TEMPLATE[i].delayDays,
+    subject: plain(item.subject) || REFERENCE_TEMPLATE[i].subject,
+    body: `${plain(item.body)}\n\n${FOOTER}`,
+  }));
+}
+
 async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
-  const biz = safe(lead.business_name);
-  const suburb = safe(lead.suburb);
-  const category = safe(lead.category || '');
-  const ownerFirstName = lead.owner_first_name ? safe(lead.owner_first_name) : null;
+  // Two versions of the same fields: HTML-escaped for the demo site (which
+  // is real HTML embedding untrusted-ish data), raw for the plain-text
+  // email sequence (which should never contain HTML entities).
+  const bizRaw = lead.business_name;
+  const suburbRaw = lead.suburb;
+  const categoryRaw = lead.category || '';
+  const ownerFirstName = lead.owner_first_name || null;
+
+  const bizHtml = safe(bizRaw);
+  const suburbHtml = safe(suburbRaw);
+  const categoryHtml = safe(categoryRaw);
 
   // 1. Generate a real demo site for this exact business, same pipeline the
   // public homepage demo uses, so the link in the sequence is a genuinely
   // working, already-built website.
-  const { html, themeName } = await generateSiteHtml({ biz, suburb, bizType: category, ownerName: '', phone: '', email: '', description: '' });
+  const { html, themeName } = await generateSiteHtml({ biz: bizHtml, suburb: suburbHtml, bizType: categoryHtml, ownerName: '', phone: '', email: '', description: '' });
   const demoId = `demo_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
   await fetch(`${SUPABASE_URL}/rest/v1/demo_sites`, {
     method: 'POST',
@@ -32,9 +81,9 @@ async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
     },
     body: JSON.stringify({
       demo_id: demoId,
-      biz_name: biz,
-      suburb,
-      biz_type: category || themeName,
+      biz_name: bizHtml,
+      suburb: suburbHtml,
+      biz_type: categoryHtml || themeName,
       html,
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(), // longer TTL than the public demo — outreach recipients may take weeks to open the email
@@ -42,9 +91,18 @@ async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
   });
   const demoUrl = `https://app.akus.com.au/api/demo-view?id=${demoId}`;
 
-  // 2. Fill the fixed 6-email sequence with this lead's merge data.
-  const sequence = renderSequence({ businessName: biz, suburb, category, demoUrl, ownerFirstName });
-  const competitorType = `other ${pluralize(category)}`;
+  // 2. Personalize the fixed sequence for this exact business via Claude,
+  // using the reference template as structure/tone guidance. Falls back to
+  // plain merge-tag substitution if the AI call fails, so a lead never ends
+  // up with no draft at all.
+  let sequence;
+  try {
+    sequence = await generatePersonalizedSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName });
+  } catch (err) {
+    console.error(`Personalized sequence generation failed for lead ${lead.id}, falling back to template substitution:`, err.message);
+    sequence = renderSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName });
+  }
+  const competitorType = `other ${pluralize(categoryRaw)}`;
 
   // 3. Roll the dice on whether this one needs a human look before it's
   // exportable — see REVIEW_SAMPLE_RATE above.
@@ -90,9 +148,9 @@ export default async function handler(req, res) {
 
   const leadIds = req.body?.leadIds || (req.body?.leadId ? [req.body.leadId] : []);
   if (leadIds.length === 0) return res.status(400).json({ error: 'leadId or leadIds required' });
-  // Cap batch size — each lead still does a real AI content-generation call
-  // for its demo site, so a large batch risks the serverless function timing
-  // out even with concurrency (below). Reaching genuinely high volume
+  // Cap batch size — each lead now does a demo-site AI call PLUS a full
+  // 6-email sequence AI call, so a large batch risks the serverless function
+  // timing out even with concurrency (below). Reaching genuinely high volume
   // (thousands/day) means calling this endpoint many times, not raising
   // this cap indefinitely.
   const boundedIds = leadIds.slice(0, 20);
