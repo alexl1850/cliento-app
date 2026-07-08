@@ -7,6 +7,7 @@ const C = {
   green:"#16A34A", greenLt:"#F0FDF4",
   amber:"#D97706", amberLt:"#FFFBEB",
   red:"#DC2626",   redLt:"#FEF2F2",
+  purple:"#7C3AED",purpleLt:"#F5F3FF",
   border:"#E5E9F0", text:"#0F172A", muted:"#64748B", light:"#F1F5F9",
 };
 
@@ -25,7 +26,23 @@ function planBadge(plan) {
   );
 }
 
-export default function AdminPanel({ onClose, onImpersonate, impersonating }) {
+function statusBadge(status) {
+  const map = {
+    sourced:  { bg: C.light,    fg: C.muted,  label: "Sourced" },
+    drafted:  { bg: C.amberLt,  fg: C.amber,  label: "Needs review" },
+    approved: { bg: C.greenLt,  fg: C.green,  label: "Approved" },
+    rejected: { bg: C.redLt,    fg: C.red,    label: "Rejected" },
+    exported: { bg: C.purpleLt, fg: C.purple, label: "Exported" },
+  };
+  const s = map[status] || map.sourced;
+  return (
+    <span style={{ background: s.bg, color: s.fg, borderRadius: "99px", padding: "3px 10px", fontSize: "0.75em", fontWeight: 700 }}>
+      {s.label}
+    </span>
+  );
+}
+
+function CustomersTab({ onImpersonate, impersonating }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,6 +84,418 @@ export default function AdminPanel({ onClose, onImpersonate, impersonating }) {
   };
 
   return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+        <div style={{ fontSize: "0.85em", color: C.muted }}>
+          {customers.length} customer{customers.length === 1 ? "" : "s"}
+        </div>
+        <div style={{ position: "relative", width: "280px", maxWidth: "100%" }}>
+          <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: C.muted }}>
+            <Icon name="search" size={15} />
+          </span>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search business, owner, email, suburb…"
+            style={{ ...inputSt, paddingLeft: "36px" }}
+          />
+        </div>
+      </div>
+
+      {loading && <div style={{ color: C.muted, padding: "24px 0" }}>Loading customers…</div>}
+      {error && (
+        <div style={{ background: C.redLt, color: C.red, borderRadius: "10px", padding: "12px 16px", fontSize: "0.88em", marginBottom: "16px" }}>
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {filtered.map(c => (
+            <div key={c.userId} style={{
+              background: "#fff", border: `1px solid ${C.border}`, borderRadius: "12px",
+              padding: "16px 18px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap",
+            }}>
+              <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 700, color: C.text, fontSize: "0.98em" }}>
+                    {c.bizName || "(no business name yet)"}
+                  </span>
+                  {planBadge(c.plan)}
+                </div>
+                <div style={{ fontSize: "0.82em", color: C.muted, marginTop: "3px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                  {c.owner && <span>{c.owner}</span>}
+                  {c.email && <span>{c.email}</span>}
+                  {c.suburb && <span><Icon name="mappin" size={12} /> {c.suburb}</span>}
+                </div>
+              </div>
+
+              <div style={{ fontSize: "0.82em", color: C.muted, minWidth: "120px" }}>
+                {c.plan === "trial" && c.daysRemaining !== null && (
+                  <span style={{ color: c.isTrialActive ? C.muted : C.red }}>
+                    {c.isTrialActive ? `${c.daysRemaining}d left in trial` : "Trial expired"}
+                  </span>
+                )}
+                {c.plan !== "trial" && c.createdAt && (
+                  <span>Joined {new Date(c.createdAt).toLocaleDateString()}</span>
+                )}
+              </div>
+
+              <button
+                onClick={() => handleImpersonate(c)}
+                disabled={busyId === c.userId || impersonating}
+                style={{
+                  padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.brand}`,
+                  background: "#fff", color: C.brand, fontSize: "0.85em", fontWeight: 700,
+                  cursor: busyId === c.userId || impersonating ? "default" : "pointer",
+                  opacity: busyId === c.userId ? 0.6 : 1, fontFamily: "inherit",
+                }}
+              >
+                {busyId === c.userId ? "Opening…" : "View as customer"}
+              </button>
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{ color: C.muted, padding: "24px 0", textAlign: "center" }}>No customers match "{query}".</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OutreachTab() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [category, setCategory] = useState("");
+  const [suburbsText, setSuburbsText] = useState("");
+  const [sourcing, setSourcing] = useState(false);
+  const [sourceMsg, setSourceMsg] = useState(null);
+
+  const [generatingIds, setGeneratingIds] = useState(new Set());
+  const [editingId, setEditingId] = useState(null);
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  const loadLeads = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const headers = await authHeaders();
+      const res = await fetch("/api/admin-list-leads", { headers });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Could not load leads");
+      setLeads(json.leads || []);
+    } catch (err) {
+      setError(err.message);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadLeads(); }, []);
+
+  const counts = useMemo(() => {
+    const c = { all: leads.length, sourced: 0, drafted: 0, approved: 0, rejected: 0, exported: 0 };
+    for (const l of leads) c[l.status] = (c[l.status] || 0) + 1;
+    return c;
+  }, [leads]);
+
+  const filtered = useMemo(() => {
+    if (statusFilter === "all") return leads;
+    return leads.filter(l => l.status === statusFilter);
+  }, [leads, statusFilter]);
+
+  const handleSource = async (e) => {
+    e.preventDefault();
+    const suburbs = suburbsText.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+    if (!category.trim() || suburbs.length === 0) return;
+    setSourcing(true);
+    setSourceMsg(null);
+    try {
+      const res = await fetch("/api/admin-source-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ category: category.trim(), suburbs }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Sourcing failed");
+      setSourceMsg(`Found ${json.sourced} lead${json.sourced === 1 ? "" : "s"} with a published email. Skipped ${json.skippedNoWebsite} with no website, ${json.skippedNoEmail} with no discoverable email, ${json.skippedDuplicate} already sourced.`);
+      await loadLeads();
+    } catch (err) {
+      setSourceMsg(`Error: ${err.message}`);
+    }
+    setSourcing(false);
+  };
+
+  const generateDraft = async (leadId) => {
+    setGeneratingIds(prev => new Set(prev).add(leadId));
+    try {
+      const res = await fetch("/api/admin-generate-outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ leadId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Draft generation failed");
+      await loadLeads();
+    } catch (err) {
+      setError(err.message);
+    }
+    setGeneratingIds(prev => { const next = new Set(prev); next.delete(leadId); return next; });
+  };
+
+  const generateAllSourced = async () => {
+    const ids = leads.filter(l => l.status === "sourced").slice(0, 5).map(l => l.id);
+    if (ids.length === 0) return;
+    setGeneratingIds(new Set(ids));
+    try {
+      const res = await fetch("/api/admin-generate-outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ leadIds: ids }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Draft generation failed");
+      await loadLeads();
+    } catch (err) {
+      setError(err.message);
+    }
+    setGeneratingIds(new Set());
+  };
+
+  const startEdit = (lead) => {
+    setEditingId(lead.id);
+    setEditSubject(lead.draft_subject || "");
+    setEditBody(lead.draft_body || "");
+  };
+
+  const updateLead = async (id, patch) => {
+    const res = await fetch("/api/admin-update-lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+      body: JSON.stringify({ id, ...patch }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Update failed");
+    await loadLeads();
+  };
+
+  const saveEdit = async (id) => {
+    try {
+      await updateLead(id, { draftSubject: editSubject, draftBody: editBody });
+      setEditingId(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const approve = async (id) => {
+    try { await updateLead(id, { status: "approved" }); } catch (err) { setError(err.message); }
+  };
+  const reject = async (id) => {
+    try { await updateLead(id, { status: "rejected" }); } catch (err) { setError(err.message); }
+  };
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const headers = await authHeaders();
+      const res = await fetch("/api/admin-export-leads", { headers });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Export failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `akus-outreach-${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      await loadLeads();
+    } catch (err) {
+      setError(err.message);
+    }
+    setExporting(false);
+  };
+
+  return (
+    <div>
+      <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: "12px", padding: "18px", marginBottom: "20px" }}>
+        <div style={{ fontWeight: 700, color: C.text, marginBottom: "10px" }}>Source new leads</div>
+        <form onSubmit={handleSource} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <input
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            placeholder="Category (e.g. plumber, cafe, hair salon)"
+            style={inputSt}
+          />
+          <textarea
+            value={suburbsText}
+            onChange={e => setSuburbsText(e.target.value)}
+            placeholder="Suburbs, one per line or comma-separated (e.g. Wollongong NSW, Corrimal NSW)"
+            rows={3}
+            style={{ ...inputSt, resize: "vertical", fontFamily: "inherit" }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              type="submit"
+              disabled={sourcing}
+              style={{
+                padding: "10px 18px", borderRadius: "8px", border: "none",
+                background: C.brand, color: "#fff", fontSize: "0.88em", fontWeight: 700,
+                cursor: sourcing ? "default" : "pointer", opacity: sourcing ? 0.6 : 1, fontFamily: "inherit",
+              }}
+            >
+              {sourcing ? "Sourcing…" : "Source leads"}
+            </button>
+            <span style={{ fontSize: "0.78em", color: C.muted }}>Only businesses with a publicly published email are kept (max 5 suburbs per run).</span>
+          </div>
+          {sourceMsg && (
+            <div style={{ fontSize: "0.82em", color: sourceMsg.startsWith("Error") ? C.red : C.green }}>{sourceMsg}</div>
+          )}
+        </form>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          {["all", "sourced", "drafted", "approved", "rejected", "exported"].map(s => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              style={{
+                padding: "6px 14px", borderRadius: "99px", border: `1.5px solid ${statusFilter === s ? C.brand : C.border}`,
+                background: statusFilter === s ? C.brandLt : "#fff", color: statusFilter === s ? C.brand : C.muted,
+                fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize",
+              }}
+            >
+              {s} ({counts[s] || 0})
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {counts.sourced > 0 && (
+            <button
+              onClick={generateAllSourced}
+              disabled={generatingIds.size > 0}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.brand}`,
+                background: "#fff", color: C.brand, fontSize: "0.82em", fontWeight: 700,
+                cursor: generatingIds.size > 0 ? "default" : "pointer", fontFamily: "inherit",
+              }}
+            >
+              Generate drafts (up to 5)
+            </button>
+          )}
+          {counts.approved > 0 && (
+            <button
+              onClick={exportCsv}
+              disabled={exporting}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", border: "none",
+                background: C.green, color: "#fff", fontSize: "0.82em", fontWeight: 700,
+                cursor: exporting ? "default" : "pointer", opacity: exporting ? 0.6 : 1, fontFamily: "inherit",
+              }}
+            >
+              {exporting ? "Exporting…" : `Export ${counts.approved} approved as CSV`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {loading && <div style={{ color: C.muted, padding: "24px 0" }}>Loading leads…</div>}
+      {error && (
+        <div style={{ background: C.redLt, color: C.red, borderRadius: "10px", padding: "12px 16px", fontSize: "0.88em", marginBottom: "16px" }}>
+          {error}
+        </div>
+      )}
+
+      {!loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {filtered.map(lead => (
+            <div key={lead.id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: "12px", padding: "16px 18px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
+                <div>
+                  <span style={{ fontWeight: 700, color: C.text }}>{lead.business_name}</span>
+                  <span style={{ fontSize: "0.82em", color: C.muted, marginLeft: "8px" }}>
+                    <Icon name="mappin" size={12} /> {lead.suburb} · {lead.category}
+                  </span>
+                </div>
+                {statusBadge(lead.status)}
+              </div>
+              <div style={{ fontSize: "0.8em", color: C.muted, marginBottom: "10px" }}>
+                {lead.discovered_email} · {lead.website_url}
+                {lead.pagespeed_score !== null && lead.pagespeed_score !== undefined && (
+                  <span> · Their site's mobile PageSpeed score: {lead.pagespeed_score}/100</span>
+                )}
+              </div>
+
+              {lead.status === "sourced" && (
+                <button
+                  onClick={() => generateDraft(lead.id)}
+                  disabled={generatingIds.has(lead.id)}
+                  style={{
+                    padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.brand}`,
+                    background: "#fff", color: C.brand, fontSize: "0.82em", fontWeight: 700,
+                    cursor: generatingIds.has(lead.id) ? "default" : "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  {generatingIds.has(lead.id) ? "Generating…" : "Generate draft"}
+                </button>
+              )}
+
+              {(lead.status === "drafted" || lead.status === "approved" || lead.status === "rejected") && (
+                <div style={{ background: C.light, borderRadius: "10px", padding: "14px" }}>
+                  {editingId === lead.id ? (
+                    <>
+                      <input value={editSubject} onChange={e => setEditSubject(e.target.value)} style={{ ...inputSt, marginBottom: "8px", fontWeight: 700 }} />
+                      <textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={6} style={{ ...inputSt, resize: "vertical", fontFamily: "inherit", whiteSpace: "pre-wrap" }} />
+                      <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                        <button onClick={() => saveEdit(lead.id)} style={{ padding: "6px 14px", borderRadius: "8px", border: "none", background: C.brand, color: "#fff", fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Save</button>
+                        <button onClick={() => setEditingId(null)} style={{ padding: "6px 14px", borderRadius: "8px", border: `1.5px solid ${C.border}`, background: "#fff", color: C.muted, fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontWeight: 700, color: C.text, marginBottom: "6px", fontSize: "0.9em" }}>{lead.draft_subject}</div>
+                      <div style={{ fontSize: "0.85em", color: C.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{lead.draft_body}</div>
+                      {lead.demo_url && (
+                        <div style={{ marginTop: "8px" }}>
+                          <a href={lead.demo_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8em", color: C.brand, fontWeight: 700 }}>View generated demo ↗</a>
+                        </div>
+                      )}
+                      {lead.status === "drafted" && (
+                        <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                          <button onClick={() => approve(lead.id)} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", background: C.green, color: "#fff", fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Approve</button>
+                          <button onClick={() => reject(lead.id)} style={{ padding: "7px 16px", borderRadius: "8px", border: `1.5px solid ${C.red}`, background: "#fff", color: C.red, fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Reject</button>
+                          <button onClick={() => startEdit(lead)} style={{ padding: "7px 16px", borderRadius: "8px", border: `1.5px solid ${C.border}`, background: "#fff", color: C.muted, fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Edit</button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{ color: C.muted, padding: "24px 0", textAlign: "center" }}>No leads in this view yet.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function AdminPanel({ onClose, onImpersonate, impersonating }) {
+  const [tab, setTab] = useState("customers");
+
+  return (
     <div style={{ minHeight: "100vh", background: "#F8F9FA", fontFamily: "'Inter',system-ui,sans-serif", padding: "32px 24px" }}>
       <div style={{ maxWidth: "980px", margin: "0 auto" }}>
         <button onClick={onClose} style={{ ...backBtn, marginBottom: "16px" }}>
@@ -74,82 +503,37 @@ export default function AdminPanel({ onClose, onImpersonate, impersonating }) {
         </button>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-          <div>
-            <h1 style={{ fontSize: "1.5em", fontWeight: 800, color: C.text, margin: 0 }}>Admin — Customers</h1>
-            <div style={{ fontSize: "0.85em", color: C.muted, marginTop: "2px" }}>
-              {customers.length} customer{customers.length === 1 ? "" : "s"}
-            </div>
-          </div>
-          <div style={{ position: "relative", width: "280px", maxWidth: "100%" }}>
-            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: C.muted }}>
-              <Icon name="search" size={15} />
-            </span>
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search business, owner, email, suburb…"
-              style={{ ...inputSt, paddingLeft: "36px" }}
-            />
+          <h1 style={{ fontSize: "1.5em", fontWeight: 800, color: C.text, margin: 0 }}>
+            Admin — {tab === "customers" ? "Customers" : "Outreach"}
+          </h1>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              onClick={() => setTab("customers")}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${tab === "customers" ? C.brand : C.border}`,
+                background: tab === "customers" ? C.brandLt : "#fff", color: tab === "customers" ? C.brand : C.muted,
+                fontSize: "0.85em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Customers
+            </button>
+            <button
+              onClick={() => setTab("outreach")}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${tab === "outreach" ? C.brand : C.border}`,
+                background: tab === "outreach" ? C.brandLt : "#fff", color: tab === "outreach" ? C.brand : C.muted,
+                fontSize: "0.85em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Outreach
+            </button>
           </div>
         </div>
 
-        {loading && <div style={{ color: C.muted, padding: "24px 0" }}>Loading customers…</div>}
-        {error && (
-          <div style={{ background: C.redLt, color: C.red, borderRadius: "10px", padding: "12px 16px", fontSize: "0.88em", marginBottom: "16px" }}>
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {filtered.map(c => (
-              <div key={c.userId} style={{
-                background: "#fff", border: `1px solid ${C.border}`, borderRadius: "12px",
-                padding: "16px 18px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap",
-              }}>
-                <div style={{ flex: "1 1 260px", minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 700, color: C.text, fontSize: "0.98em" }}>
-                      {c.bizName || "(no business name yet)"}
-                    </span>
-                    {planBadge(c.plan)}
-                  </div>
-                  <div style={{ fontSize: "0.82em", color: C.muted, marginTop: "3px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                    {c.owner && <span>{c.owner}</span>}
-                    {c.email && <span>{c.email}</span>}
-                    {c.suburb && <span><Icon name="mappin" size={12} /> {c.suburb}</span>}
-                  </div>
-                </div>
-
-                <div style={{ fontSize: "0.82em", color: C.muted, minWidth: "120px" }}>
-                  {c.plan === "trial" && c.daysRemaining !== null && (
-                    <span style={{ color: c.isTrialActive ? C.muted : C.red }}>
-                      {c.isTrialActive ? `${c.daysRemaining}d left in trial` : "Trial expired"}
-                    </span>
-                  )}
-                  {c.plan !== "trial" && c.createdAt && (
-                    <span>Joined {new Date(c.createdAt).toLocaleDateString()}</span>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => handleImpersonate(c)}
-                  disabled={busyId === c.userId || impersonating}
-                  style={{
-                    padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.brand}`,
-                    background: "#fff", color: C.brand, fontSize: "0.85em", fontWeight: 700,
-                    cursor: busyId === c.userId || impersonating ? "default" : "pointer",
-                    opacity: busyId === c.userId ? 0.6 : 1, fontFamily: "inherit",
-                  }}
-                >
-                  {busyId === c.userId ? "Opening…" : "View as customer"}
-                </button>
-              </div>
-            ))}
-            {filtered.length === 0 && (
-              <div style={{ color: C.muted, padding: "24px 0", textAlign: "center" }}>No customers match "{query}".</div>
-            )}
-          </div>
+        {tab === "customers" ? (
+          <CustomersTab onImpersonate={onImpersonate} impersonating={impersonating} />
+        ) : (
+          <OutreachTab />
         )}
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
+import { checkPagespeed } from './_lib/pagespeedCheck.js';
 
 // Google's PageSpeed Insights API technically works unauthenticated, but the
 // shared/unkeyed quota turned out to be exhausted almost immediately in
@@ -19,29 +20,7 @@ export default async function handler(req, res) {
   if (!url) return res.status(400).json({ error: 'No website URL to check — build your website first.' });
 
   try {
-    const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
-    const params = new URLSearchParams({ url, strategy: 'mobile', category: 'performance' });
-    if (apiKey) params.set('key', apiKey);
-
-    const psiRes = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`);
-    const psiData = await psiRes.json();
-    if (!psiRes.ok) {
-      const rawMessage = psiData.error?.message || 'PageSpeed check failed';
-      console.error('PageSpeed API error:', rawMessage);
-      // Don't leak raw Google Cloud quota/project internals to the customer —
-      // show a clean, generic message instead for anything that isn't just a
-      // bad URL from them.
-      const isQuota = /quota/i.test(rawMessage);
-      throw new Error(isQuota ? 'Speed checks are temporarily unavailable — please try again later.' : 'Could not check that URL — make sure it\'s a valid, live website address.');
-    }
-
-    const audits = psiData.lighthouseResult?.audits || {};
-    const score = Math.round((psiData.lighthouseResult?.categories?.performance?.score || 0) * 100);
-    const metrics = {
-      firstContentfulPaint: audits['first-contentful-paint']?.displayValue || null,
-      largestContentfulPaint: audits['largest-contentful-paint']?.displayValue || null,
-      speedIndex: audits['speed-index']?.displayValue || null,
-    };
+    const { score, metrics } = await checkPagespeed(url);
 
     // Cache the result so the Health Score panel can show it without
     // re-checking on every view — best-effort, doesn't block the response.

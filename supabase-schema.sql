@@ -166,3 +166,32 @@ BEGIN
   RETURN v_count <= p_max;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ─── OUTREACH / LEAD GENERATION ───────────────────────────────────
+-- Backs the admin-only Outreach tab (api/admin-source-leads.js,
+-- admin-generate-outreach.js, admin-list-leads.js, admin-export-leads.js).
+-- Sourced prospect businesses move through sourced -> drafted -> approved/
+-- rejected -> exported; nothing is ever sent automatically, a human approves
+-- every draft before export. Service-role only, no RLS policies needed
+-- (never touched from the browser — only from admin-gated API endpoints).
+CREATE TABLE IF NOT EXISTS leads (
+  id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_name    TEXT NOT NULL,
+  suburb           TEXT NOT NULL,
+  category         TEXT,
+  website_url      TEXT,
+  discovered_email TEXT,
+  pagespeed_score  INTEGER,
+  demo_id          TEXT,
+  demo_url         TEXT,
+  draft_subject    TEXT,
+  draft_body       TEXT,
+  status           TEXT DEFAULT 'sourced', -- sourced | drafted | approved | rejected | exported
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+-- Intentionally no policies added: same reasoning as admin_audit_log/
+-- rate_limits above — RLS enabled with zero policies denies anon/
+-- authenticated access entirely, reachable only via the service-role key.
