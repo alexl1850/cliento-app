@@ -179,22 +179,25 @@ $$ LANGUAGE plpgsql;
 -- compliance drift. Service-role only, no RLS policies needed (never
 -- touched from the browser — only from admin-gated API endpoints).
 CREATE TABLE IF NOT EXISTS leads (
-  id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  business_name    TEXT NOT NULL,
-  suburb           TEXT NOT NULL,
-  category         TEXT,
-  website_url      TEXT,
-  discovered_email TEXT,
-  phone            TEXT,
-  pagespeed_score  INTEGER,
-  demo_id          TEXT,
-  demo_url         TEXT,
-  draft_subject    TEXT,
-  draft_body       TEXT,
-  status           TEXT DEFAULT 'sourced', -- sourced | drafted | approved | rejected | exported | phone_lead
-  review_sample    BOOLEAN DEFAULT false,   -- true = randomly picked for manual review before approval
-  created_at       TIMESTAMPTZ DEFAULT NOW(),
-  updated_at       TIMESTAMPTZ DEFAULT NOW()
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_name     TEXT NOT NULL,
+  suburb            TEXT NOT NULL,
+  category          TEXT,
+  website_url       TEXT,
+  discovered_email  TEXT,
+  phone             TEXT,
+  owner_first_name  TEXT,
+  competitor_type   TEXT,
+  pagespeed_score   INTEGER,
+  demo_id           TEXT,
+  demo_url          TEXT,
+  draft_subject     TEXT,
+  draft_body        TEXT,
+  sequence          JSONB,   -- full 6-step rendered email sequence, see api/_lib/outreachSequence.js
+  status            TEXT DEFAULT 'sourced', -- sourced | drafted | approved | rejected | exported | phone_lead
+  review_sample     BOOLEAN DEFAULT false,   -- true = randomly picked for manual review before approval
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS review_sample BOOLEAN DEFAULT false;
@@ -203,6 +206,13 @@ ALTER TABLE leads ADD COLUMN IF NOT EXISTS review_sample BOOLEAN DEFAULT false;
 -- phone calls aren't covered by the Spam Act at all, so these are kept as a
 -- separate call list instead of being discarded.
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS phone TEXT;
+-- Best-effort owner first name (scraped from the lead's own site) and a
+-- derived "other <category>s" phrase — merge-tag inputs for the fixed
+-- 6-email sequence in api/_lib/outreachSequence.js, which replaced
+-- per-lead AI-drafted copy with a single reviewed-once template.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS owner_first_name TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS competitor_type TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS sequence JSONB;
 
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies added: same reasoning as admin_audit_log/

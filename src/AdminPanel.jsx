@@ -180,6 +180,7 @@ function OutreachTab() {
   const [editingId, setEditingId] = useState(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [expandedSeqId, setExpandedSeqId] = useState(null);
   const [exporting, setExporting] = useState(false);
 
   const [bulkCategoriesText, setBulkCategoriesText] = useState("");
@@ -655,8 +656,29 @@ function OutreachTab() {
                       </div>
                       <div style={{ fontSize: "0.85em", color: C.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{lead.draft_body}</div>
                       {lead.demo_url && (
-                        <div style={{ marginTop: "8px" }}>
+                        <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
                           <a href={lead.demo_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8em", color: C.brand, fontWeight: 700 }}>View generated demo ↗</a>
+                          {Array.isArray(lead.sequence) && lead.sequence.length > 1 && (
+                            <button
+                              onClick={() => setExpandedSeqId(expandedSeqId === lead.id ? null : lead.id)}
+                              style={{ padding: "3px 10px", borderRadius: "99px", border: `1px solid ${C.border}`, background: "#fff", color: C.muted, fontSize: "0.75em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                            >
+                              {expandedSeqId === lead.id ? "Hide" : "Show"} remaining {lead.sequence.length - 1} email{lead.sequence.length - 1 === 1 ? "" : "s"}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {expandedSeqId === lead.id && Array.isArray(lead.sequence) && (
+                        <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                          {lead.sequence.filter(s => s.step > 1).map(s => (
+                            <div key={s.step} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: "8px", padding: "10px 12px" }}>
+                              <div style={{ fontSize: "0.72em", fontWeight: 700, color: C.muted, marginBottom: "4px" }}>
+                                Day {s.delayDays} · Step {s.step}
+                              </div>
+                              <div style={{ fontWeight: 700, color: C.text, marginBottom: "4px", fontSize: "0.85em" }}>{s.subject}</div>
+                              <div style={{ fontSize: "0.8em", color: C.text, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.body}</div>
+                            </div>
+                          ))}
                         </div>
                       )}
                       {lead.status === "drafted" && (

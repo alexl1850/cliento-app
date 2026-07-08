@@ -1,5 +1,7 @@
 import { requireAdmin } from './_lib/checkAccess.js';
 import { mapWithConcurrency } from './_lib/concurrency.js';
+import { fetchWithTimeout } from './_lib/httpFetch.js';
+import { findOwnerFirstName } from './_lib/ownerName.js';
 
 // Domains that show up constantly as false-positive "contact emails" scraped
 // off small-business sites — tracking pixels, website-builder boilerplate,
@@ -27,19 +29,6 @@ function extractEmail(html) {
     return email;
   }
   return null;
-}
-
-async function fetchWithTimeout(url, ms) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    const res = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AkusOutreachBot/1.0)' } });
-    return await res.text();
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 async function findPublishedEmail(websiteUrl) {
@@ -157,6 +146,10 @@ export default async function handler(req, res) {
         const discoveredEmail = await findPublishedEmail(websiteUrl);
         if (!discoveredEmail) return { skip: 'noEmail' };
 
+        // Best-effort only — most sites never state an owner's name anywhere
+        // scrapable, so null here is the normal, expected outcome, not a bug.
+        const ownerFirstName = await findOwnerFirstName(websiteUrl).catch(() => null);
+
         const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
           method: 'POST',
           headers: {
@@ -171,6 +164,7 @@ export default async function handler(req, res) {
             category,
             website_url: websiteUrl,
             discovered_email: discoveredEmail,
+            owner_first_name: ownerFirstName,
             phone,
             status: 'sourced',
           }),

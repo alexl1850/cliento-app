@@ -32,13 +32,25 @@ export default async function handler(req, res) {
       return res.status(200).json({ error: `No ${isPhone ? 'phone leads' : 'approved leads'} to export` });
     }
 
+    // Email export includes both the raw merge-tag values (for platforms
+    // that run the sequence template themselves, e.g. Instantly/Smartlead —
+    // column names match the {{FirstName}}-style tags in
+    // _lib/outreachSequence.js) and the fully-rendered 6 steps (for
+    // platforms that need literal per-lead content, or just for reference).
     const header = isPhone
       ? ['business_name', 'suburb', 'category', 'phone']
-      : ['email', 'business_name', 'suburb', 'subject', 'body', 'demo_url'];
-    const rows = leads.map(l => (isPhone
-      ? [l.business_name, l.suburb, l.category, l.phone]
-      : [l.discovered_email, l.business_name, l.suburb, l.draft_subject, l.draft_body, l.demo_url]
-    ).map(csvField).join(','));
+      : ['email', 'FirstName', 'BusinessName', 'Suburb', 'DemoLink', 'CompetitorType',
+         'Subject1', 'Body1', 'Subject2', 'Body2', 'Subject3', 'Body3',
+         'Subject4', 'Body4', 'Subject5', 'Body5', 'Subject6', 'Body6'];
+    const rows = leads.map(l => {
+      if (isPhone) return [l.business_name, l.suburb, l.category, l.phone].map(csvField).join(',');
+      const seq = Array.isArray(l.sequence) ? l.sequence : [];
+      const step = n => seq.find(s => s.step === n) || {};
+      return [
+        l.discovered_email, l.owner_first_name || '', l.business_name, l.suburb, l.demo_url, l.competitor_type || '',
+        ...[1, 2, 3, 4, 5, 6].flatMap(n => [step(n).subject || '', step(n).body || '']),
+      ].map(csvField).join(',');
+    });
     const csv = [header.join(','), ...rows].join('\n');
 
     // Mark exported so a repeat export doesn't re-send the same leads.
