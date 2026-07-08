@@ -1,4 +1,5 @@
 import { requireAdmin } from './_lib/checkAccess.js';
+import { mapWithConcurrency } from './_lib/concurrency.js';
 
 // Domains that show up constantly as false-positive "contact emails" scraped
 // off small-business sites — tracking pixels, website-builder boilerplate,
@@ -76,8 +77,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'category and a non-empty suburbs array are required' });
   }
   // Keep each request bounded — this fetches a live third-party website per
-  // result, so a large fan-out risks the serverless function timing out.
-  const boundedSuburbs = suburbs.slice(0, 5);
+  // result, so a large fan-out risks the serverless function timing out even
+  // with the concurrency-capped fetching below. Reaching genuinely high
+  // sourcing volume means calling this endpoint many times, not raising
+  // this cap indefinitely.
+  const boundedSuburbs = suburbs.slice(0, 8);
+  const CONCURRENCY = 5;
 
   const PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
   if (!PLACES_API_KEY) {
@@ -99,7 +104,7 @@ export default async function handler(req, res) {
           'X-Goog-Api-Key': PLACES_API_KEY,
           'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.websiteUri,places.id',
         },
-        body: JSON.stringify({ textQuery: `${category} in ${suburb}`, maxResultCount: 10 }),
+        body: JSON.stringify({ textQuery: `${category} in ${suburb}`, maxResultCount: 15 }),
       });
       const placesData = await placesRes.json();
       if (!placesRes.ok) {
@@ -107,10 +112,10 @@ export default async function handler(req, res) {
         continue;
       }
 
-      for (const place of placesData.places || []) {
+      const outcomes = await mapWithConcurrency(placesData.places || [], CONCURRENCY, async (place) => {
         const websiteUrl = place.websiteUri;
         const businessName = place.displayName?.text || 'Unknown business';
-        if (!websiteUrl) { skippedNoWebsite++; continue; }
+        if (!websiteUrl) return { skip: 'noWebsite' };
 
         // Skip if we've already sourced this exact business+suburb before,
         // so re-running a search doesn't spam duplicate rows.
@@ -119,10 +124,10 @@ export default async function handler(req, res) {
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
         );
         const existing = existingRes.ok ? await existingRes.json() : [];
-        if (existing.length > 0) { skippedDuplicate++; continue; }
+        if (existing.length > 0) return { skip: 'duplicate' };
 
         const discoveredEmail = await findPublishedEmail(websiteUrl);
-        if (!discoveredEmail) { skippedNoEmail++; continue; }
+        if (!discoveredEmail) return { skip: 'noEmail' };
 
         const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
           method: 'POST',
@@ -141,11 +146,16 @@ export default async function handler(req, res) {
             status: 'sourced',
           }),
         });
-        if (insertRes.ok) {
-          const [row] = await insertRes.json();
-          newLeads.push(row);
-          sourced++;
-        }
+        if (!insertRes.ok) return { skip: 'insertFailed' };
+        const [row] = await insertRes.json();
+        return { row };
+      });
+
+      for (const o of outcomes) {
+        if (o.row) { newLeads.push(o.row); sourced++; }
+        else if (o.skip === 'noWebsite') skippedNoWebsite++;
+        else if (o.skip === 'duplicate') skippedDuplicate++;
+        else if (o.skip === 'noEmail') skippedNoEmail++;
       }
     }
 

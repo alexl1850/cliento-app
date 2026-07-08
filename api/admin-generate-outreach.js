@@ -1,6 +1,7 @@
 import { requireAdmin } from './_lib/checkAccess.js';
 import { generateSiteHtml, safe } from './_lib/generateSite.js';
 import { checkPagespeed } from './_lib/pagespeedCheck.js';
+import { mapWithConcurrency } from './_lib/concurrency.js';
 
 // Fixed, non-AI-generated compliance footer — Australian Spam Act 2003
 // requires accurate sender self-identification and a working way to opt
@@ -10,6 +11,14 @@ import { checkPagespeed } from './_lib/pagespeedCheck.js';
 const FOOTER = `—
 Akus Voice (ABN 90 632 856 615)
 This email was sent because your business's contact details are publicly published on your own website. If you'd rather not hear from us again, just reply and let me know.`;
+
+// At real send volume (thousands/month) a human can't click approve on
+// every single draft — instead, only a random sample gets held for manual
+// review; everything else auto-approves straight into the exportable
+// pool. This trades full manual review for an ongoing spot-check on
+// quality/compliance drift, which the admin can raise or lower over time
+// once they've seen how the sampled drafts look.
+const REVIEW_SAMPLE_RATE = 0.05;
 
 async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
   const biz = safe(lead.business_name);
@@ -86,7 +95,12 @@ Return JSON: {"subject": "...", "body": "..."}` }],
   const subject = safe(draft.subject) || `A website for ${biz}`;
   const body = `${safe(draft.body)}\n\n${FOOTER}`;
 
-  // 4. Persist the draft onto the lead row.
+  // 4. Roll the dice on whether this one needs a human look before it's
+  // exportable — see REVIEW_SAMPLE_RATE above.
+  const reviewSample = Math.random() < REVIEW_SAMPLE_RATE;
+  const status = reviewSample ? 'drafted' : 'approved';
+
+  // 5. Persist the draft onto the lead row.
   await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${lead.id}`, {
     method: 'PATCH',
     headers: {
@@ -101,12 +115,13 @@ Return JSON: {"subject": "...", "body": "..."}` }],
       demo_url: demoUrl,
       draft_subject: subject,
       draft_body: body,
-      status: 'drafted',
+      status,
+      review_sample: reviewSample,
       updated_at: new Date().toISOString(),
     }),
   });
 
-  return { id: lead.id, subject, demoUrl, pagespeedScore };
+  return { id: lead.id, subject, demoUrl, pagespeedScore, status, reviewSample };
 }
 
 export default async function handler(req, res) {
@@ -123,27 +138,31 @@ export default async function handler(req, res) {
   if (leadIds.length === 0) return res.status(400).json({ error: 'leadId or leadIds required' });
   // Cap batch size — each lead does a real AI content generation call plus an
   // AI drafting call plus a live PageSpeed check, so a large batch risks the
-  // serverless function timing out.
-  const boundedIds = leadIds.slice(0, 5);
+  // serverless function timing out even with concurrency (below). Reaching
+  // genuinely high volume (thousands/day) means calling this endpoint many
+  // times rather than raising this cap indefinitely.
+  const boundedIds = leadIds.slice(0, 20);
+  const CONCURRENCY = 5;
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-  const results = [];
-  const errors = [];
-  for (const id of boundedIds) {
+  const outcomes = await mapWithConcurrency(boundedIds, CONCURRENCY, async (id) => {
     try {
       const leadRes = await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${id}&select=*`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
       });
       const [lead] = await leadRes.json();
-      if (!lead) { errors.push({ id, error: 'Lead not found' }); continue; }
+      if (!lead) return { ok: false, id, error: 'Lead not found' };
       const result = await draftOne(lead, { SUPABASE_URL, SUPABASE_KEY });
-      results.push(result);
+      return { ok: true, ...result };
     } catch (err) {
-      errors.push({ id, error: err.message });
+      return { ok: false, id, error: err.message };
     }
-  }
+  });
+
+  const results = outcomes.filter(o => o.ok);
+  const errors = outcomes.filter(o => !o.ok).map(({ id, error }) => ({ id, error }));
 
   return res.status(200).json({ drafted: results, errors });
 }

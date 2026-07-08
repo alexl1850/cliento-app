@@ -171,9 +171,13 @@ $$ LANGUAGE plpgsql;
 -- Backs the admin-only Outreach tab (api/admin-source-leads.js,
 -- admin-generate-outreach.js, admin-list-leads.js, admin-export-leads.js).
 -- Sourced prospect businesses move through sourced -> drafted -> approved/
--- rejected -> exported; nothing is ever sent automatically, a human approves
--- every draft before export. Service-role only, no RLS policies needed
--- (never touched from the browser — only from admin-gated API endpoints).
+-- rejected -> exported. Nothing is ever sent automatically. At low volume
+-- every draft waited for a human approve/reject click; at real send volume
+-- (thousands/month) that doesn't scale, so only a random sample of drafts
+-- (review_sample = true) still require a manual click — the rest are
+-- auto-approved, trading full manual review for a spot-check on quality/
+-- compliance drift. Service-role only, no RLS policies needed (never
+-- touched from the browser — only from admin-gated API endpoints).
 CREATE TABLE IF NOT EXISTS leads (
   id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   business_name    TEXT NOT NULL,
@@ -187,11 +191,57 @@ CREATE TABLE IF NOT EXISTS leads (
   draft_subject    TEXT,
   draft_body       TEXT,
   status           TEXT DEFAULT 'sourced', -- sourced | drafted | approved | rejected | exported
+  review_sample    BOOLEAN DEFAULT false,   -- true = randomly picked for manual review before approval
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS review_sample BOOLEAN DEFAULT false;
 
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies added: same reasoning as admin_audit_log/
 -- rate_limits above — RLS enabled with zero policies denies anon/
 -- authenticated access entirely, reachable only via the service-role key.
+
+-- ─── DEMO SITE GENERATOR ───────────────────────────────────────────
+-- Backs api/demo.js (public homepage demo), api/demo-view.js (serves the
+-- generated page by demo_id), and api/admin-generate-outreach.js (which
+-- generates the same kind of demo site for sourced outreach leads).
+-- Service-role only, no RLS policies needed (never touched from the
+-- browser — demo_id is an unguessable server-generated token, not a
+-- browser-facing auth boundary).
+CREATE TABLE IF NOT EXISTS demo_sites (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  demo_id      TEXT NOT NULL UNIQUE,
+  biz_name     TEXT,
+  suburb       TEXT,
+  biz_type     TEXT,
+  html         TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  expires_at   TIMESTAMPTZ
+);
+
+ALTER TABLE demo_sites ENABLE ROW LEVEL SECURITY;
+-- Intentionally no policies added: same reasoning as leads/admin_audit_log
+-- above — RLS enabled with zero policies denies anon/authenticated access
+-- entirely, reachable only via the service-role key.
+
+-- Leads captured from the public demo form when a visitor leaves contact
+-- details alongside their generated demo (see api/demo.js) — distinct from
+-- the outreach `leads` table above, which is sourced by admins rather than
+-- self-submitted by visitors.
+CREATE TABLE IF NOT EXISTS demo_leads (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  demo_id      TEXT,
+  biz_name     TEXT,
+  suburb       TEXT,
+  biz_type     TEXT,
+  owner_name   TEXT,
+  phone        TEXT,
+  email        TEXT,
+  description  TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE demo_leads ENABLE ROW LEVEL SECURITY;
+-- Intentionally no policies added: same reasoning as demo_sites above.

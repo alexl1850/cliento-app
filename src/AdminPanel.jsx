@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { authHeaders } from "./supabase.js";
 import { inputSt, backBtn, Icon } from "./DashboardB.jsx";
 
@@ -181,6 +181,14 @@ function OutreachTab() {
   const [editBody, setEditBody] = useState("");
   const [exporting, setExporting] = useState(false);
 
+  const [bulkCategoriesText, setBulkCategoriesText] = useState("");
+  const [bulkSuburbsText, setBulkSuburbsText] = useState("");
+  const [bulkTarget, setBulkTarget] = useState(1000);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ sourced: 0, drafted: 0, status: "" });
+  const [bulkLog, setBulkLog] = useState([]);
+  const bulkStopRef = useRef(false);
+
   const loadLeads = async () => {
     setLoading(true);
     setError(null);
@@ -266,6 +274,89 @@ function OutreachTab() {
     }
     setGeneratingIds(new Set());
   };
+
+  // Runs entirely in the browser using the admin's own logged-in session —
+  // repeatedly calls the same source/generate endpoints the manual buttons
+  // use, chunked to match their internal per-call caps (8 suburbs sourced,
+  // 20 drafted at a time), until the target count is hit or every
+  // category+suburb combination has been tried. This exists because reaching
+  // real volume (hundreds to thousands of leads) by clicking the manual
+  // buttons one batch at a time isn't practical.
+  const runBulkBatch = async () => {
+    const categories = bulkCategoriesText.split("\n").map(s => s.trim()).filter(Boolean);
+    const suburbs = bulkSuburbsText.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+    if (categories.length === 0 || suburbs.length === 0) {
+      setBulkLog(prev => [...prev, "Need at least one category and one suburb."]);
+      return;
+    }
+
+    bulkStopRef.current = false;
+    setBulkRunning(true);
+    setBulkProgress({ sourced: 0, drafted: 0, status: "Starting…" });
+    setBulkLog([]);
+    let totalSourced = 0, totalDrafted = 0;
+
+    outer:
+    for (const cat of categories) {
+      for (let i = 0; i < suburbs.length; i += 8) {
+        if (bulkStopRef.current) break outer;
+        if (totalDrafted >= bulkTarget) break outer;
+
+        const chunk = suburbs.slice(i, i + 8);
+        setBulkProgress(p => ({ ...p, status: `Sourcing "${cat}" in ${chunk.length} suburb(s)…` }));
+
+        let sourcedIds = [];
+        try {
+          const headers = await authHeaders();
+          const res = await fetch("/api/admin-source-leads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...headers },
+            body: JSON.stringify({ category: cat, suburbs: chunk }),
+          });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || "Sourcing failed");
+          sourcedIds = (json.leads || []).map(l => l.id);
+          totalSourced += json.sourced || 0;
+          setBulkLog(prev => [...prev, `Sourced ${json.sourced} in ${cat} / ${chunk.join(", ")} (skipped: ${json.skippedNoWebsite} no site, ${json.skippedNoEmail} no email, ${json.skippedDuplicate} dup)`]);
+        } catch (err) {
+          setBulkLog(prev => [...prev, `Sourcing error for ${cat} / ${chunk.join(", ")}: ${err.message}`]);
+          continue;
+        }
+        setBulkProgress(p => ({ ...p, sourced: totalSourced }));
+
+        // Draft everything just sourced, in sub-chunks of 20 (the endpoint's cap).
+        for (let j = 0; j < sourcedIds.length; j += 20) {
+          if (bulkStopRef.current || totalDrafted >= bulkTarget) break;
+          const idChunk = sourcedIds.slice(j, j + 20);
+          setBulkProgress(p => ({ ...p, status: `Drafting ${idChunk.length} lead(s)…` }));
+          try {
+            const headers = await authHeaders();
+            const res = await fetch("/api/admin-generate-outreach", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...headers },
+              body: JSON.stringify({ leadIds: idChunk }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || "Draft generation failed");
+            totalDrafted += (json.drafted || []).length;
+            if ((json.errors || []).length) {
+              setBulkLog(prev => [...prev, `${json.errors.length} draft error(s): ${json.errors.map(e => e.error).slice(0, 3).join("; ")}`]);
+            }
+          } catch (err) {
+            setBulkLog(prev => [...prev, `Drafting error: ${err.message}`]);
+          }
+          setBulkProgress(p => ({ ...p, drafted: totalDrafted }));
+        }
+
+        await loadLeads();
+      }
+    }
+
+    setBulkProgress(p => ({ ...p, status: bulkStopRef.current ? "Stopped." : "Done." }));
+    setBulkRunning(false);
+  };
+
+  const stopBulkBatch = () => { bulkStopRef.current = true; };
 
   const startEdit = (lead) => {
     setEditingId(lead.id);
@@ -355,7 +446,7 @@ function OutreachTab() {
             >
               {sourcing ? "Sourcing…" : "Source leads"}
             </button>
-            <span style={{ fontSize: "0.78em", color: C.muted }}>Only businesses with a publicly published email are kept (max 5 suburbs per run).</span>
+            <span style={{ fontSize: "0.78em", color: C.muted }}>Only businesses with a publicly published email are kept (max 8 suburbs per run).</span>
           </div>
           {sourceMsg && (
             <div style={{ fontSize: "0.82em", color: sourceMsg.startsWith("Error") ? C.red : C.green }}>{sourceMsg}</div>
@@ -363,19 +454,87 @@ function OutreachTab() {
         </form>
       </div>
 
+      <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: "12px", padding: "18px", marginBottom: "20px" }}>
+        <div style={{ fontWeight: 700, color: C.text, marginBottom: "4px" }}>Bulk batch</div>
+        <div style={{ fontSize: "0.78em", color: C.muted, marginBottom: "10px" }}>
+          Runs sourcing + drafting automatically across many categories and suburbs until it hits your target count. Keep this tab open while it runs — it can take a while for large targets.
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+          <textarea
+            value={bulkCategoriesText}
+            onChange={e => setBulkCategoriesText(e.target.value)}
+            placeholder={"Categories, one per line\ne.g.\nplumber\nelectrician\ncafe"}
+            rows={4}
+            disabled={bulkRunning}
+            style={{ ...inputSt, resize: "vertical", fontFamily: "inherit" }}
+          />
+          <textarea
+            value={bulkSuburbsText}
+            onChange={e => setBulkSuburbsText(e.target.value)}
+            placeholder={"Suburbs, one per line or comma-separated\ne.g.\nWollongong NSW\nCorrimal NSW\nShellharbour NSW"}
+            rows={4}
+            disabled={bulkRunning}
+            style={{ ...inputSt, resize: "vertical", fontFamily: "inherit" }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <label style={{ fontSize: "0.82em", color: C.muted, display: "flex", alignItems: "center", gap: "6px" }}>
+            Target leads
+            <input
+              type="number" min="1" value={bulkTarget}
+              onChange={e => setBulkTarget(parseInt(e.target.value) || 0)}
+              disabled={bulkRunning}
+              style={{ ...inputSt, width: "90px", padding: "6px 10px" }}
+            />
+          </label>
+          {!bulkRunning ? (
+            <button
+              onClick={runBulkBatch}
+              style={{ padding: "10px 18px", borderRadius: "8px", border: "none", background: C.purple, color: "#fff", fontSize: "0.88em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Run bulk batch
+            </button>
+          ) : (
+            <button
+              onClick={stopBulkBatch}
+              style={{ padding: "10px 18px", borderRadius: "8px", border: `1.5px solid ${C.red}`, background: "#fff", color: C.red, fontSize: "0.88em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Stop
+            </button>
+          )}
+          {bulkProgress.status && (
+            <span style={{ fontSize: "0.82em", color: C.text, fontWeight: 600 }}>
+              {bulkProgress.status} · Sourced {bulkProgress.sourced} · Drafted {bulkProgress.drafted} / {bulkTarget}
+            </span>
+          )}
+        </div>
+        {bulkLog.length > 0 && (
+          <div style={{ marginTop: "10px", maxHeight: "140px", overflowY: "auto", background: C.light, borderRadius: "8px", padding: "10px 12px", fontSize: "0.76em", color: C.muted, fontFamily: "monospace" }}>
+            {bulkLog.map((line, i) => <div key={i}>{line}</div>)}
+          </div>
+        )}
+      </div>
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          {["all", "sourced", "drafted", "approved", "rejected", "exported"].map(s => (
+          {[
+            { key: "all", label: "All" },
+            { key: "sourced", label: "Sourced" },
+            { key: "drafted", label: "Needs your review" },
+            { key: "approved", label: "Approved" },
+            { key: "rejected", label: "Rejected" },
+            { key: "exported", label: "Exported" },
+          ].map(({ key: s, label }) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
               style={{
                 padding: "6px 14px", borderRadius: "99px", border: `1.5px solid ${statusFilter === s ? C.brand : C.border}`,
                 background: statusFilter === s ? C.brandLt : "#fff", color: statusFilter === s ? C.brand : C.muted,
-                fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize",
+                fontSize: "0.8em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               }}
             >
-              {s} ({counts[s] || 0})
+              {label} ({counts[s] || 0})
             </button>
           ))}
         </div>
@@ -463,7 +622,14 @@ function OutreachTab() {
                     </>
                   ) : (
                     <>
-                      <div style={{ fontWeight: 700, color: C.text, marginBottom: "6px", fontSize: "0.9em" }}>{lead.draft_subject}</div>
+                      <div style={{ fontWeight: 700, color: C.text, marginBottom: "6px", fontSize: "0.9em" }}>
+                        {lead.draft_subject}
+                        {lead.status === "approved" && (
+                          <span style={{ marginLeft: "8px", fontSize: "0.7em", fontWeight: 700, color: lead.review_sample ? C.green : C.muted, background: lead.review_sample ? C.greenLt : C.light, borderRadius: "99px", padding: "2px 8px" }}>
+                            {lead.review_sample ? "Reviewed" : "Auto-approved"}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: "0.85em", color: C.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{lead.draft_body}</div>
                       {lead.demo_url && (
                         <div style={{ marginTop: "8px" }}>
