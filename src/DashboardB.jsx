@@ -818,6 +818,38 @@ export function CitationBuilder({ biz, profile, session }) {
         )}
       </div>
 
+      {/* Technical SEO — automatic, nothing to configure, just visibility */}
+      <div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
+        <div style={{fontWeight:700,fontSize:"0.9em",color:C.text,marginBottom:"4px"}}>Technical SEO</div>
+        <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"12px"}}>
+          {biz?.live_url
+            ? "Every website Akus builds for you automatically includes these — nothing to set up."
+            : "These get added automatically the moment you build your website — nothing to set up."}
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+          {[
+            { label: "Structured data (Schema.org)", note: "Lets Google show your name, phone and rating directly in search results.", href: biz?.live_url || null },
+            { label: "XML sitemap", note: "Tells Google exactly what pages your site has.", href: biz?.live_url ? `${biz.live_url}/sitemap.xml` : null },
+            { label: "robots.txt", note: "Confirms to search engines they're welcome to crawl your site.", href: biz?.live_url ? `${biz.live_url}/robots.txt` : null },
+            { label: "Canonical URL", note: "Prevents duplicate-content confusion if your site is ever mirrored.", href: biz?.live_url || null },
+          ].map(item => (
+            <div key={item.label} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 12px",background:C.light,borderRadius:"8px"}}>
+              <span style={{color:biz?.live_url?C.green:C.muted,flexShrink:0}}><Icon name="checkcircle" size={16}/></span>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:"0.83em",fontWeight:600,color:C.text}}>{item.label}</div>
+                <div style={{fontSize:"0.72em",color:C.muted}}>{item.note}</div>
+              </div>
+              {item.href && (
+                <a href={item.href} target="_blank" rel="noopener noreferrer" style={{...backBtn,flexShrink:0,fontSize:"0.76em"}}>View</a>
+              )}
+            </div>
+          ))}
+        </div>
+        {!biz?.live_url && (
+          <div style={{fontSize:"0.76em",color:C.amber,marginTop:"10px"}}>You haven't built your website yet — head to Marketing → My Website first.</div>
+        )}
+      </div>
+
       {/* Progress */}
       <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px"}}>
         <div style={{flex:1,height:"8px",background:C.light,borderRadius:"99px",overflow:"hidden"}}>
