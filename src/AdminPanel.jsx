@@ -397,6 +397,27 @@ function OutreachTab() {
     try { await updateLead(id, { status: "rejected" }); } catch (err) { setError(err.message); }
   };
 
+  const deleteLeads = async (ids) => {
+    try {
+      const res = await fetch("/api/admin-delete-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ ids }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Delete failed");
+      await loadLeads();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  const deleteLead = (id) => deleteLeads([id]);
+  const deleteAllShown = () => {
+    if (filtered.length === 0) return;
+    if (!window.confirm(`Delete all ${filtered.length} lead(s) in this view? This can't be undone.`)) return;
+    deleteLeads(filtered.map(l => l.id));
+  };
+
   const exportCsv = async (type) => {
     setExporting(true);
     try {
@@ -585,6 +606,18 @@ function OutreachTab() {
               {exporting ? "Exporting…" : `Export ${counts.phone_lead} phone leads as CSV`}
             </button>
           )}
+          {filtered.length > 0 && (
+            <button
+              onClick={deleteAllShown}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.red}`,
+                background: "#fff", color: C.red, fontSize: "0.82em", fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Delete all shown ({filtered.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -606,7 +639,16 @@ function OutreachTab() {
                     <Icon name="mappin" size={12} /> {lead.suburb} · {lead.category}
                   </span>
                 </div>
-                {statusBadge(lead.status)}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  {statusBadge(lead.status)}
+                  <button
+                    onClick={() => deleteLead(lead.id)}
+                    title="Delete this lead"
+                    style={{ padding: "3px 9px", borderRadius: "99px", border: `1px solid ${C.border}`, background: "#fff", color: C.muted, fontSize: "0.72em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
               <div style={{ fontSize: "0.8em", color: C.muted, marginBottom: "10px" }}>
                 {lead.status === "phone_lead" ? (
