@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { GrowPanel, HealthPanel, NetworkPanel, CitationBuilder, SiteSpeedCheck, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
 import WebsiteEditor from "./WebsiteEditor.jsx";
-import { authHeaders } from "./supabase.js";
+import { authHeaders, supabase } from "./supabase.js";
 
 // ─── TOKENS ──────────────────────────────────────────────────────────────────
 const C = {
@@ -168,14 +168,20 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"});
 }
 
-// ─── SAMPLE CUSTOMERS (pre-loaded so demo works immediately) ─────────────────
-const SAMPLE_CUSTOMERS = [
-  {id:"c1",name:"Sandra Mitchell",phone:"0412 345 678",email:"sandra@email.com",tag:"vip",   lastVisit:"2026-06-10",notes:"Loves oat latte, always gets the avocado toast. Birthday in March.",   jobHistory:"Regular Mon/Wed morning. Referred 3 friends this year."},
-  {id:"c2",name:"Dave Robertson", phone:"0423 456 789",email:"dave@email.com",  tag:"regular",lastVisit:"2026-06-22",notes:"Tradie — comes in after jobs. Prefers strong flat white.",              jobHistory:"Weekly customer, sometimes brings the crew."},
-  {id:"c3",name:"Mary Chen",      phone:"0434 567 890",email:"mary@email.com",  tag:"lapsed", lastVisit:"2026-03-14",notes:"Used to come every week. Moved suburbs but still nearby.",             jobHistory:"Was a daily regular for 2 years. Haven't seen her since March."},
-  {id:"c4",name:"Tom Nguyen",     phone:"0445 678 901",email:"tom@email.com",   tag:"new",    lastVisit:"2026-06-25",notes:"First visit last week. Ordered large cappuccino and banana bread.",    jobHistory:"New customer — found us on Google."},
-  {id:"c5",name:"Karen Williams", phone:"0456 789 012",email:"karen@email.com", tag:"lead",   lastVisit:null,         notes:"Called about catering a work morning tea for 20 people. Needs quote.",jobHistory:"Hasn't visited yet — enquiry by phone 24 June."},
-];
+// ─── CUSTOMERS DB MAPPING — the customers table uses snake_case (last_visit,
+// job_history); the CRM UI uses camelCase. ────────────────────────────────
+function dbToCustomer(row) {
+  return {
+    id: row.id, name: row.name || "", phone: row.phone || "", email: row.email || "",
+    tag: row.tag || "new", lastVisit: row.last_visit, notes: row.notes || "", jobHistory: row.job_history || "",
+  };
+}
+function customerToDb(c, userId) {
+  return {
+    user_id: userId, name: c.name, phone: c.phone || "", email: c.email || "",
+    tag: c.tag || "new", last_visit: c.lastVisit || null, notes: c.notes || "", job_history: c.jobHistory || "",
+  };
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN APP
@@ -205,7 +211,8 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
   const [setupStep,  setSetupStep]  = useState(0);
   const [activeTool, setActiveTool] = useState(null);
   const [results,    setResults]    = useState({});
-  const [customers,  setCustomers]  = useState(SAMPLE_CUSTOMERS);
+  const [customers,  setCustomers]  = useState([]);
+  const [customersLoaded, setCustomersLoaded] = useState(false);
   const [crmView,    setCrmView]    = useState("list");
   const [activeCustomer, setActiveCustomer] = useState(null);
   const [crmMsg,     setCrmMsg]     = useState({loading:false, text:"", type:""});
@@ -230,6 +237,19 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
   useEffect(() => {
     if (profile) { setBiz(profileToBiz(profile)); setScreen("dashboard"); }
   }, [profile]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+      if (!error && data) setCustomers(data.map(dbToCustomer));
+      setCustomersLoaded(true);
+    })();
+  }, [session?.user?.id]);
 
   const handleFinishSetup = async () => {
     setSavingProfile(true);
@@ -762,10 +782,10 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
         {/* ── CRM TAB ───────────────────────────────────────────────────────── */}
         {activeTab==="crm" && (
           <CRMPanel
-            customers={customers} setCustomers={setCustomers}
+            customers={customers} setCustomers={setCustomers} customersLoaded={customersLoaded}
             crmView={crmView} setCrmView={setCrmView}
             activeCustomer={activeCustomer} setActiveCustomer={setActiveCustomer}
-            biz={biz} industry={industry}
+            biz={biz} industry={industry} session={session}
             crmMsg={crmMsg} setCrmMsg={setCrmMsg}
           />
         )}
@@ -853,13 +873,36 @@ function ShopifyDashboard({activeTab, activeTool, setActiveTool, biz, results, s
 // ═════════════════════════════════════════════════════════════════════════════
 // CRM PANEL
 // ═════════════════════════════════════════════════════════════════════════════
-function CRMPanel({customers,setCustomers,crmView,setCrmView,activeCustomer,setActiveCustomer,biz,industry,crmMsg,setCrmMsg}) {
+function CRMPanel({customers,setCustomers,customersLoaded,crmView,setCrmView,activeCustomer,setActiveCustomer,biz,industry,session,crmMsg,setCrmMsg}) {
 
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState("all");
   const [editCustomer, setEditCustomer] = useState(null);
   const [generatedMsg, setGeneratedMsg] = useState("");
   const [msgType, setMsgType] = useState("followup");
+  const [saveError, setSaveError] = useState("");
+
+  const saveCustomer = async (c) => {
+    setSaveError("");
+    const isNew = c.id.startsWith("new_");
+    if (isNew) {
+      const { data, error } = await supabase.from("customers").insert(customerToDb(c, session.user.id)).select().single();
+      if (error) { setSaveError(error.message); return null; }
+      const saved = dbToCustomer(data);
+      setCustomers(cs => [saved, ...cs]);
+      return saved;
+    } else {
+      const { error } = await supabase.from("customers").update(customerToDb(c, session.user.id)).eq("id", c.id);
+      if (error) { setSaveError(error.message); return null; }
+      setCustomers(cs => cs.map(x => x.id === c.id ? c : x));
+      return c;
+    }
+  };
+
+  const deleteCustomer = async (id) => {
+    const { error } = await supabase.from("customers").delete().eq("id", id);
+    if (!error) setCustomers(cs => cs.filter(x => x.id !== id));
+  };
 
   const filtered = customers.filter(c=>{
     const matchTag = tagFilter==="all"||c.tag===tagFilter;
@@ -982,7 +1025,15 @@ function CRMPanel({customers,setCustomers,crmView,setCrmView,activeCustomer,setA
             </div>
           );
         })}
-        {sorted.length===0&&<div style={{textAlign:"center",padding:"32px",color:C.muted,fontSize:"0.85em"}}>No customers found</div>}
+        {sorted.length===0 && customers.length>0 && <div style={{textAlign:"center",padding:"32px",color:C.muted,fontSize:"0.85em"}}>No customers match that search or filter</div>}
+        {customers.length===0 && customersLoaded && (
+          <div style={{textAlign:"center",padding:"40px 20px",color:C.muted,fontSize:"0.85em"}}>
+            No customers yet — add your first one above, or leads from your website will start appearing here automatically.
+          </div>
+        )}
+        {customers.length===0 && !customersLoaded && (
+          <div style={{textAlign:"center",padding:"40px 20px",color:C.muted,fontSize:"0.85em"}}>Loading your customers…</div>
+        )}
       </div>
     </div>
   );
@@ -1017,11 +1068,13 @@ function CRMPanel({customers,setCustomers,crmView,setCrmView,activeCustomer,setA
           <Field label="Job / visit history">
             <textarea value={editCustomer.jobHistory} onChange={e=>setEditCustomer(c=>({...c,jobHistory:e.target.value}))} placeholder="e.g. Regular since 2023, referred two friends, ordered catering once" rows={2} style={{...inputSt,resize:"vertical"}}/>
           </Field>
+          {saveError && <div style={{color:C.red,fontSize:"0.82em",background:C.redLt,padding:"9px 12px",borderRadius:"8px"}}>{saveError}</div>}
           <button
             disabled={!editCustomer.name}
-            onClick={()=>{
-              setCustomers(cs=>[editCustomer,...cs.filter(c=>c.id!==editCustomer.id)]);
-              setActiveCustomer(editCustomer);
+            onClick={async ()=>{
+              const saved = await saveCustomer(editCustomer);
+              if (!saved) return;
+              setActiveCustomer(saved);
               setCrmView("detail");
               setGeneratedMsg("");
               setCrmMsg({loading:false,text:"",type:""});
@@ -1067,9 +1120,9 @@ function CRMPanel({customers,setCustomers,crmView,setCrmView,activeCustomer,setA
             </div>
             <div style={{display:"flex",gap:"8px"}}>
               <button onClick={()=>{setEditCustomer({...c});setCrmView("add");}} style={{padding:"7px 14px",borderRadius:"7px",border:`1px solid ${C.border}`,background:"#fff",color:C.muted,cursor:"pointer",fontSize:"0.78em",fontWeight:600}}>✏️ Edit</button>
-              <button onClick={()=>{
+              <button onClick={async ()=>{
                 if(window.confirm(`Remove ${c.name} from your customer list?`)){
-                  setCustomers(cs=>cs.filter(x=>x.id!==c.id));
+                  await deleteCustomer(c.id);
                   setCrmView("list");
                   setActiveCustomer(null);
                 }
@@ -1113,11 +1166,11 @@ function CRMPanel({customers,setCustomers,crmView,setCrmView,activeCustomer,setA
           <input type="date" defaultValue={new Date().toISOString().split("T")[0]}
             style={{...inputSt,width:"160px",padding:"7px 10px",fontSize:"0.83em"}}
             id={`visit-${c.id}`}/>
-          <button onClick={()=>{
+          <button onClick={async ()=>{
             const newDate = document.getElementById(`visit-${c.id}`)?.value||new Date().toISOString().split("T")[0];
             const updated = {...c,lastVisit:newDate,tag:c.tag==="lapsed"?"regular":c.tag==="lead"?"new":c.tag};
-            setCustomers(cs=>cs.map(x=>x.id===c.id?updated:x));
-            setActiveCustomer(updated);
+            const saved = await saveCustomer(updated);
+            if (saved) setActiveCustomer(saved);
           }} style={{...btnPrimary,padding:"8px 16px",fontSize:"0.82em"}}>Mark Visited ✓</button>
         </div>
 
