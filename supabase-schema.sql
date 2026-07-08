@@ -185,18 +185,24 @@ CREATE TABLE IF NOT EXISTS leads (
   category         TEXT,
   website_url      TEXT,
   discovered_email TEXT,
+  phone            TEXT,
   pagespeed_score  INTEGER,
   demo_id          TEXT,
   demo_url         TEXT,
   draft_subject    TEXT,
   draft_body       TEXT,
-  status           TEXT DEFAULT 'sourced', -- sourced | drafted | approved | rejected | exported
+  status           TEXT DEFAULT 'sourced', -- sourced | drafted | approved | rejected | exported | phone_lead
   review_sample    BOOLEAN DEFAULT false,   -- true = randomly picked for manual review before approval
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS review_sample BOOLEAN DEFAULT false;
+-- phone_lead: businesses with no website (so no legitimate way to find a
+-- publicly-published email) but a real phone number from Google Places —
+-- phone calls aren't covered by the Spam Act at all, so these are kept as a
+-- separate call list instead of being discarded.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS phone TEXT;
 
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies added: same reasoning as admin_audit_log/

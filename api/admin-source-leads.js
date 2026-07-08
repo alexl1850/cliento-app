@@ -92,7 +92,7 @@ export default async function handler(req, res) {
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-  let sourced = 0, skippedNoWebsite = 0, skippedNoEmail = 0, skippedDuplicate = 0;
+  let sourced = 0, phoneLeadsSourced = 0, skippedNoWebsite = 0, skippedNoEmail = 0, skippedDuplicate = 0;
   const newLeads = [];
 
   try {
@@ -102,7 +102,7 @@ export default async function handler(req, res) {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': PLACES_API_KEY,
-          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.websiteUri,places.id',
+          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.id',
         },
         body: JSON.stringify({ textQuery: `${category} in ${suburb}`, maxResultCount: 15 }),
       });
@@ -114,17 +114,45 @@ export default async function handler(req, res) {
 
       const outcomes = await mapWithConcurrency(placesData.places || [], CONCURRENCY, async (place) => {
         const websiteUrl = place.websiteUri;
+        const phone = place.nationalPhoneNumber || null;
         const businessName = place.displayName?.text || 'Unknown business';
-        if (!websiteUrl) return { skip: 'noWebsite' };
 
-        // Skip if we've already sourced this exact business+suburb before,
-        // so re-running a search doesn't spam duplicate rows.
+        // Skip if we've already sourced this exact business+suburb before
+        // (either as an email lead or a phone lead), so re-running a search
+        // doesn't spam duplicate rows.
         const existingRes = await fetch(
           `${SUPABASE_URL}/rest/v1/leads?business_name=eq.${encodeURIComponent(businessName)}&suburb=eq.${encodeURIComponent(suburb)}&select=id`,
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
         );
         const existing = existingRes.ok ? await existingRes.json() : [];
         if (existing.length > 0) return { skip: 'duplicate' };
+
+        if (!websiteUrl) {
+          // No website means no legitimate way to find a publicly-published
+          // email — but their phone number is still fair game to call (phone
+          // calls aren't covered by the Spam Act at all), so keep them as a
+          // separate call-list lead instead of just discarding them.
+          if (!phone) return { skip: 'noWebsite' };
+          const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Prefer': 'return=representation',
+            },
+            body: JSON.stringify({
+              business_name: businessName,
+              suburb,
+              category,
+              phone,
+              status: 'phone_lead',
+            }),
+          });
+          if (!insertRes.ok) return { skip: 'insertFailed' };
+          const [row] = await insertRes.json();
+          return { row, phoneLead: true };
+        }
 
         const discoveredEmail = await findPublishedEmail(websiteUrl);
         if (!discoveredEmail) return { skip: 'noEmail' };
@@ -143,6 +171,7 @@ export default async function handler(req, res) {
             category,
             website_url: websiteUrl,
             discovered_email: discoveredEmail,
+            phone,
             status: 'sourced',
           }),
         });
@@ -152,14 +181,15 @@ export default async function handler(req, res) {
       });
 
       for (const o of outcomes) {
-        if (o.row) { newLeads.push(o.row); sourced++; }
+        if (o.row && o.phoneLead) { newLeads.push(o.row); phoneLeadsSourced++; }
+        else if (o.row) { newLeads.push(o.row); sourced++; }
         else if (o.skip === 'noWebsite') skippedNoWebsite++;
         else if (o.skip === 'duplicate') skippedDuplicate++;
         else if (o.skip === 'noEmail') skippedNoEmail++;
       }
     }
 
-    return res.status(200).json({ sourced, skippedNoWebsite, skippedNoEmail, skippedDuplicate, leads: newLeads });
+    return res.status(200).json({ sourced, phoneLeadsSourced, skippedNoWebsite, skippedNoEmail, skippedDuplicate, leads: newLeads });
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Lead sourcing failed' });
   }

@@ -28,11 +28,12 @@ function planBadge(plan) {
 
 function statusBadge(status) {
   const map = {
-    sourced:  { bg: C.light,    fg: C.muted,  label: "Sourced" },
-    drafted:  { bg: C.amberLt,  fg: C.amber,  label: "Needs review" },
-    approved: { bg: C.greenLt,  fg: C.green,  label: "Approved" },
-    rejected: { bg: C.redLt,    fg: C.red,    label: "Rejected" },
-    exported: { bg: C.purpleLt, fg: C.purple, label: "Exported" },
+    sourced:    { bg: C.light,    fg: C.muted,  label: "Sourced" },
+    drafted:    { bg: C.amberLt,  fg: C.amber,  label: "Needs review" },
+    approved:   { bg: C.greenLt,  fg: C.green,  label: "Approved" },
+    rejected:   { bg: C.redLt,    fg: C.red,    label: "Rejected" },
+    exported:   { bg: C.purpleLt, fg: C.purple, label: "Exported" },
+    phone_lead: { bg: C.brandLt,  fg: C.brand,  label: "Call list" },
   };
   const s = map[status] || map.sourced;
   return (
@@ -207,7 +208,7 @@ function OutreachTab() {
   useEffect(() => { loadLeads(); }, []);
 
   const counts = useMemo(() => {
-    const c = { all: leads.length, sourced: 0, drafted: 0, approved: 0, rejected: 0, exported: 0 };
+    const c = { all: leads.length, sourced: 0, drafted: 0, approved: 0, rejected: 0, exported: 0, phone_lead: 0 };
     for (const l of leads) c[l.status] = (c[l.status] || 0) + 1;
     return c;
   }, [leads]);
@@ -231,7 +232,7 @@ function OutreachTab() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Sourcing failed");
-      setSourceMsg(`Found ${json.sourced} lead${json.sourced === 1 ? "" : "s"} with a published email. Skipped ${json.skippedNoWebsite} with no website, ${json.skippedNoEmail} with no discoverable email, ${json.skippedDuplicate} already sourced.`);
+      setSourceMsg(`Found ${json.sourced} lead${json.sourced === 1 ? "" : "s"} with a published email, plus ${json.phoneLeadsSourced || 0} no-website business${json.phoneLeadsSourced === 1 ? "" : "es"} added to the call list. Skipped ${json.skippedNoEmail} with a site but no discoverable email, ${json.skippedDuplicate} already sourced.`);
       await loadLeads();
     } catch (err) {
       setSourceMsg(`Error: ${err.message}`);
@@ -315,9 +316,11 @@ function OutreachTab() {
           });
           const json = await res.json();
           if (!res.ok) throw new Error(json.error || "Sourcing failed");
-          sourcedIds = (json.leads || []).map(l => l.id);
+          // Only email-able leads (status "sourced") go on to drafting — phone
+          // leads (no website, no email) have nothing to draft an email for.
+          sourcedIds = (json.leads || []).filter(l => l.status === "sourced").map(l => l.id);
           totalSourced += json.sourced || 0;
-          setBulkLog(prev => [...prev, `Sourced ${json.sourced} in ${cat} / ${chunk.join(", ")} (skipped: ${json.skippedNoWebsite} no site, ${json.skippedNoEmail} no email, ${json.skippedDuplicate} dup)`]);
+          setBulkLog(prev => [...prev, `Sourced ${json.sourced} email lead(s) + ${json.phoneLeadsSourced || 0} phone lead(s) in ${cat} / ${chunk.join(", ")} (skipped: ${json.skippedNoEmail} no email, ${json.skippedDuplicate} dup)`]);
         } catch (err) {
           setBulkLog(prev => [...prev, `Sourcing error for ${cat} / ${chunk.join(", ")}: ${err.message}`]);
           continue;
@@ -391,11 +394,11 @@ function OutreachTab() {
     try { await updateLead(id, { status: "rejected" }); } catch (err) { setError(err.message); }
   };
 
-  const exportCsv = async () => {
+  const exportCsv = async (type) => {
     setExporting(true);
     try {
       const headers = await authHeaders();
-      const res = await fetch("/api/admin-export-leads", { headers });
+      const res = await fetch(`/api/admin-export-leads${type ? `?type=${type}` : ""}`, { headers });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error || "Export failed");
@@ -404,7 +407,7 @@ function OutreachTab() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `akus-outreach-${Date.now()}.csv`;
+      a.download = `akus-outreach-${type || "email"}-${Date.now()}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -524,6 +527,7 @@ function OutreachTab() {
             { key: "approved", label: "Approved" },
             { key: "rejected", label: "Rejected" },
             { key: "exported", label: "Exported" },
+            { key: "phone_lead", label: "Call list" },
           ].map(({ key: s, label }) => (
             <button
               key={s}
@@ -554,7 +558,7 @@ function OutreachTab() {
           )}
           {counts.approved > 0 && (
             <button
-              onClick={exportCsv}
+              onClick={() => exportCsv()}
               disabled={exporting}
               style={{
                 padding: "8px 16px", borderRadius: "8px", border: "none",
@@ -563,6 +567,19 @@ function OutreachTab() {
               }}
             >
               {exporting ? "Exporting…" : `Export ${counts.approved} approved as CSV`}
+            </button>
+          )}
+          {counts.phone_lead > 0 && (
+            <button
+              onClick={() => exportCsv("phone")}
+              disabled={exporting}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.brand}`,
+                background: "#fff", color: C.brand, fontSize: "0.82em", fontWeight: 700,
+                cursor: exporting ? "default" : "pointer", opacity: exporting ? 0.6 : 1, fontFamily: "inherit",
+              }}
+            >
+              {exporting ? "Exporting…" : `Export ${counts.phone_lead} phone leads as CSV`}
             </button>
           )}
         </div>
@@ -589,9 +606,15 @@ function OutreachTab() {
                 {statusBadge(lead.status)}
               </div>
               <div style={{ fontSize: "0.8em", color: C.muted, marginBottom: "10px" }}>
-                {lead.discovered_email} · {lead.website_url}
-                {lead.pagespeed_score !== null && lead.pagespeed_score !== undefined && (
-                  <span> · Their site's mobile PageSpeed score: {lead.pagespeed_score}/100</span>
+                {lead.status === "phone_lead" ? (
+                  <span>No website found — call <strong style={{ color: C.text }}>{lead.phone || "unknown"}</strong> directly</span>
+                ) : (
+                  <>
+                    {lead.discovered_email} · {lead.website_url}
+                    {lead.pagespeed_score !== null && lead.pagespeed_score !== undefined && (
+                      <span> · Their site's mobile PageSpeed score: {lead.pagespeed_score}/100</span>
+                    )}
+                  </>
                 )}
               </div>
 

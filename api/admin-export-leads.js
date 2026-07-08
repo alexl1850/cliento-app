@@ -18,23 +18,27 @@ export default async function handler(req, res) {
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const isPhone = req.query?.type === 'phone';
 
   try {
     const leadsRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/leads?status=eq.approved&select=*&order=created_at.asc`,
+      `${SUPABASE_URL}/rest/v1/leads?status=eq.${isPhone ? 'phone_lead' : 'approved'}&select=*&order=created_at.asc`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
     );
-    if (!leadsRes.ok) return res.status(500).json({ error: 'Could not load approved leads' });
+    if (!leadsRes.ok) return res.status(500).json({ error: `Could not load ${isPhone ? 'phone' : 'approved'} leads` });
     const leads = await leadsRes.json();
 
     if (leads.length === 0) {
-      return res.status(200).json({ error: 'No approved leads to export' });
+      return res.status(200).json({ error: `No ${isPhone ? 'phone leads' : 'approved leads'} to export` });
     }
 
-    const header = ['email', 'business_name', 'suburb', 'subject', 'body', 'demo_url'];
-    const rows = leads.map(l => [
-      l.discovered_email, l.business_name, l.suburb, l.draft_subject, l.draft_body, l.demo_url,
-    ].map(csvField).join(','));
+    const header = isPhone
+      ? ['business_name', 'suburb', 'category', 'phone']
+      : ['email', 'business_name', 'suburb', 'subject', 'body', 'demo_url'];
+    const rows = leads.map(l => (isPhone
+      ? [l.business_name, l.suburb, l.category, l.phone]
+      : [l.discovered_email, l.business_name, l.suburb, l.draft_subject, l.draft_body, l.demo_url]
+    ).map(csvField).join(','));
     const csv = [header.join(','), ...rows].join('\n');
 
     // Mark exported so a repeat export doesn't re-send the same leads.
