@@ -81,8 +81,9 @@ export default async function handler(req, res) {
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-  let sourced = 0, phoneLeadsSourced = 0, skippedNoWebsite = 0, skippedNoEmail = 0, skippedDuplicate = 0;
+  let sourced = 0, phoneLeadsSourced = 0, skippedNoWebsite = 0, skippedNoEmail = 0, skippedDuplicate = 0, insertFailed = 0;
   const newLeads = [];
+  const errors = [];
 
   try {
     for (const suburb of boundedSuburbs) {
@@ -97,8 +98,19 @@ export default async function handler(req, res) {
       });
       const placesData = await placesRes.json();
       if (!placesRes.ok) {
-        console.error('Places API error:', placesData.error?.message || placesData);
+        const msg = placesData.error?.message || JSON.stringify(placesData);
+        console.error('Places API error:', msg);
+        errors.push(`Places API error for "${suburb}": ${msg}`);
         continue;
+      }
+      // How many results this suburb's search actually had a phone number
+      // on file — if this stays 0 across every run, the nationalPhoneNumber
+      // field likely isn't coming through for this API key/project (it's
+      // priced on a different SKU tier than the fields already in use),
+      // not that businesses genuinely lack phone numbers.
+      const placesWithPhone = (placesData.places || []).filter(p => p.nationalPhoneNumber).length;
+      if ((placesData.places || []).length > 0 && placesWithPhone === 0) {
+        errors.push(`"${suburb}": Google returned ${placesData.places.length} result(s) but none included a phone number — check that nationalPhoneNumber is actually enabled/billed on this API key.`);
       }
 
       const outcomes = await mapWithConcurrency(placesData.places || [], CONCURRENCY, async (place) => {
@@ -138,7 +150,10 @@ export default async function handler(req, res) {
               status: 'phone_lead',
             }),
           });
-          if (!insertRes.ok) return { skip: 'insertFailed' };
+          if (!insertRes.ok) {
+            const errText = await insertRes.text().catch(() => '');
+            return { skip: 'insertFailed', error: `Insert failed for phone lead "${businessName}": ${errText}` };
+          }
           const [row] = await insertRes.json();
           return { row, phoneLead: true };
         }
@@ -169,7 +184,10 @@ export default async function handler(req, res) {
             status: 'sourced',
           }),
         });
-        if (!insertRes.ok) return { skip: 'insertFailed' };
+        if (!insertRes.ok) {
+          const errText = await insertRes.text().catch(() => '');
+          return { skip: 'insertFailed', error: `Insert failed for "${businessName}": ${errText}` };
+        }
         const [row] = await insertRes.json();
         return { row };
       });
@@ -180,10 +198,11 @@ export default async function handler(req, res) {
         else if (o.skip === 'noWebsite') skippedNoWebsite++;
         else if (o.skip === 'duplicate') skippedDuplicate++;
         else if (o.skip === 'noEmail') skippedNoEmail++;
+        else if (o.skip === 'insertFailed') { insertFailed++; if (o.error) errors.push(o.error); }
       }
     }
 
-    return res.status(200).json({ sourced, phoneLeadsSourced, skippedNoWebsite, skippedNoEmail, skippedDuplicate, leads: newLeads });
+    return res.status(200).json({ sourced, phoneLeadsSourced, skippedNoWebsite, skippedNoEmail, skippedDuplicate, insertFailed, errors, leads: newLeads });
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Lead sourcing failed' });
   }

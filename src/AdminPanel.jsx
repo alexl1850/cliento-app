@@ -233,7 +233,9 @@ function OutreachTab() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Sourcing failed");
-      setSourceMsg(`Found ${json.sourced} lead${json.sourced === 1 ? "" : "s"} with a published email, plus ${json.phoneLeadsSourced || 0} no-website business${json.phoneLeadsSourced === 1 ? "" : "es"} added to the call list. Skipped ${json.skippedNoEmail} with a site but no discoverable email, ${json.skippedDuplicate} already sourced.`);
+      let msg = `Found ${json.sourced} lead${json.sourced === 1 ? "" : "s"} with a published email, plus ${json.phoneLeadsSourced || 0} no-website business${json.phoneLeadsSourced === 1 ? "" : "es"} added to the call list. Skipped ${json.skippedNoEmail} with a site but no discoverable email, ${json.skippedDuplicate} already sourced${json.insertFailed ? `, ${json.insertFailed} failed to save (see below)` : ""}.`;
+      if (json.errors?.length) msg += `\n\n⚠ ${json.errors.join("\n⚠ ")}`;
+      setSourceMsg(msg);
       await loadLeads();
     } catch (err) {
       setSourceMsg(`Error: ${err.message}`);
@@ -453,7 +455,7 @@ function OutreachTab() {
             <span style={{ fontSize: "0.78em", color: C.muted }}>Only businesses with a publicly published email are kept (max 8 suburbs per run).</span>
           </div>
           {sourceMsg && (
-            <div style={{ fontSize: "0.82em", color: sourceMsg.startsWith("Error") ? C.red : C.green }}>{sourceMsg}</div>
+            <div style={{ fontSize: "0.82em", color: sourceMsg.startsWith("Error") ? C.red : C.green, whiteSpace: "pre-wrap" }}>{sourceMsg}</div>
           )}
         </form>
       </div>
