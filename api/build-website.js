@@ -870,7 +870,9 @@ footer{background:#111827;padding:56px 24px 32px}
     <div class="hero-btns">
       ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}" class="btn-hero-primary">${svgIcon('phone',18)} Call ${intake.phone}</a>` : ''}
       ${whatsappLink ? `<a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary">${svgIcon('messagecircle',18)} WhatsApp Us</a>` : ''}
-      <a href="#services" class="btn-hero-secondary">${svgIcon(isFood ? 'utensils' : isBeauty ? 'sparkles' : 'clipboardlist',18)} ${isFood ? 'View Menu' : isBeauty ? 'Our Services' : 'What We Do'} ↓</a>
+      ${isTrade
+        ? `<a href="#estimate" class="btn-hero-secondary">${svgIcon('dollar',18)} Get an Instant Estimate ↓</a>`
+        : `<a href="#services" class="btn-hero-secondary">${svgIcon(isFood ? 'utensils' : isBeauty ? 'sparkles' : 'clipboardlist',18)} ${isFood ? 'View Menu' : isBeauty ? 'Our Services' : 'What We Do'} ↓</a>`}
     </div>
     <div class="hero-stats">
       <div>
@@ -923,6 +925,27 @@ footer{background:#111827;padding:56px 24px 32px}
     </div>
   </div>
 </section>
+
+${isTrade ? `
+<!-- INSTANT ESTIMATE -->
+<section id="estimate" style="padding:72px 24px;background:${p.light}">
+  <div style="max-width:640px;margin:0 auto;text-align:center">
+    <div class="eyebrow">Get A Ballpark</div>
+    <h2 class="section-h2">Get an instant estimate</h2>
+    <p class="section-sub">Tell us about the job and get a rough price range in seconds — no waiting for a call back.</p>
+    <div style="background:#fff;border-radius:16px;padding:28px;margin-top:28px;box-shadow:0 4px 24px rgba(0,0,0,0.06);text-align:left">
+      <textarea id="estJobDetails" placeholder="e.g. Repaint a 3-bedroom house exterior, weatherboard, single storey" rows="3" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid #E5E7EB;font-family:inherit;font-size:0.95rem;margin-bottom:12px;resize:vertical"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <input id="estName" placeholder="Your name" style="box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1.5px solid #E5E7EB;font-family:inherit;font-size:0.95rem">
+        <input id="estPhone" placeholder="Phone" style="box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1.5px solid #E5E7EB;font-family:inherit;font-size:0.95rem">
+      </div>
+      <input id="estEmail" type="email" placeholder="Email (optional)" style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1.5px solid #E5E7EB;font-family:inherit;font-size:0.95rem;margin-bottom:14px">
+      <button id="estSubmitBtn" onclick="akusGetEstimate()" style="width:100%;padding:14px;border-radius:10px;border:none;background:${p.primary};color:#fff;font-weight:800;font-size:0.95rem;cursor:pointer;font-family:inherit">Get My Instant Estimate →</button>
+      <div id="estResult" style="display:none;margin-top:18px"></div>
+      <div id="estError" style="display:none;margin-top:10px;color:#DC2626;font-size:0.85rem"></div>
+    </div>
+  </div>
+</section>` : ''}
 
 <!-- GALLERY -->
 ${allPhotos.length > 0 ? `
@@ -1122,6 +1145,55 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 });
+${isTrade ? `
+// Instant estimate widget
+async function akusGetEstimate() {
+  var jobDetails = document.getElementById('estJobDetails').value.trim();
+  var name = document.getElementById('estName').value.trim();
+  var phone = document.getElementById('estPhone').value.trim();
+  var email = document.getElementById('estEmail').value.trim();
+  var errorEl = document.getElementById('estError');
+  var resultEl = document.getElementById('estResult');
+  var btn = document.getElementById('estSubmitBtn');
+  errorEl.style.display = 'none';
+  resultEl.style.display = 'none';
+  if (!jobDetails || !name) {
+    errorEl.textContent = 'Please tell us about the job and your name.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Getting your estimate...';
+  try {
+    var res = await fetch('/api/generate-estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ownerId: ${JSON.stringify(access.userId)},
+        bizName: ${JSON.stringify(intake.biz_name)},
+        trade: ${JSON.stringify(intake.services || intake.difference || 'trade services')},
+        suburb: ${JSON.stringify(intake.base_suburb)},
+        jobDetails: jobDetails, name: name, phone: phone, email: email,
+      })
+    });
+    var d = await res.json();
+    if (d.error) throw new Error(d.error);
+    resultEl.innerHTML = '<div style="background:${p.bg};border-radius:10px;padding:18px">'
+      + '<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${p.primary};margin-bottom:6px">Your ballpark estimate</div>'
+      + '<div style="font-size:1.8rem;font-weight:900;color:${p.dark};margin-bottom:8px">$' + d.low.toLocaleString() + ' – $' + d.high.toLocaleString() + '</div>'
+      + '<p style="font-size:0.88rem;color:#4B5563;line-height:1.6;margin-bottom:12px">' + d.reasoning + '</p>'
+      + '<p style="font-size:0.78rem;color:#6B7280;margin:0">This is a rough guide only — get in touch for a firm, no-obligation quote.</p>'
+      + '</div>';
+    resultEl.style.display = 'block';
+    btn.textContent = 'Get Another Estimate';
+    btn.disabled = false;
+  } catch (e) {
+    errorEl.textContent = e.message || 'Something went wrong — please try again.';
+    errorEl.style.display = 'block';
+    btn.textContent = 'Get My Instant Estimate →';
+    btn.disabled = false;
+  }
+}` : ''}
 </script>
 </body>
 </html>`;
