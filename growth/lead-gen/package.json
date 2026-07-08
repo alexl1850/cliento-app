@@ -1,0 +1,17 @@
+{
+  "name": "lead-gen",
+  "version": "1.0.0",
+  "description": "Cliento cold-outreach pipeline -- sources local businesses, scores their existing site, generates a personalized demo link, and drafts an opener. Does not send anything.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "leads": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "cheerio": "^1.2.0"
+  }
+}
