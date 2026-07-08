@@ -3,6 +3,12 @@ import { generateSiteHtml, safe } from './_lib/generateSite.js';
 import { mapWithConcurrency } from './_lib/concurrency.js';
 import { buildSequencePrompt, renderSequence, pluralize, REFERENCE_TEMPLATE, FOOTER } from './_lib/outreachSequence.js';
 
+// Raise the allowed run time for this function — each lead does two real AI
+// calls (a demo site plus a full 6-email sequence), which is enough work to
+// exceed Vercel's default timeout. Requires a plan that allows overriding
+// this; on plans that don't, it's simply ignored, not harmful.
+export const config = { maxDuration: 60 };
+
 // The AI-generated copy below is plain-text email content, not HTML — it
 // must NOT go through generateSite.js's safe(), which HTML-entity-escapes
 // quotes/angle-brackets for embedding into a web page. This sequence is
@@ -19,19 +25,35 @@ const plain = (s) => String(s ?? '').trim();
 // reason this sampling existed for the original single-email flow.
 const REVIEW_SAMPLE_RATE = 0.05;
 
+// The 6-email sequence call is the slow one (a large reference prompt plus
+// up to ~2000 words of generated output) — if Anthropic is slow, we'd
+// rather bail out and fall back to plain template substitution than let the
+// whole request hang toward the platform's own timeout and 504 with
+// nothing saved for any lead in the batch.
+const SEQUENCE_TIMEOUT_MS = 35000;
+
 async function generatePersonalizedSequence({ businessName, suburb, category, demoUrl, ownerFirstName }) {
   const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
   const { system, user } = buildSequencePrompt({ businessName, suburb, category, demoUrl, ownerFirstName });
-  const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4000,
-      system,
-      messages: [{ role: 'user', content: user }],
-    }),
-  });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEQUENCE_TIMEOUT_MS);
+  let aiRes;
+  try {
+    aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 3000,
+        system,
+        messages: [{ role: 'user', content: user }],
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
   const aiData = await aiRes.json();
   if (aiData.error) throw new Error(aiData.error.message || JSON.stringify(aiData.error));
 
@@ -66,52 +88,58 @@ async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
   const suburbHtml = safe(suburbRaw);
   const categoryHtml = safe(categoryRaw);
 
-  // 1. Generate a real demo site for this exact business, same pipeline the
-  // public homepage demo uses, so the link in the sequence is a genuinely
-  // working, already-built website.
-  const { html, themeName } = await generateSiteHtml({ biz: bizHtml, suburb: suburbHtml, bizType: categoryHtml, ownerName: '', phone: '', email: '', description: '' });
+  // The demo URL is fully deterministic before the site is even built, so
+  // the sequence-personalization call (which only needs the URL string, not
+  // the actual HTML) can run at the same time as demo-site generation
+  // instead of waiting for it — this was the main source of the 504s, since
+  // both AI calls were previously sequential and together could run well
+  // past a minute for a single lead.
   const demoId = `demo_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-  await fetch(`${SUPABASE_URL}/rest/v1/demo_sites`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Prefer': 'return=minimal',
-    },
-    body: JSON.stringify({
-      demo_id: demoId,
-      biz_name: bizHtml,
-      suburb: suburbHtml,
-      biz_type: categoryHtml || themeName,
-      html,
-      created_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(), // longer TTL than the public demo — outreach recipients may take weeks to open the email
-    }),
-  });
   const demoUrl = `https://app.akus.com.au/api/demo-view?id=${demoId}`;
 
-  // 2. Personalize the fixed sequence for this exact business via Claude,
-  // using the reference template as structure/tone guidance. Falls back to
-  // plain merge-tag substitution if the AI call fails, so a lead never ends
-  // up with no draft at all.
-  let sequence;
-  try {
-    sequence = await generatePersonalizedSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName });
-  } catch (err) {
-    console.error(`Personalized sequence generation failed for lead ${lead.id}, falling back to template substitution:`, err.message);
-    sequence = renderSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName });
-  }
+  const buildDemo = (async () => {
+    const { html, themeName } = await generateSiteHtml({ biz: bizHtml, suburb: suburbHtml, bizType: categoryHtml, ownerName: '', phone: '', email: '', description: '' });
+    await fetch(`${SUPABASE_URL}/rest/v1/demo_sites`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        demo_id: demoId,
+        biz_name: bizHtml,
+        suburb: suburbHtml,
+        biz_type: categoryHtml || themeName,
+        html,
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(), // longer TTL than the public demo — outreach recipients may take weeks to open the email
+      }),
+    });
+  })();
+
+  // Personalize the fixed sequence for this exact business via Claude, using
+  // the reference template as structure/tone guidance. Falls back to plain
+  // merge-tag substitution if the AI call fails or times out, so a lead
+  // never ends up with no draft at all.
+  const buildSequence = generatePersonalizedSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName })
+    .catch((err) => {
+      console.error(`Personalized sequence generation failed for lead ${lead.id}, falling back to template substitution:`, err.message);
+      return renderSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName });
+    });
+
+  const [, sequence] = await Promise.all([buildDemo, buildSequence]);
   const competitorType = `other ${pluralize(categoryRaw)}`;
 
-  // 3. Roll the dice on whether this one needs a human look before it's
+  // Roll the dice on whether this one needs a human look before it's
   // exportable — see REVIEW_SAMPLE_RATE above.
   const reviewSample = Math.random() < REVIEW_SAMPLE_RATE;
   const status = reviewSample ? 'drafted' : 'approved';
 
-  // 4. Persist — step 1 mirrors into draft_subject/draft_body so the
-  // existing single-draft review UI still shows something meaningful; the
-  // full sequence lives in the `sequence` JSONB column for export.
+  // Persist — step 1 mirrors into draft_subject/draft_body so the existing
+  // single-draft review UI still shows something meaningful; the full
+  // sequence lives in the `sequence` JSONB column for export.
   await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${lead.id}`, {
     method: 'PATCH',
     headers: {
@@ -148,13 +176,14 @@ export default async function handler(req, res) {
 
   const leadIds = req.body?.leadIds || (req.body?.leadId ? [req.body.leadId] : []);
   if (leadIds.length === 0) return res.status(400).json({ error: 'leadId or leadIds required' });
-  // Cap batch size — each lead now does a demo-site AI call PLUS a full
-  // 6-email sequence AI call, so a large batch risks the serverless function
-  // timing out even with concurrency (below). Reaching genuinely high volume
-  // (thousands/day) means calling this endpoint many times, not raising
-  // this cap indefinitely.
-  const boundedIds = leadIds.slice(0, 20);
-  const CONCURRENCY = 5;
+  // Cap batch size — even with the two AI calls per lead now running in
+  // parallel with each other, a large batch still risks the serverless
+  // function timing out overall. Lowered from the original 20 now that each
+  // lead does meaningfully more work than the old single-email flow.
+  // Reaching genuinely high volume (thousands/day) means calling this
+  // endpoint many times, not raising this cap indefinitely.
+  const boundedIds = leadIds.slice(0, 8);
+  const CONCURRENCY = 3;
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;

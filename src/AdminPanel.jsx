@@ -261,7 +261,7 @@ function OutreachTab() {
   };
 
   const generateAllSourced = async () => {
-    const ids = leads.filter(l => l.status === "sourced").slice(0, 5).map(l => l.id);
+    const ids = leads.filter(l => l.status === "sourced").slice(0, 8).map(l => l.id);
     if (ids.length === 0) return;
     setGeneratingIds(new Set(ids));
     try {
@@ -330,10 +330,15 @@ function OutreachTab() {
         }
         setBulkProgress(p => ({ ...p, sourced: totalSourced }));
 
-        // Draft everything just sourced, in sub-chunks of 20 (the endpoint's cap).
-        for (let j = 0; j < sourcedIds.length; j += 20) {
+        // Draft everything just sourced, in sub-chunks of 8 (the endpoint's
+        // cap) — each lead now does two AI calls (demo site + full
+        // personalized sequence), so anything sent beyond the endpoint's
+        // own cap gets silently truncated server-side rather than queued,
+        // which would otherwise leave those extra leads stuck at "sourced"
+        // forever with no error to explain why.
+        for (let j = 0; j < sourcedIds.length; j += 8) {
           if (bulkStopRef.current || totalDrafted >= bulkTarget) break;
-          const idChunk = sourcedIds.slice(j, j + 20);
+          const idChunk = sourcedIds.slice(j, j + 8);
           setBulkProgress(p => ({ ...p, status: `Drafting ${idChunk.length} lead(s)…` }));
           try {
             const headers = await authHeaders();
@@ -577,7 +582,7 @@ function OutreachTab() {
                 cursor: generatingIds.size > 0 ? "default" : "pointer", fontFamily: "inherit",
               }}
             >
-              Generate drafts (up to 5)
+              Generate drafts (up to 8)
             </button>
           )}
           {counts.approved > 0 && (
