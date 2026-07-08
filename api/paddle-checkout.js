@@ -1,14 +1,25 @@
+import { requireAuth } from './_lib/checkAccess.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  try {
-    const { userId, email, name } = req.body;
+  // This had no auth at all before — it trusted whatever userId the client
+  // sent, and that id is visible to anyone who views the source of a
+  // customer's public website (it's embedded there for the estimate
+  // widget). Left unfixed, that's a path to starting a checkout — and later
+  // a cancellation — attributed to a business that never initiated either,
+  // which the webhook then acts on (pausing their live site). Always derive
+  // the id from the verified session, never the request body.
+  const access = await requireAuth(req);
+  if (!access.ok) return res.status(access.status).json({ error: access.error });
 
-    if (!userId) return res.status(400).json({ error: 'User ID required' });
+  try {
+    const { email, name } = req.body;
+    const userId = access.userId;
 
     // Create a Paddle transaction with a 7-day trial
     const res2 = await fetch('https://api.paddle.com/transactions', {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GrowPanel, HealthPanel, NetworkPanel, CitationBuilder, SiteSpeedCheck, ProductTour, PublishWebsite, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
+import { GrowPanel, HealthPanel, NetworkPanel, CitationBuilder, SiteSpeedCheck, ProductTour, ConnectShopify, HelpCentre, inputSt, btnPrimary, backBtn, Field, Icon } from "./DashboardB.jsx";
 import WebsiteEditor from "./WebsiteEditor.jsx";
 import { authHeaders, supabase } from "./supabase.js";
 
@@ -705,7 +705,25 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
         )}
 
         {activeTab==="marketing" && activeTool==="publish" && (
-          <PublishWebsite biz={biz} websiteContent={results.website} onBack={()=>setActiveTool(null)}/>
+          <div>
+            <button onClick={()=>setActiveTool(null)} style={{...backBtn,marginBottom:"14px"}}>← Back</button>
+            {biz.live_url ? (
+              <>
+                <div style={{background:C.greenLt,border:`1.5px solid #BBF7D0`,borderRadius:"14px",padding:"20px",marginBottom:"16px"}}>
+                  <div style={{fontWeight:800,fontSize:"1em",color:C.green,marginBottom:"8px"}}>🌐 Your Website</div>
+                  <a href={biz.live_url} target="_blank" rel="noopener noreferrer" style={{fontSize:"0.9em",color:C.green,fontWeight:700,wordBreak:"break-all"}}>{biz.live_url}</a>
+                </div>
+                <SitePreviewCard liveUrl={biz.live_url}/>
+                <ConnectDomainPanel liveUrl={biz.live_url}/>
+              </>
+            ) : (
+              <div style={{background:"#fff",borderRadius:"14px",border:`1px solid ${C.border}`,padding:"22px",textAlign:"center"}}>
+                <div style={{fontSize:"2em",marginBottom:"10px"}}>🌐</div>
+                <div style={{fontWeight:700,color:C.text,marginBottom:"6px"}}>Build your website first</div>
+                <div style={{fontSize:"0.85em",color:C.muted}}>Once you've built your website with the "My Website" tool, come back here to connect your own domain.</div>
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab==="marketing" && activeTool==="edit-website" && (
@@ -2618,9 +2636,8 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
     try {
       const res = await fetch("/api/paddle-checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({
-          userId:  session?.user?.id,
           email:   session?.user?.email,
           name:    biz?.owner || biz?.name || "Customer",
         }),

@@ -134,3 +134,35 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS citations_done JSONB DEFAULT '[]':
 -- every page view — checks are user-triggered, not automatic.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pagespeed_score INTEGER;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pagespeed_checked_at TIMESTAMPTZ;
+
+-- ─── IP RATE LIMITING ───────────────────────────────────────────────
+-- Backs api/_lib/rateLimit.js — protects public, unauthenticated
+-- endpoints (the homepage demo generator, the instant-estimate widget)
+-- from being scripted/abused, since each hit costs a real Anthropic
+-- API call. Service-role only, no RLS policies needed (never touched
+-- from the browser).
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key          TEXT PRIMARY KEY,   -- e.g. "demo:203.0.113.5"
+  window_start TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  count        INTEGER NOT NULL DEFAULT 0
+);
+
+-- Atomic check-and-increment — the whole reset-if-expired / increment-if-
+-- active logic happens in one upsert so concurrent requests from the same
+-- IP can't race past each other and both slip through under the cap.
+CREATE OR REPLACE FUNCTION increment_rate_limit(p_key TEXT, p_window_seconds INT, p_max INT)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_count INT;
+BEGIN
+  INSERT INTO rate_limits (key, window_start, count)
+  VALUES (p_key, NOW(), 1)
+  ON CONFLICT (key) DO UPDATE SET
+    count = CASE WHEN rate_limits.window_start < NOW() - (p_window_seconds || ' seconds')::INTERVAL
+                 THEN 1 ELSE rate_limits.count + 1 END,
+    window_start = CASE WHEN rate_limits.window_start < NOW() - (p_window_seconds || ' seconds')::INTERVAL
+                 THEN NOW() ELSE rate_limits.window_start END
+  RETURNING count INTO v_count;
+  RETURN v_count <= p_max;
+END;
+$$ LANGUAGE plpgsql;

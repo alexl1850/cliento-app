@@ -13,8 +13,27 @@ export default async function handler(req, res) {
   try {
     const { domain, deploymentUrl, action } = req.body;
     const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN;
+    const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
     if (!domain) return res.status(400).json({ error: 'Domain is required' });
+
+    // requireActiveAccount only confirms the caller has *an* active account —
+    // without this, any paying customer could pass any other customer's
+    // deploymentUrl and attach a domain to that person's site. Confirm the
+    // target actually belongs to the caller before doing anything with it.
+    if (deploymentUrl) {
+      const profileRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${access.userId}&select=live_url`,
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}` } }
+      );
+      const profileRows = await profileRes.json();
+      const ownLiveUrl = profileRows?.[0]?.live_url || '';
+      const normalize = (u) => (u || '').replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+      if (!ownLiveUrl || normalize(ownLiveUrl) !== normalize(deploymentUrl)) {
+        return res.status(403).json({ error: "That doesn't look like your website." });
+      }
+    }
 
     // Clean the domain — remove http://, https://, www., trailing slashes
     const cleanDomain = domain

@@ -1,3 +1,11 @@
+import { checkRateLimit } from './_lib/rateLimit.js';
+
+// HTML-escapes visitor-supplied values before they go into an email body —
+// this is a public, unauthenticated endpoint, so without this a malicious
+// jobDetails/name/email could inject HTML into the notification sent to the
+// business owner (or into the visitor's own confirmation email).
+const safe = (str) => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 // Public endpoint — called anonymously from a customer's live website by a
 // visitor filling in the "Instant Estimate" widget, so there's no logged-in
 // session to check with requireActiveAccount. Instead it verifies ownerId
@@ -32,6 +40,12 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // No login on this endpoint (visitors on a customer's site aren't Akus
+  // accounts) — every hit costs a real Anthropic call and can spam a real
+  // lead into someone's CRM, so cap it per IP.
+  const rateLimit = await checkRateLimit(req, 'estimate', 5, 3600);
+  if (!rateLimit.ok) return res.status(rateLimit.status).json({ error: rateLimit.error });
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -98,19 +112,25 @@ export default async function handler(req, res) {
     }).catch(() => {});
 
     // Notify both sides by email, best-effort — neither should block the
-    // response the visitor is waiting on.
-    const displayBizName = ownerProfile.biz_name || bizName || 'the business';
+    // response the visitor is waiting on. Everything visitor-supplied is
+    // HTML-escaped first (safe()) since this is a public endpoint — only
+    // ownerProfile fields (from our own database) and the AI's own output
+    // are trusted as-is.
+    const displayBizName = safe(ownerProfile.biz_name) || 'the business';
     const range = `$${estimate.low.toLocaleString()}–$${estimate.high.toLocaleString()}`;
+    const safeName = safe(name);
+    const safeJobDetails = safe(jobDetails);
+    const safePhone = safe(phone);
 
     if (email) {
       sendEmail(email, `Your estimate from ${displayBizName}: ${range}`, `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
           <h2 style="color:#111827">Your ballpark estimate</h2>
           <p style="font-size:1.6em;font-weight:800;color:#111827">${range}</p>
-          <p style="color:#4B5563;line-height:1.6">${estimate.reasoning}</p>
+          <p style="color:#4B5563;line-height:1.6">${safe(estimate.reasoning)}</p>
           <p style="color:#6B7280;font-size:0.85em">This is a rough guide only — ${displayBizName} will follow up with you directly for a firm, no-obligation quote.</p>
-          <p style="color:#374151">Job details you provided: <em>${jobDetails}</em></p>
-          ${ownerProfile.phone ? `<p style="color:#374151">You can also reach them directly on <a href="tel:${ownerProfile.phone.replace(/\s/g,'')}">${ownerProfile.phone}</a>.</p>` : ''}
+          <p style="color:#374151">Job details you provided: <em>${safeJobDetails}</em></p>
+          ${ownerProfile.phone ? `<p style="color:#374151">You can also reach them directly on <a href="tel:${String(ownerProfile.phone).replace(/\s/g,'')}">${safe(ownerProfile.phone)}</a>.</p>` : ''}
         </div>
       `).catch(() => {});
     }
@@ -128,14 +148,14 @@ export default async function handler(req, res) {
       } catch { /* best-effort */ }
     }
     if (ownerEmail) {
-      sendEmail(ownerEmail, `New lead from your website: ${name}`, `
+      sendEmail(ownerEmail, `New lead from your website: ${safeName}`, `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
           <h2 style="color:#111827">New instant-estimate lead 🎉</h2>
-          <p style="color:#374151"><strong>${name}</strong> just requested an estimate on your website.</p>
+          <p style="color:#374151"><strong>${safeName}</strong> just requested an estimate on your website.</p>
           <table style="width:100%;border-collapse:collapse;margin:16px 0">
-            <tr><td style="padding:6px 0;color:#6B7280">Job</td><td style="padding:6px 0;color:#111827">${jobDetails}</td></tr>
-            ${phone ? `<tr><td style="padding:6px 0;color:#6B7280">Phone</td><td style="padding:6px 0;color:#111827">${phone}</td></tr>` : ''}
-            ${email ? `<tr><td style="padding:6px 0;color:#6B7280">Email</td><td style="padding:6px 0;color:#111827">${email}</td></tr>` : ''}
+            <tr><td style="padding:6px 0;color:#6B7280">Job</td><td style="padding:6px 0;color:#111827">${safeJobDetails}</td></tr>
+            ${phone ? `<tr><td style="padding:6px 0;color:#6B7280">Phone</td><td style="padding:6px 0;color:#111827">${safePhone}</td></tr>` : ''}
+            ${email ? `<tr><td style="padding:6px 0;color:#6B7280">Email</td><td style="padding:6px 0;color:#111827">${safe(email)}</td></tr>` : ''}
             <tr><td style="padding:6px 0;color:#6B7280">Estimate shown</td><td style="padding:6px 0;color:#111827">${range}</td></tr>
           </table>
           <p style="color:#6B7280;font-size:0.85em">This lead has also been added to your Customers list in Akus.</p>

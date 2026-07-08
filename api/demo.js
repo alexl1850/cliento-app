@@ -1,3 +1,11 @@
+import { checkRateLimit } from './_lib/rateLimit.js';
+
+// HTML-escapes a value so it's safe to interpolate into the generated page —
+// used on BOTH raw visitor input (biz/suburb/ownerName/phone/email) and the
+// AI-generated copy, since prompt-injected content in the input could also
+// come back out in the AI's response.
+const safe = (str) => (str||'').replace(/\\/g,'').replace(/`/g,"'").replace(/\$/g,'&#36;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://www.akus.com.au');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -6,9 +14,27 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // No login on this endpoint (it's the public homepage demo) — every hit
+  // costs a real Anthropic call, so cap it per IP rather than leaving it
+  // wide open to scripted abuse.
+  const rateLimit = await checkRateLimit(req, 'demo', 5, 3600);
+  if (!rateLimit.ok) return res.status(rateLimit.status).json({ error: rateLimit.error });
+
   try {
-    const { biz, suburb, bizType, ownerName, phone, email, description } = req.body;
+    let { biz, suburb, bizType, ownerName, phone, email, description } = req.body;
     if (!biz || !suburb) return res.status(400).json({ error: 'Business name and suburb required' });
+
+    // Sanitize every visitor-supplied field before it touches the AI prompt
+    // or the generated HTML — this endpoint is public and unauthenticated,
+    // and the generated page is served from the same origin as the real
+    // logged-in dashboard, so unescaped input here is a stored XSS risk.
+    biz = safe(biz);
+    suburb = safe(suburb);
+    ownerName = safe(ownerName);
+    phone = safe(phone);
+    email = safe(email);
+    description = safe(description);
+    bizType = safe(bizType);
 
     const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
     const SUPABASE_URL  = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -186,30 +212,27 @@ Return JSON:
       throw new Error('AI returned invalid JSON: ' + aiData.content[0].text.slice(0,100));
     }
 
-    // Sanitize all AI content to prevent template literal and HTML injection
-    const safe = (str) => (str||'').replace(/`/g,"'").replace(/\$/g,'&#36;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const safePlain = (str) => (str||'').replace(/`/g,"'").replace(/\\/g,'');
-
-    // Apply sanitization to all AI fields
-    c.headline = safePlain(c.headline) || `${biz} — ${suburb}`;
-    c.subline = safePlain(c.subline) || `Proudly serving ${suburb} and surrounds.`;
-    c.about = safePlain(c.about) || `${biz} is a trusted local business in ${suburb}.`;
-    c.why1_title = safePlain(c.why1_title) || 'Quality you can trust';
-    c.why1_desc = safePlain(c.why1_desc) || 'We take pride in everything we do.';
-    c.why2_title = safePlain(c.why2_title) || 'Local expertise';
-    c.why2_desc = safePlain(c.why2_desc) || 'We know this community inside out.';
-    c.why3_title = safePlain(c.why3_title) || 'Personal service';
-    c.why3_desc = safePlain(c.why3_desc) || 'Every customer is treated like family.';
-    c.testimonial = safePlain(c.testimonial) || `${biz} is absolutely fantastic. Highly recommend!`;
-    c.testimonial_name = safePlain(c.testimonial_name) || `Local customer, ${suburb}`;
-    c.cta = safePlain(c.cta) || `Ready to experience ${biz}?`;
-    c.tagline = safePlain(c.tagline) || `Proudly serving ${suburb}`;
+    // Apply sanitization to all AI fields (same escaper used on the raw
+    // visitor input above, in case the model echoes any of it back verbatim)
+    c.headline = safe(c.headline) || `${biz} — ${suburb}`;
+    c.subline = safe(c.subline) || `Proudly serving ${suburb} and surrounds.`;
+    c.about = safe(c.about) || `${biz} is a trusted local business in ${suburb}.`;
+    c.why1_title = safe(c.why1_title) || 'Quality you can trust';
+    c.why1_desc = safe(c.why1_desc) || 'We take pride in everything we do.';
+    c.why2_title = safe(c.why2_title) || 'Local expertise';
+    c.why2_desc = safe(c.why2_desc) || 'We know this community inside out.';
+    c.why3_title = safe(c.why3_title) || 'Personal service';
+    c.why3_desc = safe(c.why3_desc) || 'Every customer is treated like family.';
+    c.testimonial = safe(c.testimonial) || `${biz} is absolutely fantastic. Highly recommend!`;
+    c.testimonial_name = safe(c.testimonial_name) || `Local customer, ${suburb}`;
+    c.cta = safe(c.cta) || `Ready to experience ${biz}?`;
+    c.tagline = safe(c.tagline) || `Proudly serving ${suburb}`;
     if (!Array.isArray(c.services)) c.services = [];
     c.services = c.services.map(s => ({
-      name: safePlain(s.name)||'Our Service',
-      desc: safePlain(s.desc)||'Quality service tailored to your needs.',
-      icon: s.icon||'⭐',
-      price: safePlain(s.price)||'Contact for pricing',
+      name: safe(s.name)||'Our Service',
+      desc: safe(s.desc)||'Quality service tailored to your needs.',
+      icon: safe(s.icon)||'⭐',
+      price: safe(s.price)||'Contact for pricing',
     }));
 
     // ── Build the premium HTML ─────────────────────────────────────────────

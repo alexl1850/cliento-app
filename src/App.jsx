@@ -23,6 +23,7 @@ export default function App() {
   const [isAdmin,         setIsAdmin]         = useState(false)
   const [showAdminPanel,  setShowAdminPanel]  = useState(false)
   const [impersonating,   setImpersonating]   = useState(() => !!localStorage.getItem(ADMIN_RETURN_KEY))
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -31,7 +32,13 @@ export default function App() {
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Clicking the "forgot password" email link lands here with Supabase
+      // having already signed the browser into a temporary recovery
+      // session — without handling this event, that silently drops the
+      // user straight into their normal dashboard with no way to actually
+      // set a new password, which was the whole point of the email.
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
       setSession(session)
       if (session) loadProfile(session.user.id)
       else {
@@ -173,6 +180,14 @@ export default function App() {
     await supabase.auth.signOut()
   }
 
+  // A password-recovery link was just clicked — this takes priority over
+  // everything else below, including the normal loading/session checks,
+  // since the user needs to actually set a new password before doing
+  // anything else with this temporary session.
+  if (passwordRecovery) return (
+    <PasswordResetScreen onDone={() => setPasswordRecovery(false)} />
+  )
+
   // Loading
   if (loading) return (
     <div style={{
@@ -251,5 +266,68 @@ export default function App() {
         onOpenAdmin={() => setShowAdminPanel(true)}
       />
     </>
+  )
+}
+
+function PasswordResetScreen({ onDone }) {
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm]   = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const [done, setDone]         = useState(false)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+    if (password !== confirm) { setError('Passwords don\'t match.'); return }
+    setLoading(true)
+    const { error: updateError } = await supabase.auth.updateUser({ password })
+    setLoading(false)
+    if (updateError) { setError(updateError.message); return }
+    setDone(true)
+  }
+
+  return (
+    <div style={{
+      minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+      background:'#F8F9FA', fontFamily:"'Inter',system-ui,sans-serif", padding:'20px',
+    }}>
+      <div style={{width:'100%', maxWidth:'380px', background:'#fff', borderRadius:'16px', border:'1px solid #E5E7EB', padding:'32px'}}>
+        <div style={{fontSize:'1.5rem', fontWeight:900, letterSpacing:'-0.03em', marginBottom:'6px', textAlign:'center'}}>
+          <span style={{color:'#2563EB'}}>⚡</span>Akus<span style={{color:'#D97706'}}>.</span>
+        </div>
+        {done ? (
+          <>
+            <p style={{textAlign:'center', color:'#111827', fontWeight:700, margin:'20px 0 8px'}}>Password updated ✓</p>
+            <p style={{textAlign:'center', color:'#6B7280', fontSize:'0.88em', marginBottom:'20px'}}>You can now continue to your dashboard.</p>
+            <button onClick={onDone} style={{
+              width:'100%', padding:'13px', borderRadius:'9px', border:'none',
+              background:'#2563EB', color:'#fff', fontWeight:700, cursor:'pointer', fontFamily:'inherit',
+            }}>Continue →</button>
+          </>
+        ) : (
+          <form onSubmit={submit}>
+            <p style={{textAlign:'center', color:'#6B7280', fontSize:'0.88em', margin:'8px 0 20px'}}>Set a new password for your account.</p>
+            <input
+              type="password" value={password} onChange={e=>setPassword(e.target.value)}
+              placeholder="New password" autoFocus
+              style={{width:'100%', padding:'12px 14px', borderRadius:'9px', border:'1.5px solid #E5E7EB', fontSize:'0.95em', marginBottom:'10px', boxSizing:'border-box', fontFamily:'inherit'}}
+            />
+            <input
+              type="password" value={confirm} onChange={e=>setConfirm(e.target.value)}
+              placeholder="Confirm new password"
+              style={{width:'100%', padding:'12px 14px', borderRadius:'9px', border:'1.5px solid #E5E7EB', fontSize:'0.95em', marginBottom:'14px', boxSizing:'border-box', fontFamily:'inherit'}}
+            />
+            {error && <div style={{color:'#DC2626', fontSize:'0.85em', marginBottom:'12px'}}>{error}</div>}
+            <button type="submit" disabled={loading} style={{
+              width:'100%', padding:'13px', borderRadius:'9px', border:'none',
+              background:'#2563EB', color:'#fff', fontWeight:700, cursor:'pointer', fontFamily:'inherit',
+              opacity: loading?0.7:1,
+            }}>{loading ? 'Updating...' : 'Update Password'}</button>
+          </form>
+        )}
+      </div>
+    </div>
   )
 }

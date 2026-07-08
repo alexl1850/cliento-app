@@ -1,3 +1,32 @@
+// Verifies the caller is a real, currently-authenticated Supabase user —
+// nothing more. Deliberately doesn't check plan/trial status (unlike
+// requireActiveAccount below), since this is for endpoints like checkout
+// that a lapsed or cancelled account still needs to be able to call. Every
+// endpoint that acts on a specific account must call this (or one of the
+// other two) and use the returned userId — never a client-supplied one,
+// which can be spoofed to act on someone else's account.
+export async function requireAuth(req) {
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return { ok: false, status: 401, error: 'Not authenticated' };
+
+  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!userRes.ok) return { ok: false, status: 401, error: 'Invalid or expired session' };
+  const user = await userRes.json();
+  const userId = user?.id;
+  if (!userId) return { ok: false, status: 401, error: 'Invalid or expired session' };
+
+  return { ok: true, userId, email: user?.email };
+}
+
 // Verifies the caller is an authenticated user on an active trial or paid plan.
 // Mirrors the client-side gate in DashboardA.jsx (needsUpgrade) so the API
 // can't be called directly to bypass the paywall.

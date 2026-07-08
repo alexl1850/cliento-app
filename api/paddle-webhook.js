@@ -31,7 +31,13 @@ function verifySignature(rawBody, signature, secret) {
   if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 5) return false;
   const signed = `${timestamp}:${rawBody}`;
   const computed = crypto.createHmac('sha256', secret).update(signed).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(hash));
+  const computedBuf = Buffer.from(computed);
+  const hashBuf = Buffer.from(hash);
+  // timingSafeEqual throws on mismatched lengths rather than returning false
+  // — a malformed/truncated header would otherwise crash this into a 500
+  // instead of a clean 401.
+  if (computedBuf.length !== hashBuf.length) return false;
+  return crypto.timingSafeEqual(computedBuf, hashBuf);
 }
 
 async function updateSupabase(userId, plan, subscriptionId) {
