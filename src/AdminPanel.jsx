@@ -2,6 +2,20 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { authHeaders } from "./supabase.js";
 import { inputSt, backBtn, Icon } from "./DashboardB.jsx";
 
+// A platform-level crash (e.g. a hard function timeout) returns a plain-text
+// or HTML error page, not JSON — res.json() throws a cryptic "Unexpected
+// token" SyntaxError in that case, hiding what actually went wrong. Read as
+// text first and only parse if it looks like JSON, so failures show a real
+// message instead.
+async function safeJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: `Server returned a non-JSON response (status ${res.status}): ${text.slice(0, 200) || "(empty)"}` };
+  }
+}
+
 const C = {
   brand:"#0284C7", brandLt:"#F0F9FF",
   green:"#16A34A", greenLt:"#F0FDF4",
@@ -57,7 +71,7 @@ function CustomersTab({ onImpersonate, impersonating }) {
       try {
         const headers = await authHeaders();
         const res = await fetch("/api/admin-list-customers", { headers });
-        const json = await res.json();
+        const json = await safeJson(res);
         if (!res.ok) throw new Error(json.error || "Could not load customers");
         setCustomers(json.customers || []);
       } catch (err) {
@@ -197,7 +211,7 @@ function OutreachTab() {
     try {
       const headers = await authHeaders();
       const res = await fetch("/api/admin-list-leads", { headers });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json.error || "Could not load leads");
       setLeads(json.leads || []);
     } catch (err) {
@@ -231,7 +245,7 @@ function OutreachTab() {
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ category: category.trim(), suburbs }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json.error || "Sourcing failed");
       let msg = `Found ${json.sourced} lead${json.sourced === 1 ? "" : "s"} with a published email, plus ${json.phoneLeadsSourced || 0} no-website business${json.phoneLeadsSourced === 1 ? "" : "es"} added to the call list. Skipped ${json.skippedNoEmail} with a site but no discoverable email, ${json.skippedDuplicate} already sourced${json.insertFailed ? `, ${json.insertFailed} failed to save (see below)` : ""}.`;
       if (json.errors?.length) msg += `\n\n⚠ ${json.errors.join("\n⚠ ")}`;
@@ -251,7 +265,7 @@ function OutreachTab() {
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ leadId }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json.error || "Draft generation failed");
       await loadLeads();
     } catch (err) {
@@ -261,7 +275,7 @@ function OutreachTab() {
   };
 
   const generateAllSourced = async () => {
-    const ids = leads.filter(l => l.status === "sourced").slice(0, 8).map(l => l.id);
+    const ids = leads.filter(l => l.status === "sourced").slice(0, 2).map(l => l.id);
     if (ids.length === 0) return;
     setGeneratingIds(new Set(ids));
     try {
@@ -270,7 +284,7 @@ function OutreachTab() {
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ leadIds: ids }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json.error || "Draft generation failed");
       await loadLeads();
     } catch (err) {
@@ -317,7 +331,7 @@ function OutreachTab() {
             headers: { "Content-Type": "application/json", ...headers },
             body: JSON.stringify({ category: cat, suburbs: chunk }),
           });
-          const json = await res.json();
+          const json = await safeJson(res);
           if (!res.ok) throw new Error(json.error || "Sourcing failed");
           // Only email-able leads (status "sourced") go on to drafting — phone
           // leads (no website, no email) have nothing to draft an email for.
@@ -330,15 +344,16 @@ function OutreachTab() {
         }
         setBulkProgress(p => ({ ...p, sourced: totalSourced }));
 
-        // Draft everything just sourced, in sub-chunks of 8 (the endpoint's
-        // cap) — each lead now does two AI calls (demo site + full
-        // personalized sequence), so anything sent beyond the endpoint's
-        // own cap gets silently truncated server-side rather than queued,
-        // which would otherwise leave those extra leads stuck at "sourced"
-        // forever with no error to explain why.
-        for (let j = 0; j < sourcedIds.length; j += 8) {
+        // Draft everything just sourced, in sub-chunks of 2 (the endpoint's
+        // cap) — each lead does two AI calls (demo site + full personalized
+        // sequence) in one request with no Fluid Compute on this project, so
+        // the 60s function ceiling is hard, not soft. Anything sent beyond
+        // the endpoint's own cap gets silently truncated server-side rather
+        // than queued, which would otherwise leave those extra leads stuck
+        // at "sourced" forever with no error to explain why.
+        for (let j = 0; j < sourcedIds.length; j += 2) {
           if (bulkStopRef.current || totalDrafted >= bulkTarget) break;
-          const idChunk = sourcedIds.slice(j, j + 8);
+          const idChunk = sourcedIds.slice(j, j + 2);
           setBulkProgress(p => ({ ...p, status: `Drafting ${idChunk.length} lead(s)…` }));
           try {
             const headers = await authHeaders();
@@ -347,7 +362,7 @@ function OutreachTab() {
               headers: { "Content-Type": "application/json", ...headers },
               body: JSON.stringify({ leadIds: idChunk }),
             });
-            const json = await res.json();
+            const json = await safeJson(res);
             if (!res.ok) throw new Error(json.error || "Draft generation failed");
             totalDrafted += (json.drafted || []).length;
             if ((json.errors || []).length) {
@@ -381,7 +396,7 @@ function OutreachTab() {
       headers: { "Content-Type": "application/json", ...(await authHeaders()) },
       body: JSON.stringify({ id, ...patch }),
     });
-    const json = await res.json();
+    const json = await safeJson(res);
     if (!res.ok) throw new Error(json.error || "Update failed");
     await loadLeads();
   };
@@ -409,7 +424,7 @@ function OutreachTab() {
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ ids }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json.error || "Delete failed");
       await loadLeads();
     } catch (err) {
@@ -582,7 +597,7 @@ function OutreachTab() {
                 cursor: generatingIds.size > 0 ? "default" : "pointer", fontFamily: "inherit",
               }}
             >
-              Generate drafts (up to 8)
+              Generate drafts (up to 2)
             </button>
           )}
           {counts.approved > 0 && (

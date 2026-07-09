@@ -25,12 +25,20 @@ const plain = (s) => String(s ?? '').trim();
 // reason this sampling existed for the original single-email flow.
 const REVIEW_SAMPLE_RATE = 0.05;
 
-// The 6-email sequence call is the slow one (a large reference prompt plus
-// up to ~2000 words of generated output) — if Anthropic is slow, we'd
-// rather bail out and fall back to plain template substitution than let the
-// whole request hang toward the platform's own timeout and 504 with
-// nothing saved for any lead in the batch.
+// Both AI calls get an explicit ceiling well under the platform's 60s
+// function limit (no Fluid Compute on this project, so 60s is a hard cap,
+// not a soft one) — if either is abnormally slow, we'd rather fail that one
+// lead fast than let it silently drag the whole batch request past the
+// platform timeout with nothing saved for anyone in it.
 const SEQUENCE_TIMEOUT_MS = 35000;
+const DEMO_TIMEOUT_MS = 40000;
+
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)),
+  ]);
+}
 
 async function generatePersonalizedSequence({ businessName, suburb, category, demoUrl, ownerFirstName }) {
   const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
@@ -97,7 +105,7 @@ async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
   const demoId = `demo_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
   const demoUrl = `https://app.akus.com.au/api/demo-view?id=${demoId}`;
 
-  const buildDemo = (async () => {
+  const buildDemo = withTimeout((async () => {
     const { html, themeName } = await generateSiteHtml({ biz: bizHtml, suburb: suburbHtml, bizType: categoryHtml, ownerName: '', phone: '', email: '', description: '' });
     await fetch(`${SUPABASE_URL}/rest/v1/demo_sites`, {
       method: 'POST',
@@ -117,7 +125,7 @@ async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
         expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(), // longer TTL than the public demo — outreach recipients may take weeks to open the email
       }),
     });
-  })();
+  })(), DEMO_TIMEOUT_MS, 'Demo site generation');
 
   // Personalize the fixed sequence for this exact business via Claude, using
   // the reference template as structure/tone guidance. Falls back to plain
@@ -129,6 +137,9 @@ async function draftOne(lead, { SUPABASE_URL, SUPABASE_KEY }) {
       return renderSequence({ businessName: bizRaw, suburb: suburbRaw, category: categoryRaw, demoUrl, ownerFirstName });
     });
 
+  // If demo generation itself times out, there's nothing usable to save for
+  // this lead — let it throw and get caught per-lead by the handler below,
+  // rather than let one bad lead take the whole batch request down with it.
   const [, sequence] = await Promise.all([buildDemo, buildSequence]);
   const competitorType = `other ${pluralize(categoryRaw)}`;
 
@@ -176,14 +187,14 @@ export default async function handler(req, res) {
 
   const leadIds = req.body?.leadIds || (req.body?.leadId ? [req.body.leadId] : []);
   if (leadIds.length === 0) return res.status(400).json({ error: 'leadId or leadIds required' });
-  // Cap batch size — even with the two AI calls per lead now running in
-  // parallel with each other, a large batch still risks the serverless
-  // function timing out overall. Lowered from the original 20 now that each
-  // lead does meaningfully more work than the old single-email flow.
-  // Reaching genuinely high volume (thousands/day) means calling this
-  // endpoint many times, not raising this cap indefinitely.
-  const boundedIds = leadIds.slice(0, 8);
-  const CONCURRENCY = 3;
+  // Cap batch size to exactly the concurrency limit, so every request does
+  // one single wave of truly-parallel leads instead of several waves stacked
+  // back to back — with no Fluid Compute on this project, 60s is a hard
+  // ceiling, not a soft one, and multiple waves is what pushed real runs
+  // past it. Reaching genuinely high volume (thousands/day) means calling
+  // this endpoint many times, not raising this cap.
+  const CONCURRENCY = 2;
+  const boundedIds = leadIds.slice(0, CONCURRENCY);
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
