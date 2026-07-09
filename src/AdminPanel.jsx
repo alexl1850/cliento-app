@@ -16,6 +16,25 @@ async function safeJson(res) {
   }
 }
 
+// The bulk-batch importer can run for many minutes, entirely as in-memory
+// component state — if anything causes AdminPanel to remount in that window
+// (a Supabase session hiccup forcing App.jsx back to the login screen and
+// then back again, for instance — there's no error boundary anywhere in
+// this app to catch that more gracefully), the whole run and its progress
+// log used to vanish with no trace. sessionStorage survives a remount
+// without surviving an actual tab close, which is the right lifetime here.
+function sessionState(key, fallback) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw !== null ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function persistSessionState(key, value) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable — not fatal */ }
+}
+
 const C = {
   brand:"#0284C7", brandLt:"#F0F9FF",
   green:"#16A34A", greenLt:"#F0FDF4",
@@ -197,12 +216,26 @@ function OutreachTab() {
   const [expandedSeqId, setExpandedSeqId] = useState(null);
   const [exporting, setExporting] = useState(false);
 
-  const [bulkCategoriesText, setBulkCategoriesText] = useState("");
-  const [bulkSuburbsText, setBulkSuburbsText] = useState("");
-  const [bulkTarget, setBulkTarget] = useState(1000);
+  const [bulkCategoriesText, setBulkCategoriesText] = useState(() => sessionState("akus_bulk_categories", ""));
+  const [bulkSuburbsText, setBulkSuburbsText] = useState(() => sessionState("akus_bulk_suburbs", ""));
+  const [bulkTarget, setBulkTarget] = useState(() => sessionState("akus_bulk_target", 1000));
   const [bulkRunning, setBulkRunning] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState({ sourced: 0, drafted: 0, status: "" });
-  const [bulkLog, setBulkLog] = useState([]);
+  const [bulkProgress, setBulkProgress] = useState(() => sessionState("akus_bulk_progress", { sourced: 0, drafted: 0, status: "" }));
+  const [bulkLog, setBulkLog] = useState(() => sessionState("akus_bulk_log", []));
+  // If AdminPanel remounted mid-run (session hiccup, etc.), bulkRunning always
+  // starts false on a fresh mount even though the restored progress/log show
+  // an in-progress status — surface that explicitly instead of letting it
+  // look like a normal idle state the user never touched.
+  const [resumedFromInterruption] = useState(() => {
+    const status = sessionState("akus_bulk_progress", { status: "" }).status;
+    return !!status && status !== "Done." && status !== "Stopped.";
+  });
+
+  useEffect(() => { persistSessionState("akus_bulk_categories", bulkCategoriesText); }, [bulkCategoriesText]);
+  useEffect(() => { persistSessionState("akus_bulk_suburbs", bulkSuburbsText); }, [bulkSuburbsText]);
+  useEffect(() => { persistSessionState("akus_bulk_target", bulkTarget); }, [bulkTarget]);
+  useEffect(() => { persistSessionState("akus_bulk_progress", bulkProgress); }, [bulkProgress]);
+  useEffect(() => { persistSessionState("akus_bulk_log", bulkLog); }, [bulkLog]);
   const bulkStopRef = useRef(false);
 
   const loadLeads = async () => {
@@ -506,6 +539,11 @@ function OutreachTab() {
         <div style={{ fontSize: "0.78em", color: C.muted, marginBottom: "10px" }}>
           Runs sourcing + drafting automatically across many categories and suburbs until it hits your target count. Keep this tab open while it runs — it can take a while for large targets.
         </div>
+        {resumedFromInterruption && !bulkRunning && (
+          <div style={{ fontSize: "0.82em", color: C.amber, background: C.amberLt, border: `1px solid ${C.amber}44`, borderRadius: "8px", padding: "10px 14px", marginBottom: "12px" }}>
+            ⚠ A previous run looks like it got interrupted partway through (last status: "{bulkProgress.status}", {bulkProgress.sourced} sourced / {bulkProgress.drafted} drafted). Nothing was lost that had already been saved — sourcing skips duplicates and drafting only touches leads still marked "sourced", so it's safe to just click "Start bulk batch" again to pick up where it left off.
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
           <textarea
             value={bulkCategoriesText}
@@ -768,7 +806,12 @@ function OutreachTab() {
 }
 
 export default function AdminPanel({ onClose, onImpersonate, impersonating }) {
-  const [tab, setTab] = useState("customers");
+  // If something forces this component to remount mid-session (see the
+  // sessionState() comment above), landing back on Customers instead of
+  // wherever the admin actually was is its own small confusion on top of
+  // whatever caused the remount — cheap to avoid.
+  const [tab, setTab] = useState(() => sessionState("akus_admin_tab", "customers"));
+  useEffect(() => { persistSessionState("akus_admin_tab", tab); }, [tab]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F8F9FA", fontFamily: "'Inter',system-ui,sans-serif", padding: "32px 24px" }}>

@@ -20,7 +20,10 @@ export async function generateSiteHtml({ biz, suburb, bizType, ownerName, phone,
     const isCafe       = /café|cafe|coffee|espresso|brunch|breakfast/.test(bizStr);
     const isRestaurant = /restaurant|dining|bistro|eatery|diner/.test(bizStr);
     const isTakeaway   = /takeaway|pizza|burger|kebab|chinese|thai|indian|sushi/.test(bizStr);
-    const isBar        = /bar|pub|brewery|cocktail|wine/.test(bizStr);
+    // \b-bounded so "bar" doesn't match as a substring of "barber" (which
+    // would otherwise win this check before isHairSalon is ever reached,
+    // since it's tested first below) — same for "pub" vs. words like "public".
+    const isBar        = /\bbar\b|\bpub\b|brewery|cocktail|wine/.test(bizStr);
     const isHairSalon  = /hair|hairdress|barber/.test(bizStr);
     const isBeautySpa  = /beauty|spa|massage|facial|nail|lash|brow|wax/.test(bizStr);
     const isPlumber    = /plumb|pipe|drain/.test(bizStr);
