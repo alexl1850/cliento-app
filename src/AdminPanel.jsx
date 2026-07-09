@@ -615,12 +615,12 @@ function OutreachTab() {
             <button
               onClick={deleteAllShown}
               style={{
-                padding: "8px 16px", borderRadius: "8px", border: `1.5px solid ${C.red}`,
-                background: "#fff", color: C.red, fontSize: "0.82em", fontWeight: 700,
+                padding: "8px 16px", borderRadius: "8px", border: "none",
+                background: C.red, color: "#fff", fontSize: "0.82em", fontWeight: 700,
                 cursor: "pointer", fontFamily: "inherit",
               }}
             >
-              Delete all shown ({filtered.length})
+              🗑 Delete all shown ({filtered.length})
             </button>
           )}
         </div>
@@ -647,11 +647,11 @@ function OutreachTab() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   {statusBadge(lead.status)}
                   <button
-                    onClick={() => deleteLead(lead.id)}
+                    onClick={() => { if (window.confirm(`Delete the lead for "${lead.business_name}"? This can't be undone.`)) deleteLead(lead.id); }}
                     title="Delete this lead"
-                    style={{ padding: "3px 9px", borderRadius: "99px", border: `1px solid ${C.border}`, background: "#fff", color: C.muted, fontSize: "0.72em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                    style={{ padding: "5px 12px", borderRadius: "99px", border: `1.5px solid ${C.red}`, background: C.redLt, color: C.red, fontSize: "0.75em", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
                   >
-                    Delete
+                    🗑 Delete
                   </button>
                 </div>
               </div>
