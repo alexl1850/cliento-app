@@ -1742,6 +1742,7 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
               )}
             </div>
           )}
+          {(toolId==="blog"||toolId==="sh_blog") && <BlogPostsList/>}
         </div>
       </div>
     </div>
@@ -2774,8 +2775,6 @@ function BlogPublishButton({ output, biz, extra }) {
   const [liveUrl, setLiveUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
-  const [homepageUpdated, setHomepageUpdated] = useState(false);
-  const [homepageSkippedReason, setHomepageSkippedReason] = useState(null);
 
   // Extract title from the blog post output
   const extractTitle = (text) => {
@@ -2796,16 +2795,13 @@ function BlogPublishButton({ output, biz, extra }) {
     setPhase("publishing");
     setErrorMsg("");
 
-    const storedProfile = biz;
-    const homepageUrl = storedProfile?.live_url || null;
-
-    // Get existing posts from localStorage
-    const existingPosts = JSON.parse(localStorage.getItem(`blog_posts_${biz?.name}`) || "[]");
-
     const { metaTitle, metaDesc } = extractMeta(output);
     const title = extractTitle(output);
 
     try {
+      // biz/palette/homepage HTML are resolved server-side from the
+      // account's own profile row now — the client only supplies the post
+      // content itself, so a spoofed body can't target someone else's site.
       const res = await fetch("/api/publish-blog", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
@@ -2816,23 +2812,14 @@ function BlogPublishButton({ output, biz, extra }) {
             meta_title: metaTitle || title,
             meta_desc: metaDesc,
           },
-          biz,
-          palette: storedProfile?.palette || "slate",
-          existingPosts,
-          homepageUrl,
         }),
       });
       const d = await res.json();
       if (d.error) throw new Error(d.error);
+      if (d.skippedReason === 'no_website') throw new Error('Build your website first using the My Website tool, then publish this post again.');
 
       setLiveUrl(d.postUrl);
-      setHomepageUpdated(!!d.homepageUpdated);
-      setHomepageSkippedReason(d.homepageSkippedReason || null);
       setPhase("done");
-
-      // Save to localStorage for next publish
-      const updated = [d.post, ...existingPosts].slice(0, 10);
-      localStorage.setItem(`blog_posts_${biz?.name}`, JSON.stringify(updated));
 
     } catch(e) {
       setErrorMsg(e.message || "Something went wrong — please try again.");
@@ -2889,16 +2876,85 @@ function BlogPublishButton({ output, biz, extra }) {
         </button>
       </div>
       <div style={{fontSize:"0.72em",color:C.muted,marginTop:"8px",lineHeight:1.5}}>
-        {homepageUpdated
-          ? '💡 Your homepage has been updated with this post in the "Latest from our blog" section.'
-          : homepageSkippedReason === 'no_website'
-          ? "⚠️ This post is live at its own link, but your homepage hasn't been built yet — build your website first, then publish this post again to add it to your homepage."
-          : "⚠️ This post is live at its own link, but we couldn't update your homepage this time — try publishing again in a minute."}
+        💡 Your homepage and /blog page have been updated with this post.
       </div>
     </div>
   );
 
   return null;
+}
+
+function BlogPostsList() {
+  const [posts, setPosts] = useState(null); // null = loading
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
+
+  const load = async () => {
+    try {
+      const res = await fetch("/api/list-blog-posts", { headers: { ...(await authHeaders()) } });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      setPosts(d.posts || []);
+    } catch (e) {
+      setError(e.message || "Could not load your posts.");
+      setPosts([]);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const deletePost = async (id) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch("/api/delete-blog-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ id }),
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      setPosts(prev => prev.filter(p => p.id !== id));
+    } catch (e) {
+      setError(e.message || "Could not delete that post.");
+    } finally {
+      setDeletingId(null);
+      setConfirmId(null);
+    }
+  };
+
+  if (posts === null) return null;
+  if (posts.length === 0 && !error) return null;
+
+  return (
+    <div style={{marginTop:"18px"}}>
+      <div style={{fontSize:"0.78em",fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:"8px"}}>Your Published Posts</div>
+      {error && <div style={{background:C.redLt,border:"1px solid #FECACA",borderRadius:"8px",padding:"9px 12px",fontSize:"0.82em",color:"#991B1B",marginBottom:"8px"}}>⚠️ {error}</div>}
+      <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+        {posts.map(p => (
+          <div key={p.id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 12px",borderRadius:"8px",border:`1px solid ${C.border}`,background:"#fff"}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:"0.86em",color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.title}</div>
+              <div style={{fontSize:"0.74em",color:C.muted,marginTop:"2px"}}>
+                {new Date(p.publishedAt).toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"})}
+                {p.url && <> · <a href={p.url} target="_blank" rel="noopener noreferrer" style={{color:C.brand}}>View live →</a></>}
+              </div>
+            </div>
+            {confirmId === p.id ? (
+              <div style={{display:"flex",gap:"6px",flexShrink:0}}>
+                <button onClick={() => deletePost(p.id)} disabled={deletingId === p.id} style={{padding:"7px 10px",borderRadius:"6px",border:"none",background:"#DC2626",color:"#fff",fontWeight:700,fontSize:"0.78em",cursor:"pointer"}}>
+                  {deletingId === p.id ? "Deleting…" : "Confirm delete"}
+                </button>
+                <button onClick={() => setConfirmId(null)} style={{padding:"7px 10px",borderRadius:"6px",border:`1px solid ${C.border}`,background:"#fff",color:C.muted,fontSize:"0.78em",cursor:"pointer"}}>Cancel</button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmId(p.id)} style={{flexShrink:0,padding:"7px 10px",borderRadius:"6px",border:`1px solid ${C.border}`,background:"#fff",color:C.muted,fontSize:"0.78em",cursor:"pointer"}}>Delete</button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

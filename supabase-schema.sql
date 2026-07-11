@@ -261,3 +261,51 @@ CREATE TABLE IF NOT EXISTS demo_leads (
 
 ALTER TABLE demo_leads ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies added: same reasoning as demo_sites above.
+
+-- ─── CUSTOMER WEBSITE PERSISTENCE ──────────────────────────────────
+-- Backs api/build-website.js, api/edit-website.js, api/publish-blog.js and
+-- api/paddle-webhook.js. site_html is the exact live homepage HTML string,
+-- persisted so a lapsed-subscription "renew" splash page (paddle-webhook.js)
+-- can restore the real site, and so blog-publish can patch from a trusted
+-- DB value instead of an unreliable live HTTP fetch of the customer's own
+-- domain. These columns were previously added directly in Supabase without
+-- ever being tracked here — added now so this file stays authoritative.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS site_html TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS site_slug TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS live_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS site_paused BOOLEAN DEFAULT false;
+-- Which colour palette (see api/_lib/palettes.js) the customer's site was
+-- built with — persisted so blog post pages can reuse the exact same theme
+-- server-side instead of trusting a client-supplied palette on every publish.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS site_palette TEXT DEFAULT 'slate';
+
+-- ─── BLOG POSTS ─────────────────────────────────────────────────────
+-- Backs api/publish-blog.js, api/list-blog-posts.js, api/delete-blog-post.js.
+-- Source of truth for a customer's blog posts, so a single publish/delete
+-- can regenerate every past post's page in one deploy (a Vercel deployment
+-- fully replaces the previous file set — there's no incremental add).
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  slug         TEXT NOT NULL,
+  title        TEXT NOT NULL,
+  meta_title   TEXT,
+  meta_desc    TEXT,
+  content      TEXT NOT NULL,
+  excerpt      TEXT,
+  palette      TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, slug)
+);
+
+ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own blog posts"
+  ON blog_posts FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own blog posts"
+  ON blog_posts FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own blog posts"
+  ON blog_posts FOR DELETE USING (auth.uid() = user_id);

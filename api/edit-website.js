@@ -1,4 +1,6 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
+import { getPalette } from './_lib/palettes.js';
+import { buildSiteFiles, fetchUserPosts } from './_lib/deploySite.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,13 +12,29 @@ export default async function handler(req, res) {
   const access = await requireActiveAccount(req);
   if (!access.ok) return res.status(access.status).json({ error: access.error });
 
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN;
+
   try {
     const { instruction, currentUrl, currentHtml, biz } = req.body;
-    const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN;
 
     if (!instruction) return res.status(400).json({ error: 'No instruction provided' });
     if (!currentHtml || currentHtml.length < 200) {
       return res.status(400).json({ error: 'No website HTML found. Please rebuild your website first using the My Website tool, then try editing again.' });
+    }
+
+    // Site identity (slug/palette/live URL) is resolved server-side from the
+    // account's own profile row — never trusted from the client — so an
+    // edit always deploys to the right project with the right theme.
+    const profileRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${access.userId}&select=site_slug,site_palette,live_url`,
+      { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
+    );
+    if (!profileRes.ok) throw new Error('Could not load your business profile');
+    const profile = (await profileRes.json())?.[0];
+    if (!profile?.site_slug) {
+      return res.status(400).json({ error: 'No website found. Please build your website first using the My Website tool.' });
     }
 
     // ── Apply the instruction to the current HTML ─────────────────────────────
@@ -61,35 +79,26 @@ Apply the instruction to this website and return the complete updated HTML.`
       throw new Error('Please try again with a more specific instruction — e.g. "Change the headline to..." or "Add a section about..."');
     }
 
-    // ── Deploy the updated HTML ───────────────────────────────────────────────
-    const slug = (biz?.name || 'my-business')
-      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
-
-    // sitemap.xml/robots.txt live as separate files from a build-website.js
-    // deploy — a deployment here only re-uploads whatever's in `files`, so
-    // without re-including them they'd silently disappear on the next edit.
-    const siteUrl = (currentUrl || '').replace(/\/$/, '');
-    const sitemapXml = siteUrl ? `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${siteUrl}/</loc>
-    <lastmod>${new Date().toISOString().slice(0,10)}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-</urlset>` : null;
-    const robotsTxt = siteUrl ? `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n` : null;
-
-    const deployFiles = [{ file: 'index.html', data: Buffer.from(updatedHtml).toString('base64'), encoding: 'base64' }];
-    if (sitemapXml) deployFiles.push({ file: 'sitemap.xml', data: Buffer.from(sitemapXml).toString('base64'), encoding: 'base64' });
-    if (robotsTxt) deployFiles.push({ file: 'robots.txt', data: Buffer.from(robotsTxt).toString('base64'), encoding: 'base64' });
+    // ── Deploy the updated HTML — re-including sitemap/robots/vercel.json
+    // and every existing blog page, since a deployment here only re-uploads
+    // whatever's in `files`; without re-including them they'd silently
+    // disappear from the live site on every edit. ─────────────────────────
+    const siteUrl = (profile.live_url || currentUrl || '').replace(/\/$/, '');
+    const posts = await fetchUserPosts(SUPABASE_URL, SUPABASE_SERVICE_KEY, access.userId);
+    const files = buildSiteFiles({
+      homeHtml: updatedHtml,
+      siteUrl,
+      biz: { name: biz?.name, suburb: biz?.suburb, description: biz?.description },
+      palette: getPalette(profile.site_palette),
+      posts,
+    });
 
     const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: `akus-${slug}`,
-        files: deployFiles,
+        name: `akus-${profile.site_slug}`,
+        files,
         projectSettings: { framework: null },
         target: 'production',
       })
@@ -97,10 +106,29 @@ Apply the instruction to this website and return the complete updated HTML.`
 
     const deployData = await deployRes.json();
     if (deployData.error) throw new Error(deployData.error.message);
+    const liveUrl = `https://${deployData.alias?.[0] || deployData.url}`;
+
+    // ── Persist the edited HTML so it becomes the new source of truth —
+    // without this, the next blog publish would silently revert this edit,
+    // since blog-publish patches from profiles.site_html. ─────────────────
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${access.userId}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({ site_html: updatedHtml, live_url: liveUrl }),
+      });
+    } catch (saveErr) {
+      console.error('Failed to persist edited site_html (non-fatal):', saveErr.message);
+    }
 
     return res.status(200).json({
       success: true,
-      url: `https://${deployData.alias?.[0] || deployData.url}`,
+      url: liveUrl,
       html: updatedHtml, // return updated HTML so client can cache it
       instruction,
     });

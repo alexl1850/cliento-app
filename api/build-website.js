@@ -1,5 +1,7 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 import { svgIcon, ICON_VOCAB } from './_lib/siteIcons.js';
+import { getPalette } from './_lib/palettes.js';
+import { buildSiteFiles, fetchUserPosts } from './_lib/deploySite.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -510,21 +512,7 @@ Return this JSON (be vivid and specific, not generic):
     const c = JSON.parse(raw);
 
     // ── 4. Get palette ─────────────────────────────────────────────────────
-    const palettes = {
-      ocean:    { primary:'#1E40AF', accent:'#0EA5E9', bg:'#F0F9FF', dark:'#0C1A3D', text:'#1E3A5F', light:'#E0F2FE' },
-      forest:   { primary:'#166534', accent:'#65A30D', bg:'#F0FDF4', dark:'#052E16', text:'#14532D', light:'#DCFCE7' },
-      sunset:   { primary:'#C2410C', accent:'#F59E0B', bg:'#FFF7ED', dark:'#431407', text:'#9A3412', light:'#FEF3C7' },
-      rose:     { primary:'#9D174D', accent:'#F43F5E', bg:'#FFF1F2', dark:'#4C0519', text:'#881337', light:'#FFE4E6' },
-      slate:    { primary:'#1E293B', accent:'#38BDF8', bg:'#F8FAFC', dark:'#020617', text:'#0F172A', light:'#E2E8F0' },
-      violet:   { primary:'#5B21B6', accent:'#A78BFA', bg:'#F5F3FF', dark:'#1E0A47', text:'#4C1D95', light:'#EDE9FE' },
-      teal:     { primary:'#0F766E', accent:'#14B8A6', bg:'#F0FDFA', dark:'#042F2E', text:'#134E4A', light:'#CCFBF1' },
-      copper:   { primary:'#92400E', accent:'#D97706', bg:'#FFFBEB', dark:'#1C0A00', text:'#78350F', light:'#FEF3C7' },
-      charcoal: { primary:'#111827', accent:'#EF4444', bg:'#F9FAFB', dark:'#030712', text:'#030712', light:'#F3F4F6' },
-      sage:     { primary:'#4D7C0F', accent:'#A16207', bg:'#F7FEE7', dark:'#1A2E05', text:'#365314', light:'#ECFCCB' },
-      navy:     { primary:'#1E3A5F', accent:'#D4AF37', bg:'#F8F9FA', dark:'#0A1628', text:'#1E3A5F', light:'#E8F0FE' },
-      blush:    { primary:'#9D174D', accent:'#EC4899', bg:'#FDF2F8', dark:'#500724', text:'#831843', light:'#FCE7F3' },
-    };
-    const p = palettes[intake.palette] || palettes.slate;
+    const p = getPalette(intake.palette);
 
     // ── 5. Build user photos ───────────────────────────────────────────────
     const userPhotos = intake.photo_urls || [];
@@ -823,6 +811,7 @@ footer{background:#111827;padding:72px 24px 40px}
       <a href="#services">${isFood ? 'Menu' : 'Services'}</a>
       <a href="#about">About</a>
       <a href="#reviews">Reviews</a>
+      <a href="/blog">Blog</a>
       <a href="#contact">Contact</a>
       <a href="${intake.phone ? `tel:${intake.phone.replace(/\s/g,'')}` : '#contact'}" class="nav-cta">${c.nav_cta || 'Get in Touch'}</a>
     </div>
@@ -1112,6 +1101,7 @@ ${allPhotos.length > 0 ? `
         <a href="#services">${isFood ? 'Menu' : 'Services'}</a>
         <a href="#about">About Us</a>
         <a href="#bookings">Bookings</a>
+        <a href="/blog">Blog</a>
         <a href="#contact">Contact</a>
       </div>
       ${intake.fb || intake.ig ? `<div class="footer-links-group">
@@ -1214,27 +1204,28 @@ async function akusGetEstimate() {
     // pattern could leave the production alias briefly dangling between the
     // two calls, which is suspected to have caused live sites to 404. Now
     // that the URL is predicted up front, one deploy is all that's needed.) ─
-    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${predictedLiveUrl}/</loc>
-    <lastmod>${new Date().toISOString().slice(0,10)}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-</urlset>`;
-    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${predictedLiveUrl}/sitemap.xml\n`;
+    // This tool also re-runs for a "rebuild my website" pass on an existing
+    // account, not just a brand-new site — so any already-published blog
+    // posts must be carried into the new deploy too, or a rebuild would
+    // silently wipe the customer's blog (a Vercel deployment replaces the
+    // whole file set rather than patching it).
+    const existingPosts = await fetchUserPosts(
+      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, access.userId
+    ).catch(() => []);
+    const files = buildSiteFiles({
+      homeHtml: html,
+      siteUrl: predictedLiveUrl,
+      biz: { name: intake.biz_name, suburb: intake.base_suburb, description: intake.description },
+      palette: p,
+      posts: existingPosts,
+    });
 
     const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: `akus-${slug}`,
-        files: [
-          { file: 'index.html', data: Buffer.from(html).toString('base64'), encoding: 'base64' },
-          { file: 'sitemap.xml', data: Buffer.from(sitemapXml).toString('base64'), encoding: 'base64' },
-          { file: 'robots.txt', data: Buffer.from(robotsTxt).toString('base64'), encoding: 'base64' },
-        ],
+        files,
         projectSettings: { framework: null },
         target: 'production',
       })
@@ -1260,7 +1251,7 @@ async function akusGetEstimate() {
           'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
           'Prefer': 'resolution=merge-duplicates,return=minimal',
         },
-        body: JSON.stringify({ user_id: access.userId, site_html: finalHtml, site_slug: slug, site_paused: false, live_url: liveUrl }),
+        body: JSON.stringify({ user_id: access.userId, site_html: finalHtml, site_slug: slug, site_paused: false, live_url: liveUrl, site_palette: intake.palette || 'slate' }),
       });
     } catch (saveErr) {
       console.error('Failed to persist site_html (non-fatal):', saveErr.message);
