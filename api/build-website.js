@@ -1,51 +1,5 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
-
-// ── Icon set — minimal stroke icons, replaces emoji everywhere on the built site ──
-const ICONS = {
-  phone: `<path d="M6.6 10.8c1.5 3 4 5.4 7 7l2.3-2.3c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1v3.4c0 .6-.4 1-1 1C10.4 21.3 2.7 13.6 2.7 3.5c0-.6.4-1 1-1H7c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.3 0 .7-.2 1L6.6 10.8Z"/>`,
-  mail: `<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>`,
-  mappin: `<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>`,
-  clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
-  star: `<path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3Z"/>`,
-  starfilled: `<path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3Z" fill="currentColor" stroke="none"/>`,
-  check: `<path d="M20 6 9 17l-5-5"/>`,
-  checkcircle: `<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.3 2.3 4.7-5"/>`,
-  wrench: `<path d="M15 6a4.5 4.5 0 0 0-6 4.9L3 17v4h4l6-6a4.5 4.5 0 0 0 5-7.4l-3.2 3.2-2.6-.9-.9-2.6L14.6 4c-.2 0-.4 0-.6 0Z"/>`,
-  droplet: `<path d="M12 3s6.5 7 6.5 11.5A6.5 6.5 0 0 1 5.5 14.5C5.5 10 12 3 12 3Z"/>`,
-  flame: `<path d="M12 2s5 4.5 5 9.5a5 5 0 0 1-10 0c0-1.4.7-2.6 1.5-3.5.2 1 .8 1.8 1.5 1.8 1 0 1-1.3 1-2.3C11 6 11 4 12 2Z"/>`,
-  shield: `<path d="M12 3 4.5 6v6c0 5 3.4 8 7.5 9 4.1-1 7.5-4 7.5-9V6L12 3Z"/>`,
-  home: `<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>`,
-  heart: `<path d="M12 20.5s-7.5-4.6-9.8-9.4C.7 7.6 2.3 4.5 5.4 4c2-.3 3.7.7 4.6 2.3.5-1.6 2.6-2.6 4.6-2.3 3.1.5 4.7 3.6 3.2 7.1-2.3 4.8-9.8 9.4-9.8 9.4Z"/>`,
-  calendar: `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>`,
-  truck: `<path d="M2 7h11v9H2z"/><path d="M13 10h4l3 3v3h-7z"/><circle cx="6.5" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>`,
-  leaf: `<path d="M5 20C3 12 8 5 20 4c1 10-5 16-15 16Z"/><path d="M6 19c3-4 6-7 12-13"/>`,
-  dollar: `<circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.2c0-1.2-1.3-2.2-3-2.2s-3 .9-3 2.2 1.3 1.9 3 2.2 3 1 3 2.2-1.3 2.1-3 2.1-3-.8-3-2.1"/>`,
-  users: `<circle cx="9" cy="8" r="3.3"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c2.6.4 4.5 2.4 4.5 5.3"/>`,
-  thumbsup: `<path d="M7 11v9H4v-9h3Z"/><path d="M7 11l3.5-7c1.5 0 2.5 1.2 2.2 2.6L12 9h5.5c1.2 0 2 1.1 1.6 2.2l-2 6c-.3.9-1.1 1.5-2 1.5H7"/>`,
-  award: `<circle cx="12" cy="8" r="5.3"/><path d="m8.5 12.8-1.3 7 4.8-2.6 4.8 2.6-1.3-7"/>`,
-  sparkles: `<path d="M12 3v4M12 17v4M4 12h4M16 12h4M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2"/>`,
-  coffee: `<path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3.5c0 1-1 1-1 2s1 1 1 2M12 3.5c0 1-1 1-1 2s1 1 1 2"/>`,
-  utensils: `<path d="M6 2v8a2 2 0 0 0 2 2v10M6 2v8M9 2v8M15 2c-1.7 0-3 2-3 5s1.3 5 3 5v10M15 2c1.7 0 3 2 3 5s-1.3 5-3 5"/>`,
-  dumbbell: `<path d="M4 9v6M2 10.5v3M20 9v6M22 10.5v3M7 12h10"/><rect x="5" y="7.5" width="4" height="9" rx="1"/><rect x="15" y="7.5" width="4" height="9" rx="1"/>`,
-  stethoscope: `<path d="M6 3v6a4 4 0 0 0 8 0V3M6 3H4.5M14 3h1.5"/><path d="M10 13v2.5a5.5 5.5 0 0 0 11 0V13.8"/><circle cx="20.5" cy="12.5" r="1.8"/>`,
-  tooth: `<path d="M7 3c-2.5 0-4 2-4 5 0 4 1.5 6 2 10 .3 2 2 2 2.5.3.4-1.3.6-3.3 2.5-3.3s2.1 2 2.5 3.3c.5 1.7 2.2 1.7 2.5-.3.5-4 2-6 2-10 0-3-1.5-5-4-5-1.2 0-2 .6-2.5 1-.5-.4-1.3-1-3.5-1Z"/>`,
-  paw: `<circle cx="6" cy="9" r="2"/><circle cx="12" cy="6.5" r="2"/><circle cx="18" cy="9" r="2"/><path d="M8 15c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5-1.8 4-4 4-4-2-4-4Z"/>`,
-  palette: `<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.7-1.5 1.6-1.5H16a4 4 0 0 0 4-4c0-4.7-3.6-8.4-8-8.4Z"/><circle cx="7.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="7" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/>`,
-  hammer: `<rect x="13.5" y="2.5" width="4.2" height="7" rx="1" transform="rotate(45 15.6 6)"/><path d="M13 8.5 4.5 17a1.8 1.8 0 0 0 0 2.5l0 0a1.8 1.8 0 0 0 2.5 0L15.5 11"/>`,
-  broom: `<path d="M20 4 10.5 13.5"/><path d="m10.5 13.5-3 6.8L4 22l1.7-3.8 3-6.8Z"/><path d="M9 12.3 12.2 15.5"/>`,
-  car: `<path d="M4 16V11l2-5h12l2 5v5"/><path d="M4 16h16v2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H7v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Z"/><circle cx="7.5" cy="16" r="1.3"/><circle cx="16.5" cy="16" r="1.3"/>`,
-  flower: `<circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="12" r="2.6"/><path d="M12 18v3"/>`,
-  briefcase: `<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>`,
-  scissors: `<circle cx="6" cy="6" r="2.3"/><circle cx="6" cy="18" r="2.3"/><path d="m20 5-12.5 8M20 19 7.5 11"/>`,
-  messagecircle: `<path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.5-5A8.5 8.5 0 1 1 21 11.5Z"/>`,
-  clipboardlist: `<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M8.5 11h.01M8.5 15h.01M11.5 11h5M11.5 15h5"/>`,
-  alert: `<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/>`,
-};
-function svgIcon(name, size = 20) {
-  const path = ICONS[name] || ICONS.sparkles;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;flex-shrink:0">${path}</svg>`;
-}
-const ICON_VOCAB = Object.keys(ICONS).filter(k => k !== 'starfilled').join(', ');
+import { svgIcon, ICON_VOCAB } from './_lib/siteIcons.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -464,8 +418,13 @@ export default async function handler(req, res) {
       : imageLibrary.default;
 
     const nameSeed = intake.biz_name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-    const heroImageUrl = lib[nameSeed % 4];
+    const heroIdx = nameSeed % 4;
+    const heroImageUrl = lib[heroIdx];
     const galleryImages = lib.slice(4);
+    // The other 3 of the 4 "hero-quality" slots not picked as hero — the
+    // only headroom this smaller 8-image-per-category pool has for
+    // testimonial photos without repeating the hero or gallery images.
+    const testimonialPhotos = [1,2,3].map(o => lib[(heroIdx+o)%4]);
     // ── 3. Generate AI content ─────────────────────────────────────────────
     const bizPersonality = isFood ? 'warm, mouth-watering, inviting — every word should make people hungry and excited to visit'
       : isBeauty ? 'luxurious, confidence-boosting, welcoming — make people feel transformed before they even arrive'
@@ -534,8 +493,11 @@ Return this JSON (be vivid and specific, not generic):
   "cta_sub": "One sentence removing hesitation",
   "years_badge": "Est. year or X years serving suburb",
   "review_count": "realistic number like 47 or 124",
-  "testimonial_generated": "A realistic 2-sentence testimonial from a local customer. Specific, warm, mentions something specific about the business.",
-  "testimonial_name": "Realistic Australian first name + suburb",
+  "testimonials": [
+    {"quote":"A realistic 2-sentence testimonial from a local customer. Specific, warm, mentions something specific about the business.","name":"Realistic Australian first name"},
+    {"quote":"A second, distinct realistic 2-sentence testimonial, different specific detail.","name":"A different realistic Australian first name"},
+    {"quote":"A third, distinct realistic 2-sentence testimonial, another specific detail.","name":"A third different realistic Australian first name"}
+  ],
   "nav_cta": "${isFood ? 'Visit Us' : isBeauty ? 'Book Now' : isTrade ? 'Get a Quote' : 'Contact Us'}"
 }`
         }]
@@ -626,11 +588,11 @@ Return this JSON (be vivid and specific, not generic):
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='${encodeURIComponent(p.primary)}'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='system-ui' font-weight='900' fill='white'>${(intake.biz_name||'B')[0].toUpperCase()}</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:#fff;color:#111827;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#fff;color:#111827;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;height:auto;display:block}
 
@@ -650,7 +612,7 @@ img{max-width:100%;height:auto;display:block}
 nav{position:fixed;top:0;left:0;right:0;z-index:1000;transition:all 0.3s;background:linear-gradient(to bottom,rgba(0,0,0,0.5),transparent)}
 nav.scrolled{background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(0,0,0,0.08)}
 .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:72px;display:flex;align-items:center;justify-content:space-between}
-.nav-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:-0.02em;transition:color 0.3s}
+.nav-logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:-0.02em;transition:color 0.3s}
 nav.scrolled .nav-logo{color:${p.primary}}
 .nav-links{display:flex;align-items:center;gap:32px}
 .nav-links a{font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.9);transition:color 0.2s}
@@ -667,12 +629,12 @@ nav.scrolled .nav-mobile-btn span{background:#111}
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:#111;clip-path:polygon(0 0,100% 0,100% 100%,0 calc(100% - 48px))}
 .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;transform:scale(1.08);animation:heroZoom 14s ease-in-out infinite alternate}
 @keyframes heroZoom{from{transform:scale(1.08)}to{transform:scale(1.0)}}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.2) 100%)}
-.hero-content{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:120px 24px 80px;width:100%}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,${p.accent}14 28%,rgba(0,0,0,.05) 42%,rgba(0,0,0,.68) 85%,rgba(0,0,0,.86) 100%)}
+.hero-content{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:140px 32px 110px;width:100%}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:99px;padding:8px 18px;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.9);margin-bottom:24px;backdrop-filter:blur(12px);animation:fadeIn 0.8s ease}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:${p.accent};animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 ${p.accent}88}50%{box-shadow:0 0 0 8px transparent}}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,6vw,5.5rem);font-weight:900;line-height:1.05;color:#fff;letter-spacing:-0.02em;margin-bottom:24px;animation:fadeUp 0.9s ease 0.1s both;max-width:700px}
+.hero h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(2.8rem,6vw,5.5rem);font-weight:900;line-height:1.05;color:#fff;letter-spacing:-0.02em;margin-bottom:24px;animation:fadeUp 0.9s ease 0.1s both;max-width:700px}
 .hero h1 span{color:${p.accent};font-style:italic}
 .hero-sub{font-size:clamp(1rem,2vw,1.2rem);color:rgba(255,255,255,0.82);max-width:540px;line-height:1.8;margin-bottom:40px;animation:fadeUp 0.9s ease 0.2s both}
 .hero-btns{display:flex;gap:16px;flex-wrap:wrap;animation:fadeUp 0.9s ease 0.3s both}
@@ -681,7 +643,7 @@ nav.scrolled .nav-mobile-btn span{background:#111}
 .btn-hero-secondary{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);color:#fff;padding:17px 32px;border-radius:99px;font-weight:700;font-size:0.95rem;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(8px);transition:all 0.2s}
 .btn-hero-secondary:hover{background:rgba(255,255,255,0.22);color:#fff}
 .hero-stats{display:flex;gap:40px;margin-top:60px;flex-wrap:wrap;animation:fadeUp 0.9s ease 0.4s both}
-.hero-stat-num{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.03em}
+.hero-stat-num{font-family:'Plus Jakarta Sans',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.03em}
 .hero-stat-label{font-size:0.75rem;color:rgba(255,255,255,0.55);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
 .hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,0.5);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;animation:fadeIn 1.5s ease 1s both}
 .hero-scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,0.4));animation:scrollLine 2s ease-in-out infinite}
@@ -698,7 +660,7 @@ nav.scrolled .nav-mobile-btn span{background:#111}
 section{padding:96px 24px}
 .s-inner{max-width:1200px;margin:0 auto}
 .eyebrow{font-size:0.72rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${p.accent};margin-bottom:12px}
-.section-h2{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;letter-spacing:-0.03em;line-height:1.15;color:#111827;margin-bottom:16px}
+.section-h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;letter-spacing:-0.03em;line-height:1.15;color:#111827;margin-bottom:16px}
 .section-h2 em{color:${p.primary};font-style:italic}
 .section-sub{font-size:1rem;color:#6B7280;max-width:580px;line-height:1.8}
 
@@ -706,15 +668,15 @@ section{padding:96px 24px}
 .services{background:#fff}
 .services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:56px}
 .service-card{border-radius:20px;padding:32px;transition:all 0.3s;cursor:default;position:relative;overflow:hidden}
-.service-card.normal{background:#F9FAFB;border:1px solid #F3F4F6}
+.service-card.normal{background:#F9FAFB;border:1px solid #F3F4F6;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
 .service-card.featured{background:linear-gradient(135deg,${p.primary},${p.dark});color:#fff}
 .service-card:hover{transform:translateY(-6px);box-shadow:0 20px 48px rgba(0,0,0,0.12)}
 .service-card.normal:hover{border-color:${p.primary}30}
-.service-icon-wrap{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px}
+.service-icon-wrap{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px}
 .service-icon-wrap svg{width:26px;height:26px}
 .service-card.normal .service-icon-wrap{background:${p.light};color:${p.primary}}
 .service-card.featured .service-icon-wrap{background:rgba(255,255,255,0.15);color:#fff}
-.service-card h3{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;margin-bottom:10px;letter-spacing:-0.01em}
+.service-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:10px;letter-spacing:-0.01em}
 .service-card.normal h3{color:#111827}
 .service-card.featured h3{color:#fff}
 .service-card p{font-size:0.88rem;line-height:1.75}
@@ -738,7 +700,21 @@ section{padding:96px 24px}
 .about-image{border-radius:24px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.18)}
 .about-image img{width:100%;height:500px;object-fit:cover;display:block}
 .about-badge{position:absolute;bottom:-24px;right:-24px;background:#fff;border-radius:20px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,0.12);text-align:center;min-width:140px}
-.about-badge-num{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:900;color:${p.primary};line-height:1;letter-spacing:-0.04em}
+.about-circle-photo{width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,0.18);position:absolute;bottom:-24px;left:-24px}
+.bookings-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 4px 24px rgba(0,0,0,0.06);text-align:left;max-width:640px;margin:36px auto 0}
+.bookings-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.bookings-nav button{background:none;border:none;color:${p.primary};padding:6px;cursor:default}
+.bookings-month{font-weight:700;font-size:1.05rem;color:#111827}
+.bookings-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.bookings-dow{text-align:center;font-size:0.72rem;font-weight:700;color:#9CA3AF;margin-bottom:8px}
+.bookings-day{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:0.8rem;color:#111827}
+.bookings-day.booked{background:${p.accent}18;color:${p.accent};font-weight:800}
+.bookings-chip{font-size:0.55rem;font-weight:800;background:${p.accent};color:#fff;border-radius:99px;padding:1px 6px}
+.bookings-cta{display:block;text-align:center;width:100%;margin-top:20px;padding:14px;border-radius:10px;background:${p.primary};color:#fff;font-weight:800;font-size:0.95rem;transition:transform 0.3s}
+.bookings-cta:hover{transform:translateY(-2px)}
+.review-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.3s;flex-shrink:0}
+.review-card:hover .review-photo{transform:scale(1.05)}
+.about-badge-num{font-family:'Plus Jakarta Sans',sans-serif;font-size:2.8rem;font-weight:900;color:${p.primary};line-height:1;letter-spacing:-0.04em}
 .about-badge-label{font-size:0.72rem;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px}
 .about-text .eyebrow{margin-bottom:14px}
 .about-story{font-size:1rem;color:#374151;line-height:1.9;margin-top:20px}
@@ -751,7 +727,7 @@ section{padding:96px 24px}
 .why-card:hover{background:${p.light};border-color:${p.primary}25;transform:translateY(-4px);box-shadow:0 12px 32px ${p.primary}15}
 .why-icon{margin-bottom:16px;color:${p.primary}}
 .why-icon svg{width:30px;height:30px}
-.why-card h4{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#111827;margin-bottom:8px}
+.why-card h4{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.1rem;font-weight:700;color:#111827;margin-bottom:8px}
 .why-card p{font-size:0.88rem;color:#6B7280;line-height:1.7}
 
 /* ── REVIEWS ── */
@@ -759,14 +735,14 @@ section{padding:96px 24px}
 .reviews-inner{max-width:1200px;margin:0 auto;text-align:center}
 .stars-row{display:flex;justify-content:center;gap:4px;margin-bottom:8px}
 .star{font-size:1.4rem;color:#FBBF24}
-.reviews-num{font-family:'Playfair Display',serif;font-size:1rem;color:rgba(255,255,255,0.5);margin-bottom:64px}
+.reviews-num{font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;color:rgba(255,255,255,0.5);margin-bottom:64px}
 .reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;text-align:left}
 .review-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;transition:all 0.3s}
 .review-card:hover{background:rgba(255,255,255,0.09);transform:translateY(-4px)}
 .review-stars{display:flex;gap:3px;margin-bottom:16px}
 .review-star{font-size:0.9rem;color:#FBBF24}
 .review-text{font-size:0.9rem;color:rgba(255,255,255,0.75);line-height:1.8;font-style:italic;margin-bottom:20px}
-.review-author{display:flex;align-items:center;gap:12px}
+.review-author{margin-top:4px}
 .review-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,${p.accent},${p.primary});display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:0.9rem;flex-shrink:0}
 .review-name{font-size:0.85rem;font-weight:700;color:#fff}
 .review-location{font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:1px}
@@ -775,7 +751,7 @@ section{padding:96px 24px}
 .cta-section{background:linear-gradient(135deg,${p.primary} 0%,${p.dark} 100%);padding:120px 24px;text-align:center;position:relative;overflow:hidden}
 .cta-bg-pattern{position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(255,255,255,0.04) 1px,transparent 1px),radial-gradient(circle at 80% 50%,rgba(255,255,255,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
 .cta-inner-wrap{position:relative;z-index:1;max-width:700px;margin:0 auto}
-.cta-section h2{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,4rem);font-weight:900;color:#fff;letter-spacing:-0.04em;line-height:1.1;margin-bottom:20px}
+.cta-section h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(2.2rem,5vw,4rem);font-weight:900;color:#fff;letter-spacing:-0.04em;line-height:1.1;margin-bottom:20px}
 .cta-section p{font-size:1.05rem;color:rgba(255,255,255,0.72);margin-bottom:40px;line-height:1.75}
 .cta-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
 .btn-cta-primary{display:inline-flex;align-items:center;gap:10px;background:#fff;color:${p.primary};padding:18px 40px;border-radius:99px;font-weight:900;font-size:1rem;transition:all 0.25s;letter-spacing:-0.01em}
@@ -802,10 +778,10 @@ section{padding:96px 24px}
 .contact-map-placeholder p{font-size:0.88rem;color:#6B7280;font-weight:600}
 
 /* ── FOOTER ── */
-footer{background:#111827;padding:56px 24px 32px}
+footer{background:#111827;padding:72px 24px 40px}
 .footer-inner{max-width:1200px;margin:0 auto}
-.footer-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:32px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,0.08)}
-.footer-brand h3{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:8px}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;align-items:flex-start;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.footer-brand h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:8px}
 .footer-brand p{font-size:0.85rem;color:rgba(255,255,255,0.4);max-width:280px;line-height:1.7}
 .footer-links-group h4{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-bottom:14px}
 .footer-links-group a{display:block;font-size:0.88rem;color:rgba(255,255,255,0.6);margin-bottom:8px;transition:color 0.2s}
@@ -826,7 +802,7 @@ footer{background:#111827;padding:56px 24px 32px}
   .gallery-grid img:first-child{grid-column:span 2}
   .hero-stats{gap:24px}
   .about-badge{display:none}
-  .footer-top{flex-direction:column}
+  .footer-top{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   section{padding:64px 16px}
@@ -947,6 +923,34 @@ ${isTrade ? `
   </div>
 </section>` : ''}
 
+<!-- INSTANT BOOKINGS -->
+<section id="bookings" style="padding:80px 24px;background:${p.bg};text-align:center">
+  <div class="s-inner">
+    <div class="eyebrow">Book Online</div>
+    <h2 class="section-h2">Instant <em>bookings</em>, no phone tag</h2>
+    <p class="section-sub" style="margin:0 auto">See our upcoming availability and lock in a time that suits you — no back-and-forth required.</p>
+    <div class="bookings-card">
+      <div class="bookings-nav">
+        <button aria-label="Previous month">${svgIcon('chevronleft',18)}</button>
+        <div class="bookings-month">${new Date().toLocaleString('en-AU',{month:'long',year:'numeric'})}</div>
+        <button aria-label="Next month">${svgIcon('chevronright',18)}</button>
+      </div>
+      <div class="bookings-grid" style="margin-bottom:8px">
+        ${['M','T','W','T','F','S','S'].map(d=>`<div class="bookings-dow">${d}</div>`).join('')}
+      </div>
+      <div class="bookings-grid">
+        ${Array.from({length:35}).map((_,i)=>{
+          const day = i - 1;
+          const booked = [5,12,13,19,26].includes(i);
+          if (day < 1 || day > 30) return '<div></div>';
+          return `<div class="bookings-day${booked?' booked':''}">${day}${booked?'<span class="bookings-chip">Booked</span>':''}</div>`;
+        }).join('')}
+      </div>
+      <a href="#contact" class="bookings-cta">Request a Booking →</a>
+    </div>
+  </div>
+</section>
+
 <!-- GALLERY -->
 ${allPhotos.length > 0 ? `
 <section class="gallery">
@@ -975,6 +979,7 @@ ${allPhotos.length > 0 ? `
         <div class="about-image">
           <img src="${allPhotos[1] || heroImageUrl}" alt="${intake.owner_name ? `${intake.owner_name}, owner of ${intake.biz_name}` : `${intake.biz_name} — locally owned and operated in ${intake.base_suburb}`}" loading="lazy">
         </div>
+        <img src="${heroImageUrl}" alt="" class="about-circle-photo" loading="lazy">
         <div class="about-badge">
           <div class="about-badge-num">${c.years_badge?.match(/\d+/)?.[0] || '5'}+</div>
           <div class="about-badge-label">Years in ${intake.base_suburb}</div>
@@ -1016,22 +1021,22 @@ ${allPhotos.length > 0 ? `
     <div class="reveal">
       <div class="stars-row">${Array(5).fill(`<span class="star">${svgIcon('starfilled',22)}</span>`).join('')}</div>
       <p class="reviews-num">Rated 5 stars by ${c.review_count || '50'}+ customers in ${intake.base_suburb}</p>
-      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-0.03em;margin-bottom:48px">What our customers say</h2>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-0.03em;margin-bottom:48px">What our customers say</h2>
     </div>
     <div class="reviews-grid">
-      ${[
-        { text: c.testimonial_generated || `Absolutely love ${intake.biz_name}. ${intake.owner_name} and the team are fantastic.`, name: c.testimonial_name || 'Sarah M.', location: intake.base_suburb },
-        { text: `Best in ${intake.base_suburb} by far. I've been coming here for years and wouldn't go anywhere else. Highly recommend!`, name: 'James T.', location: intake.base_suburb },
-        { text: `${intake.biz_name} is everything you want in a local ${isFood ? 'café' : isBeauty ? 'salon' : 'business'}. Professional, friendly and always delivers.`, name: 'Michelle K.', location: intake.base_suburb },
-      ].map(r => `
+      ${(Array.isArray(c.testimonials) && c.testimonials.length ? c.testimonials.slice(0,3) : [
+        { quote: `Absolutely love ${intake.biz_name}. ${intake.owner_name} and the team are fantastic.`, name: 'Sarah M.' },
+        { quote: `Best in ${intake.base_suburb} by far. I've been coming here for years and wouldn't go anywhere else.`, name: 'James T.' },
+        { quote: `${intake.biz_name} is everything you want in a local ${isFood ? 'café' : isBeauty ? 'salon' : 'business'}.`, name: 'Michelle K.' },
+      ]).map((r, i) => `
       <div class="review-card reveal">
+        <img src="${testimonialPhotos[i]}" alt="${r.name}" class="review-photo" loading="lazy">
         <div class="review-stars">${Array(5).fill(`<span class="review-star">${svgIcon('starfilled',15)}</span>`).join('')}</div>
-        <p class="review-text">"${r.text}"</p>
+        <p class="review-text">"${r.quote}"</p>
         <div class="review-author">
-          <div class="review-avatar">${r.name[0]}</div>
           <div>
             <div class="review-name">${r.name}</div>
-            <div class="review-location">${svgIcon('mappin',13)} ${r.location}</div>
+            <div class="review-location">${svgIcon('mappin',13)} ${intake.base_suburb}</div>
           </div>
         </div>
       </div>`).join('')}
@@ -1106,7 +1111,7 @@ ${allPhotos.length > 0 ? `
         <h4>Navigate</h4>
         <a href="#services">${isFood ? 'Menu' : 'Services'}</a>
         <a href="#about">About Us</a>
-        <a href="#reviews">Reviews</a>
+        <a href="#bookings">Bookings</a>
         <a href="#contact">Contact</a>
       </div>
       ${intake.fb || intake.ig ? `<div class="footer-links-group">
@@ -1114,6 +1119,11 @@ ${allPhotos.length > 0 ? `
         ${intake.fb ? `<a href="${intake.fb}" target="_blank" rel="noopener">Facebook</a>` : ''}
         ${intake.ig ? `<a href="${intake.ig}" target="_blank" rel="noopener">Instagram</a>` : ''}
       </div>` : ''}
+      <div class="footer-links-group">
+        <h4>Get in Touch</h4>
+        ${intake.phone ? `<a href="tel:${intake.phone.replace(/\s/g,'')}">${intake.phone}</a>` : ''}
+        <a href="#contact">${intake.base_suburb}, Australia</a>
+      </div>
     </div>
     <div class="footer-bottom">
       <p>© ${new Date().getFullYear()} ${intake.biz_name} · ${intake.base_suburb}, Australia</p>
