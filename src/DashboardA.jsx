@@ -186,7 +186,7 @@ function customerToDb(c, userId) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN APP
 // ═════════════════════════════════════════════════════════════════════════════
-export default function Dashboard({ session, profile, onSaveProfile, onSignOut, isAdmin, onOpenAdmin }) {
+export default function Dashboard({ session, profile, onSaveProfile, onSignOut, isAdmin, onOpenAdmin, onCheckoutCompleted }) {
   const profileToBiz = (p) => p ? {
     owner:       p.owner       || '',
     name:        p.biz_name    || '',
@@ -399,7 +399,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
   const needsUpgrade = (plan === "cancelled" || plan === "past_due" || (plan === "trial" && trialExpired));
 
   if (needsUpgrade) {
-    return <PaywallScreen session={session} biz={biz} plan={plan} trialEnds={trialEnds} onSignOut={onSignOut}/>;
+    return <PaywallScreen session={session} biz={biz} plan={plan} trialEnds={trialEnds} onSignOut={onSignOut} onCheckoutCompleted={onCheckoutCompleted}/>;
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -2627,9 +2627,47 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // PAYWALL SCREEN
 // ═════════════════════════════════════════════════════════════════════════════
-function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
+// Loads Paddle.js once and caches the promise — repeated calls (e.g. if the
+// paywall unmounts/remounts) reuse the same script tag instead of injecting
+// it again. A transaction's `checkout.url` only does anything if Paddle.js
+// is loaded on the page that catches it (see api/paddle-checkout.js); the
+// simpler, more reliable approach is to open the overlay directly here with
+// Paddle.Checkout.open({ transactionId }) — no redirect/return-URL dance,
+// no domain-approval-for-the-return-URL gotcha, and an immediate
+// checkout.completed event instead of waiting on a page reload.
+let paddleJsPromise = null;
+function loadPaddleJs() {
+  if (window.Paddle) return Promise.resolve(window.Paddle);
+  if (paddleJsPromise) return paddleJsPromise;
+  paddleJsPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+    script.onload = () => resolve(window.Paddle);
+    script.onerror = () => reject(new Error("Could not load the payment provider — check your connection and try again."));
+    document.head.appendChild(script);
+  });
+  return paddleJsPromise;
+}
+
+function PaywallScreen({ session, biz, plan, trialEnds, onSignOut, onCheckoutCompleted }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
+  const [paddleReady, setPaddleReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPaddleJs().then(Paddle => {
+      if (cancelled) return;
+      Paddle.Initialize({
+        token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
+        eventCallback: (event) => {
+          if (event.name === "checkout.completed") onCheckoutCompleted?.();
+        },
+      });
+      setPaddleReady(true);
+    }).catch(e => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true };
+  }, []);
 
   const startCheckout = async () => {
     setLoading(true);
@@ -2645,7 +2683,8 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
       });
       const d = await res.json();
       if (d.error) throw new Error(d.error);
-      window.location.href = d.url;
+      window.Paddle.Checkout.open({ transactionId: d.transactionId });
+      setLoading(false);
     } catch(e) {
       setError(e.message || "Something went wrong — please try again.");
       setLoading(false);
@@ -2738,14 +2777,14 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut }) {
             </div>
           )}
 
-          <button onClick={startCheckout} disabled={loading} style={{
+          <button onClick={startCheckout} disabled={loading || !paddleReady} style={{
             width:"100%",padding:"16px",borderRadius:"12px",border:"none",
             background:"#38BDF8",color:"#03050A",
-            fontWeight:900,fontSize:"1em",cursor:loading?"not-allowed":"pointer",
-            fontFamily:"inherit",opacity:loading?0.7:1,transition:"all 0.2s",
+            fontWeight:900,fontSize:"1em",cursor:(loading||!paddleReady)?"not-allowed":"pointer",
+            fontFamily:"inherit",opacity:(loading||!paddleReady)?0.7:1,transition:"all 0.2s",
             letterSpacing:"-0.02em",
           }}>
-            {loading ? "Loading checkout..." : isCancelled||isPastDue ? "Resubscribe → $50/month" : "Subscribe now → $50/month"}
+            {loading ? "Loading checkout..." : !paddleReady ? "Loading..." : isCancelled||isPastDue ? "Resubscribe → $50/month" : "Subscribe now → $50/month"}
           </button>
 
           <div style={{fontSize:"0.75em",color:"rgba(255,255,255,0.25)",marginTop:"12px",display:"flex",alignItems:"flex-start",justifyContent:"center",gap:"6px"}}>

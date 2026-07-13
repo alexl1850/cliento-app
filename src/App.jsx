@@ -319,6 +319,12 @@ export default function App() {
         supabase={supabase}
         isAdmin={isAdmin && !impersonating}
         onOpenAdmin={() => setShowAdminPanel(true)}
+        // Fired by the Paddle.js overlay's own 'checkout.completed' event —
+        // no redirect/reload involved now, so this fires immediately rather
+        // than depending on a page reload racing the webhook. Reuses the
+        // same bounded wait as the (still-kept, belt-and-braces) redirect
+        // path in case the overlay event is ever missed.
+        onCheckoutCompleted={() => { setConfirmingPayment(true); pollForPaidPlan(session.user.id, profile) }}
       />
     </>
   )

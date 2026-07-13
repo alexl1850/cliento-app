@@ -21,7 +21,13 @@ export default async function handler(req, res) {
     const { email, name } = req.body;
     const userId = access.userId;
 
-    // Create a Paddle transaction with a 7-day trial
+    // Create the transaction only — no `checkout.url` needed. That field
+    // just builds a redirect link (your default-payment-link domain plus
+    // a ?_ptxn= query param) that only does anything if Paddle.js is
+    // loaded on the page it points to to catch that param. We don't
+    // redirect anywhere; the frontend opens this transaction directly in
+    // a Paddle.js overlay via Paddle.Checkout.open({ transactionId }),
+    // which needs nothing here beyond the transaction id itself.
     const res2 = await fetch('https://api.paddle.com/transactions', {
       method: 'POST',
       headers: {
@@ -35,22 +41,16 @@ export default async function handler(req, res) {
         }],
         customer: { email, name },
         custom_data: { user_id: userId },
-        // The ?checkout=success marker lets the app tell "just came back
-        // from Paddle" apart from a normal page load, so it can wait for
-        // the webhook to land instead of re-checking a stale profile and
-        // bouncing straight back to the paywall (see App.jsx).
-        checkout: { url: 'https://app.akus.com.au/?checkout=success' },
       })
     });
 
     const data = await res2.json();
     if (data.error) throw new Error(data.error.detail || 'Paddle error');
 
-    // Return the checkout URL
-    const checkoutUrl = data.data?.checkout?.url;
-    if (!checkoutUrl) throw new Error('No checkout URL returned');
+    const transactionId = data.data?.id;
+    if (!transactionId) throw new Error('No transaction id returned');
 
-    return res.status(200).json({ url: checkoutUrl });
+    return res.status(200).json({ transactionId });
 
   } catch(err) {
     console.error('Paddle checkout error:', err);
