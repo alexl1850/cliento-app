@@ -15,6 +15,20 @@ const demoParams = urlParams.get('demo') === '1' ? {
   type:   urlParams.get('type') || 'local business',
 } : null;
 
+// Paddle redirects back here with ?checkout=success once payment completes.
+// Paddle's webhook (the thing that actually flips profiles.plan) arrives
+// server-to-server and can land after this redirect — without this, the app
+// re-checks the still-stale profile and bounces straight back to the
+// paywall, which looks exactly like "payment didn't go through."
+const returningFromCheckout = urlParams.get('checkout') === 'success';
+
+function stillNeedsUpgrade(profile) {
+  const plan = profile?.plan || 'trial'
+  const trialEnds = profile?.trial_ends ? new Date(profile.trial_ends) : null
+  const trialExpired = trialEnds && new Date() > trialEnds
+  return plan === 'cancelled' || plan === 'past_due' || (plan === 'trial' && trialExpired)
+}
+
 export default function App() {
   const [session,         setSession]         = useState(null)
   const [loading,         setLoading]         = useState(true)
@@ -24,12 +38,35 @@ export default function App() {
   const [showAdminPanel,  setShowAdminPanel]  = useState(false)
   const [impersonating,   setImpersonating]   = useState(() => !!localStorage.getItem(ADMIN_RETURN_KEY))
   const [passwordRecovery, setPasswordRecovery] = useState(false)
+  const [confirmingPayment, setConfirmingPayment] = useState(returningFromCheckout)
+
+  // Wait for the webhook to catch up instead of trusting whatever profile
+  // state we loaded the instant we landed back from Paddle. Bounded at
+  // ~12s (6 tries, 2s apart) — if the webhook still hasn't landed by then,
+  // fall through to the normal paywall rather than waiting forever.
+  const pollForPaidPlan = async (userId, initialProfile) => {
+    let current = initialProfile
+    let attempts = 0
+    while (stillNeedsUpgrade(current) && attempts < 6) {
+      await new Promise(r => setTimeout(r, 2000))
+      current = await loadProfile(userId)
+      attempts++
+    }
+    setConfirmingPayment(false)
+    // Strip the marker so refreshing later doesn't re-trigger the wait.
+    window.history.replaceState({}, '', window.location.pathname)
+  }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
-      if (session) loadProfile(session.user.id)
-      else setLoading(false)
+      if (session) {
+        const data = await loadProfile(session.user.id)
+        if (returningFromCheckout) await pollForPaidPlan(session.user.id, data)
+      } else {
+        setLoading(false)
+        setConfirmingPayment(false)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -42,7 +79,7 @@ export default function App() {
       setSession(session)
       if (session) loadProfile(session.user.id)
       else {
-        setProfile(null); setLoading(false); setJourneyComplete(false)
+        setProfile(null); setLoading(false); setJourneyComplete(false); setConfirmingPayment(false)
         // A stale impersonation stash left behind by a sign-out mid-session
         // would otherwise show a broken "Exit to admin" banner on next login.
         localStorage.removeItem(ADMIN_RETURN_KEY); setImpersonating(false)
@@ -128,6 +165,7 @@ export default function App() {
       setJourneyComplete(false)
     }
     setLoading(false)
+    return data && !error ? data : null
   }
 
   const saveProfile = async (bizData) => {
@@ -186,6 +224,23 @@ export default function App() {
   // anything else with this temporary session.
   if (passwordRecovery) return (
     <PasswordResetScreen onDone={() => setPasswordRecovery(false)} />
+  )
+
+  // Just back from Paddle checkout — wait for the webhook rather than
+  // re-checking a possibly-stale profile and bouncing back to the paywall.
+  // Takes priority over the plain "loading" screen below so the message
+  // stays consistent through every re-fetch in the poll, not just the first.
+  if (confirmingPayment) return (
+    <div style={{
+      minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+      background:'#F8F9FA', fontFamily:"'Inter',system-ui,sans-serif",
+      flexDirection:'column', gap:'12px', padding:'24px', textAlign:'center',
+    }}>
+      <div style={{fontSize:'1.8rem', fontWeight:900, letterSpacing:'-0.04em'}}>
+        <span style={{color:'#2563EB'}}>⚡</span>Akus<span style={{color:'#D97706'}}>.</span>
+      </div>
+      <div style={{fontSize:'0.85em', color:'#6B7280'}}>Confirming your payment — this only takes a few seconds...</div>
+    </div>
   )
 
   // Loading

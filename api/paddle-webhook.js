@@ -159,7 +159,11 @@ export default async function handler(req, res) {
 
     case 'subscription.updated':
     case 'transaction.completed':
-      await updateSupabase(userId, 'active', subscriptionId);
+      // 'pro' — not 'active' — is the canonical paid-plan value everywhere
+      // else in the app (supabase-schema.sql's comment, AdminPanel.jsx's
+      // plan-badge lookup). 'active' silently fell through to the "Trial"
+      // badge in the admin directory since it matched no known key.
+      await updateSupabase(userId, 'pro', subscriptionId);
       await resumeSite(userId);
       break;
 

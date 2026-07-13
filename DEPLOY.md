@@ -75,7 +75,11 @@ git push -u origin main
 2. Complete business verification (needs your ABN and cliento.com.au URL)
 3. Create product: "Cliento Pro" → $50 AUD/month recurring
 4. Get your **Price ID** (looks like `pri_01abc...`)
-5. Add to Vercel env vars: `VITE_PADDLE_PRICE_ID`
+5. Get an **API key** (Developer Tools → Authentication) and your webhook's
+   **Notification ID** (Developer Tools → Notifications)
+6. Add to Vercel env vars — no `VITE_` prefix on any of these, they're only
+   ever read server-side (`api/paddle-checkout.js`, `api/paddle-webhook.js`):
+   `PADDLE_API_KEY`, `PADDLE_PRICE_ID`, `PADDLE_NOTIFICATION_ID`
 
 ---
 

@@ -35,7 +35,11 @@ export default async function handler(req, res) {
         }],
         customer: { email, name },
         custom_data: { user_id: userId },
-        checkout: { url: 'https://app.akus.com.au' },
+        // The ?checkout=success marker lets the app tell "just came back
+        // from Paddle" apart from a normal page load, so it can wait for
+        // the webhook to land instead of re-checking a stale profile and
+        // bouncing straight back to the paywall (see App.jsx).
+        checkout: { url: 'https://app.akus.com.au/?checkout=success' },
       })
     });
 
