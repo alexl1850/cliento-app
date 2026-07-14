@@ -481,3 +481,24 @@ CREATE TABLE IF NOT EXISTS checker_leads (
 
 ALTER TABLE checker_leads ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies added: same reasoning as demo_sites above.
+
+-- ─── REFERRAL TRACKING ──────────────────────────────────────────────
+-- Credit-only referral program — "refer a mate, both get a month free."
+-- Deliberately no cash payouts and no separate affiliate table: this is
+-- just two columns on profiles plus a running credit count, redeemed
+-- manually by Alex (comping a future Paddle invoice) rather than any
+-- automatic billing/discount integration, which is a much bigger and
+-- riskier scope than what was asked for here.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE;
+-- The referral_code of whoever referred this customer, captured from a
+-- ?ref= URL param at signup (src/App.jsx) — NULL for organic signups.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referred_by TEXT;
+-- Free months owed to this customer, incremented by api/paddle-webhook.js
+-- for BOTH the referrer and the referred customer the moment the referred
+-- customer converts to paying for the first time. A count, not a table,
+-- since redemption is a manual step Alex takes — this is just the ledger.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_credit_months INTEGER DEFAULT 0;
+-- Set once a referred customer's first conversion has already granted
+-- credit, so a later renewal webhook (subscription.updated fires monthly)
+-- can never grant it a second time.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_credited BOOLEAN DEFAULT false;

@@ -166,6 +166,11 @@ function CustomersTab({ onImpersonate, impersonating }) {
                       <Icon name="alert" size={11} /> {c.daysSinceActive}d inactive — call?
                     </span>
                   )}
+                  {c.referralCreditMonths > 0 && (
+                    <span style={{ background: C.brandLt, color: C.brand, borderRadius: "99px", padding: "3px 10px", fontSize: "0.75em", fontWeight: 700 }}>
+                      🎁 {c.referralCreditMonths} mo credit owed
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: "0.82em", color: C.muted, marginTop: "3px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
                   {c.owner && <span>{c.owner}</span>}

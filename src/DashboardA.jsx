@@ -219,6 +219,7 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
   const [savingProfile, setSavingProfile] = useState(false);
   const [showTour,   setShowTour]   = useState(false);
   const [tourStep,   setTourStep]   = useState(0);
+  const [refCopied,  setRefCopied]  = useState(false);
 
   // Network members (simulated — in production this pulls from your database)
   const [networkMembers] = useState([
@@ -539,6 +540,41 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
                 <div style={{fontSize:"0.72em",color:"rgba(255,255,255,0.3)",fontWeight:600}}>Saved vs agency</div>
                 <div style={{fontSize:"0.9em",fontWeight:800,color:"#6EE7B7"}}>${totalSaved.toLocaleString()}</div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Refer a mate */}
+        {profile?.referral_code && (
+          <div style={{padding:"12px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{
+              background:"rgba(56,189,248,0.06)",
+              border:"1px solid rgba(56,189,248,0.15)",
+              borderRadius:"10px",padding:"10px 12px",
+            }}>
+              <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:(profile.referral_credit_months>0)?"6px":0}}>
+                <span style={{fontSize:"1em"}}>🎁</span>
+                <div style={{fontSize:"0.72em",color:"rgba(255,255,255,0.3)",fontWeight:600}}>Refer a mate, both get a month free</div>
+              </div>
+              {profile.referral_credit_months > 0 && (
+                <div style={{fontSize:"0.78em",fontWeight:800,color:"#38BDF8",marginBottom:"6px"}}>
+                  {profile.referral_credit_months} free month{profile.referral_credit_months===1?"":"s"} owed to you
+                </div>
+              )}
+              <button
+                onClick={()=>{
+                  navigator.clipboard?.writeText(`https://akus.com.au?ref=${profile.referral_code}`);
+                  setRefCopied(true);
+                  setTimeout(()=>setRefCopied(false), 2000);
+                }}
+                style={{
+                  width:"100%",padding:"7px 8px",borderRadius:"7px",border:"1px solid rgba(56,189,248,0.25)",
+                  background:"rgba(56,189,248,0.08)",color:"#38BDF8",fontSize:"0.72em",fontWeight:700,
+                  cursor:"pointer",fontFamily:"inherit",
+                }}
+              >
+                {refCopied ? "Copied!" : "Copy my referral link"}
+              </button>
             </div>
           </div>
         )}

@@ -64,6 +64,7 @@ export default async function handler(req, res) {
         // Only meaningful for paying customers — a quiet trial isn't a
         // retention risk the way a quiet paying account is.
         churnRisk: p.plan === 'pro' && daysSinceActive !== null && daysSinceActive >= 30,
+        referralCreditMonths: p.referral_credit_months || 0,
       };
     });
 

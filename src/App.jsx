@@ -22,6 +22,14 @@ const demoParams = urlParams.get('demo') === '1' ? {
 // paywall, which looks exactly like "payment didn't go through."
 const returningFromCheckout = urlParams.get('checkout') === 'success';
 
+// Referral capture — stashed in localStorage (not just read from the URL)
+// because signup requires an email-confirmation round trip: the visitor
+// leaves this tab, clicks a link in their inbox, and lands back without the
+// original ?ref= param. localStorage survives that; the URL alone wouldn't.
+const REFERRAL_KEY = 'akus_referral_code'
+const refParam = urlParams.get('ref')
+if (refParam) { try { localStorage.setItem(REFERRAL_KEY, refParam) } catch {} }
+
 function stillNeedsUpgrade(profile) {
   const plan = profile?.plan || 'trial'
   const trialEnds = profile?.trial_ends ? new Date(profile.trial_ends) : null
@@ -187,13 +195,27 @@ export default function App() {
       areas_served: bizData.areasServed || [],
       updated_at:  new Date().toISOString(),
     }
+    // Only ever set on the very first save (no `profile` yet) — later edits
+    // must never touch either column, or a re-save could hand someone a
+    // fresh referral_code (breaking any link they've already shared) or
+    // overwrite a real referred_by with whatever's currently in
+    // localStorage (which could be stale or belong to a different visit).
+    if (!profile) {
+      payload.referral_code = Math.random().toString(36).slice(2, 10)
+      let ref = null
+      try { ref = localStorage.getItem(REFERRAL_KEY) } catch {}
+      if (ref) payload.referred_by = ref
+    }
     const { data, error } = await supabase
       .from('profiles')
       .upsert(payload, { onConflict: 'user_id' })
       .select()
       .single()
 
-    if (data && !error) setProfile(data)
+    if (data && !error) {
+      setProfile(data)
+      if (payload.referred_by) { try { localStorage.removeItem(REFERRAL_KEY) } catch {} }
+    }
     return { data, error }
   }
 

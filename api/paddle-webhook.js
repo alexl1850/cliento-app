@@ -72,6 +72,57 @@ function extractBillingInterval(data) {
   return null;
 }
 
+// Credit-only referral program — no cash payouts, no billing integration.
+// Grants a free-month credit to BOTH sides of a referral the moment the
+// referred customer converts to paying for the first time. Read BEFORE
+// updateSupabase() runs so `before.plan` reflects the pre-conversion state
+// — that's what distinguishes "just converted" from "renewing next month",
+// on top of the referral_credited flag, which is the actual idempotency
+// guard against duplicate/retried webhook deliveries.
+async function fetchReferralState(userId) {
+  const res = await fetch(
+    `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=plan,referred_by,referral_credited,referral_credit_months`,
+    { headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
+  );
+  if (!res.ok) return null;
+  return (await res.json())?.[0] || null;
+}
+
+async function fetchReferrerByCode(code) {
+  const res = await fetch(
+    `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?referral_code=eq.${encodeURIComponent(code)}&select=user_id,referral_credit_months`,
+    { headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
+  );
+  if (!res.ok) return null;
+  return (await res.json())?.[0] || null;
+}
+
+async function incrementReferralCredit(userId, currentMonths, extra = {}) {
+  await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: process.env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ referral_credit_months: (currentMonths || 0) + 1, ...extra }),
+  });
+}
+
+async function grantReferralCreditIfDue(userId) {
+  try {
+    const before = await fetchReferralState(userId);
+    if (!before || !before.referred_by || before.referral_credited || before.plan === 'pro') return;
+
+    const referrer = await fetchReferrerByCode(before.referred_by);
+    if (referrer) await incrementReferralCredit(referrer.user_id, referrer.referral_credit_months);
+    await incrementReferralCredit(userId, before.referral_credit_months, { referral_credited: true });
+  } catch (e) {
+    console.error('Referral credit grant failed (non-fatal):', e.message);
+  }
+}
+
 async function getSiteInfo(userId) {
   const res = await fetch(
     `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=biz_name,site_slug,site_html,site_paused`,
@@ -176,6 +227,9 @@ export default async function handler(req, res) {
 
     case 'subscription.updated':
     case 'transaction.completed':
+      // Must run before updateSupabase() — it needs the pre-conversion
+      // plan value to tell "just converted" apart from "renewing".
+      await grantReferralCreditIfDue(userId);
       // 'pro' — not 'active' — is the canonical paid-plan value everywhere
       // else in the app (supabase-schema.sql's comment, AdminPanel.jsx's
       // plan-badge lookup). 'active' silently fell through to the "Trial"
