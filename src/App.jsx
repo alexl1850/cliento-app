@@ -184,6 +184,7 @@ export default function App() {
       email:       bizData.email || '',
       menu:        bizData.menu || '',
       live_url:    bizData.live_url || '',
+      areas_served: bizData.areasServed || [],
       updated_at:  new Date().toISOString(),
     }
     const { data, error } = await supabase

@@ -309,3 +309,138 @@ CREATE POLICY "Users can insert own blog posts"
 
 CREATE POLICY "Users can delete own blog posts"
   ON blog_posts FOR DELETE USING (auth.uid() = user_id);
+
+-- Distinguishes cron-generated posts (api/_lib/blogAutoPublish.js) from a
+-- customer's own manual publish, and records which rotated keyword a
+-- scheduled post targeted (for a future link to rank_keywords below).
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS scheduled BOOLEAN DEFAULT false;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS auto_generated BOOLEAN DEFAULT true;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS source_keyword TEXT;
+
+-- ─── TECHNICAL SEO / REAL REVIEWS ───────────────────────────────────
+-- Backs api/pull-reviews.js, api/find-competitors.js, api/build-website.js.
+-- gbp_place_id is cached after the first Places searchText match so later
+-- pulls hit the Place Details endpoint directly instead of re-searching by
+-- name every time. reviews_data holds real Google reviews/rating — the
+-- prerequisite for ever emitting Review/AggregateRating JSON-LD, since the
+-- site's testimonials were previously entirely AI-fabricated and must never
+-- be the thing structured data is generated from.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gbp_place_id TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS reviews_data JSONB;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS reviews_synced_at TIMESTAMPTZ;
+
+-- Suburbs a business serves beyond their home suburb (profiles.suburb) —
+-- drives per-suburb location page generation in api/build-website.js.
+-- Empty by default so existing customers see no behaviour change until
+-- they explicitly opt in.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS areas_served JSONB DEFAULT '[]'::jsonb;
+
+-- ─── LOCATION PAGES ─────────────────────────────────────────────────
+-- One row per suburb in profiles.areas_served. Content is stored as JSON
+-- (not full HTML) since the page is rebuilt from the shared template on
+-- every deploy, the same pattern blog_posts already uses.
+CREATE TABLE IF NOT EXISTS location_pages (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  suburb       TEXT NOT NULL,
+  slug         TEXT NOT NULL,
+  content      JSONB NOT NULL,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, slug)
+);
+
+ALTER TABLE location_pages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own location pages"
+  ON location_pages FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own location pages"
+  ON location_pages FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own location pages"
+  ON location_pages FOR DELETE USING (auth.uid() = user_id);
+
+-- ─── SCHEDULED BLOG AUTO-PUBLISH ────────────────────────────────────
+-- Backs api/cron-daily.js + api/_lib/blogAutoPublish.js. blog_auto_day is
+-- assigned once at opt-in time (a value 0-6) so the single Hobby-plan daily
+-- cron can spread customers across the week instead of every opted-in
+-- customer firing on the same day. blog_topic_queue is a persisted rotation
+-- of AI-suggested topics — replaces the previous ephemeral one-shot keyword
+-- flow (Journey.jsx's findKeywords) with something the cron can consume
+-- over time without repeating.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS blog_auto_enabled BOOLEAN DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS blog_auto_frequency TEXT DEFAULT 'weekly';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS blog_auto_day SMALLINT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS blog_last_auto_at TIMESTAMPTZ;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS blog_topic_queue JSONB DEFAULT '[]'::jsonb;
+
+-- ─── RANK TRACKING ──────────────────────────────────────────────────
+-- Backs api/track-keyword.js, api/list-tracked-keywords.js,
+-- api/untrack-keyword.js, api/cron-daily.js. rank_history is a separate
+-- time-series table (not a JSONB array on rank_keywords) so the daily
+-- cron's inserts never race a concurrent read/write of the same row.
+CREATE TABLE IF NOT EXISTS rank_keywords (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  keyword      TEXT NOT NULL,
+  suburb       TEXT,
+  active       BOOLEAN DEFAULT true,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, keyword, suburb)
+);
+
+ALTER TABLE rank_keywords ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own tracked keywords"
+  ON rank_keywords FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own tracked keywords"
+  ON rank_keywords FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own tracked keywords"
+  ON rank_keywords FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own tracked keywords"
+  ON rank_keywords FOR DELETE USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS rank_history (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  keyword_id   UUID REFERENCES rank_keywords(id) ON DELETE CASCADE NOT NULL,
+  position     INTEGER,
+  checked_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE rank_history ENABLE ROW LEVEL SECURITY;
+
+-- Only a SELECT policy — rows are written exclusively by api/cron-daily.js
+-- via the service-role key, which bypasses RLS entirely, so no INSERT
+-- policy is needed (same reasoning as leads/admin_audit_log elsewhere in
+-- this file).
+CREATE POLICY "Users can view own rank history"
+  ON rank_history FOR SELECT USING (
+    EXISTS (SELECT 1 FROM rank_keywords k WHERE k.id = rank_history.keyword_id AND k.user_id = auth.uid())
+  );
+
+CREATE INDEX IF NOT EXISTS idx_rank_history_keyword_time ON rank_history(keyword_id, checked_at DESC);
+
+-- ─── COMPETITOR COMPARISON ──────────────────────────────────────────
+-- Backs api/find-competitors.js, api/list-competitors.js. A cache, not a
+-- live-fetched-every-page-load table — fetched_at drives a cooldown so a
+-- customer can't rack up Places API spend by refreshing repeatedly.
+CREATE TABLE IF NOT EXISTS competitors (
+  id                 UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id            UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  place_id           TEXT NOT NULL,
+  business_name      TEXT,
+  rating             NUMERIC,
+  user_rating_count  INTEGER,
+  website_url        TEXT,
+  fetched_at         TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, place_id)
+);
+
+ALTER TABLE competitors ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own competitors"
+  ON competitors FOR SELECT USING (auth.uid() = user_id);

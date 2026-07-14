@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authHeaders, supabase } from "./supabase.js";
 
 // ─── Icon set — minimal stroke icons, replaces emoji in the dashboard chrome ──
@@ -753,6 +753,103 @@ export function CitationBuilder({ biz, profile, session }) {
   const [done, setDone] = useState(() => new Set(Array.isArray(profile?.citations_done) ? profile.citations_done : []));
   const [saving, setSaving] = useState(false);
   const [copiedField, setCopiedField] = useState("");
+  const [reviewsData, setReviewsData] = useState(profile?.reviews_data || null);
+  const [pullingReviews, setPullingReviews] = useState(false);
+  const [pullError, setPullError] = useState("");
+  const [locationPages, setLocationPages] = useState(null); // null = loading
+  const [competitors, setCompetitors] = useState(null); // null = loading
+  const [refreshingCompetitors, setRefreshingCompetitors] = useState(false);
+  const [competitorsError, setCompetitorsError] = useState("");
+  const [trackedKeywords, setTrackedKeywords] = useState(null); // null = loading
+  const [newKeyword, setNewKeyword] = useState("");
+  const [trackingKeyword, setTrackingKeyword] = useState(false);
+  const [keywordError, setKeywordError] = useState("");
+
+  const loadTrackedKeywords = async () => {
+    try {
+      const res = await fetch("/api/list-tracked-keywords", { headers: { ...(await authHeaders()) } });
+      const d = await res.json();
+      setTrackedKeywords(d.keywords || []);
+    } catch {
+      setTrackedKeywords([]);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/list-location-pages", { headers: { ...(await authHeaders()) } });
+        const d = await res.json();
+        setLocationPages(d.pages || []);
+      } catch {
+        setLocationPages([]);
+      }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/list-competitors", { headers: { ...(await authHeaders()) } });
+        const d = await res.json();
+        setCompetitors(d.competitors || []);
+      } catch {
+        setCompetitors([]);
+      }
+    })();
+    loadTrackedKeywords();
+  }, []);
+
+  const trackKeyword = async () => {
+    const keyword = newKeyword.trim();
+    if (!keyword) return;
+    setTrackingKeyword(true); setKeywordError("");
+    try {
+      const res = await fetch("/api/track-keyword", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ keyword, suburb: biz?.suburb || "" }),
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      setNewKeyword("");
+      await loadTrackedKeywords();
+    } catch (e) {
+      setKeywordError(e.message || "Could not track that keyword right now.");
+    }
+    setTrackingKeyword(false);
+  };
+
+  const untrackKeyword = async (id) => {
+    try {
+      await fetch("/api/untrack-keyword", { method: "POST", headers: { "Content-Type": "application/json", ...(await authHeaders()) }, body: JSON.stringify({ id }) });
+      setTrackedKeywords(prev => (prev || []).filter(k => k.id !== id));
+    } catch { /* best-effort */ }
+  };
+
+  const refreshCompetitors = async () => {
+    setRefreshingCompetitors(true); setCompetitorsError("");
+    try {
+      const res = await fetch("/api/find-competitors", { method: "POST", headers: { "Content-Type": "application/json", ...(await authHeaders()) } });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      setCompetitors(d.competitors || []);
+    } catch (e) {
+      setCompetitorsError(e.message || "Could not check competitors right now — try again shortly.");
+    }
+    setRefreshingCompetitors(false);
+  };
+
+  const pullReviews = async () => {
+    setPullingReviews(true); setPullError("");
+    try {
+      const res = await fetch("/api/pull-reviews", { method: "POST", headers: { "Content-Type": "application/json", ...(await authHeaders()) } });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      if (d.reviews) setReviewsData(d.reviews);
+      else setPullError("Couldn't find a Google Business listing for this business yet — make sure your business name and suburb match your Google listing exactly.");
+    } catch (e) {
+      setPullError(e.message || "Could not pull reviews right now — try again shortly.");
+    }
+    setPullingReviews(false);
+  };
 
   const napFields = [
     { label: "Business name", value: biz?.name || "" },
@@ -818,7 +915,8 @@ export function CitationBuilder({ biz, profile, session }) {
         )}
       </div>
 
-      {/* Technical SEO — automatic, nothing to configure, just visibility */}
+      {/* Technical SEO — automatic items are just visibility; reviews are the
+          one thing that needs a click, since it's real, live Google data. */}
       <div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
         <div style={{fontWeight:700,fontSize:"0.9em",color:C.text,marginBottom:"4px"}}>Technical SEO</div>
         <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"12px"}}>
@@ -828,26 +926,135 @@ export function CitationBuilder({ biz, profile, session }) {
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
           {[
-            { label: "Structured data (Schema.org)", note: "Lets Google show your name, phone and rating directly in search results.", href: biz?.live_url || null },
-            { label: "XML sitemap", note: "Tells Google exactly what pages your site has.", href: biz?.live_url ? `${biz.live_url}/sitemap.xml` : null },
-            { label: "robots.txt", note: "Confirms to search engines they're welcome to crawl your site.", href: biz?.live_url ? `${biz.live_url}/robots.txt` : null },
-            { label: "Canonical URL", note: "Prevents duplicate-content confusion if your site is ever mirrored.", href: biz?.live_url || null },
+            { label: "Structured data (Schema.org)", note: "Service, FAQ and business schema so Google can show rich results in search.", href: biz?.live_url || null, done: !!biz?.live_url },
+            {
+              label: "Review ratings (AggregateRating)",
+              note: reviewsData
+                ? `${reviewsData.rating}★ from ${reviewsData.userRatingCount} real Google reviews — showing on your site now.`
+                : "Pull your real Google reviews to show star ratings in search results. Never fabricated — genuine reviews only.",
+              done: !!reviewsData,
+            },
+            { label: "XML sitemap (incl. images)", note: "Tells Google exactly what pages and photos your site has.", href: biz?.live_url ? `${biz.live_url}/sitemap.xml` : null, done: !!biz?.live_url },
+            { label: "robots.txt", note: "Confirms to search engines they're welcome to crawl your site.", href: biz?.live_url ? `${biz.live_url}/robots.txt` : null, done: !!biz?.live_url },
+            { label: "Canonical URL", note: "Prevents duplicate-content confusion if your site is ever mirrored.", href: biz?.live_url || null, done: !!biz?.live_url },
           ].map(item => (
             <div key={item.label} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 12px",background:C.light,borderRadius:"8px"}}>
-              <span style={{color:biz?.live_url?C.green:C.muted,flexShrink:0}}><Icon name="checkcircle" size={16}/></span>
+              <span style={{color:item.done?C.green:C.muted,flexShrink:0}}><Icon name="checkcircle" size={16}/></span>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:"0.83em",fontWeight:600,color:C.text}}>{item.label}</div>
                 <div style={{fontSize:"0.72em",color:C.muted}}>{item.note}</div>
               </div>
-              {item.href && (
+              {item.label.startsWith("Review ratings") ? (
+                <button onClick={pullReviews} disabled={pullingReviews || !biz?.live_url} style={{...backBtn,flexShrink:0,fontSize:"0.76em",cursor:pullingReviews||!biz?.live_url?"not-allowed":"pointer",opacity:pullingReviews||!biz?.live_url?0.6:1}}>
+                  {pullingReviews ? "Pulling…" : reviewsData ? "Refresh" : "Pull reviews"}
+                </button>
+              ) : item.href && (
                 <a href={item.href} target="_blank" rel="noopener noreferrer" style={{...backBtn,flexShrink:0,fontSize:"0.76em"}}>View</a>
               )}
             </div>
           ))}
         </div>
+        {pullError && <div style={{fontSize:"0.76em",color:C.red,marginTop:"10px"}}>{pullError}</div>}
         {!biz?.live_url && (
           <div style={{fontSize:"0.76em",color:C.amber,marginTop:"10px"}}>You haven't built your website yet — head to Marketing → My Website first.</div>
         )}
+      </div>
+
+      {/* Location pages — one per suburb entered in "Other suburbs you
+          serve" on the My Website tool, generated on your next build/rebuild. */}
+      {Array.isArray(locationPages) && locationPages.length > 0 && (
+        <div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
+          <div style={{fontWeight:700,fontSize:"0.9em",color:C.text,marginBottom:"4px"}}>Location pages</div>
+          <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"12px"}}>A dedicated page for each extra suburb you serve — each with its own local SEO.</div>
+          <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+            {locationPages.map(page => (
+              <div key={page.id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 12px",background:C.light,borderRadius:"8px"}}>
+                <span style={{color:C.green,flexShrink:0}}><Icon name="checkcircle" size={16}/></span>
+                <div style={{flex:1,minWidth:0,fontSize:"0.83em",fontWeight:600,color:C.text}}>{page.suburb}</div>
+                {page.url && <a href={page.url} target="_blank" rel="noopener noreferrer" style={{...backBtn,flexShrink:0,fontSize:"0.76em"}}>View</a>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* How you compare — own rating next to 1-3 local competitors,
+          manual refresh only since every check is real Places API spend. */}
+      <div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"4px"}}>
+          <div style={{fontWeight:700,fontSize:"0.9em",color:C.text}}>How you compare</div>
+          <button onClick={refreshCompetitors} disabled={refreshingCompetitors} style={{...backBtn,fontSize:"0.76em",cursor:refreshingCompetitors?"not-allowed":"pointer",opacity:refreshingCompetitors?0.6:1}}>
+            {refreshingCompetitors ? "Checking…" : "Refresh competitors"}
+          </button>
+        </div>
+        <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"12px"}}>Your rating next to nearby local competitors, so you know where you stand.</div>
+        <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 12px",background:C.brandLt,borderRadius:"8px",border:`1.5px solid #BAE6FD`}}>
+            <div style={{flex:1,minWidth:0,fontSize:"0.85em",fontWeight:700,color:C.text}}>{biz?.name || "You"}</div>
+            <div style={{fontSize:"0.82em",fontWeight:700,color:C.brand,flexShrink:0}}>
+              {reviewsData ? `${reviewsData.rating}★ (${reviewsData.userRatingCount})` : "No rating yet"}
+            </div>
+          </div>
+          {Array.isArray(competitors) && competitors.map(c => (
+            <div key={c.place_id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 12px",background:C.light,borderRadius:"8px"}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:"0.83em",fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.business_name}</div>
+                {c.website_url && <div style={{fontSize:"0.7em",color:C.muted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.website_url}</div>}
+              </div>
+              <div style={{fontSize:"0.8em",color:C.muted,flexShrink:0}}>{c.rating != null ? `${c.rating}★ (${c.user_rating_count})` : "No rating"}</div>
+            </div>
+          ))}
+          {Array.isArray(competitors) && competitors.length === 0 && (
+            <div style={{fontSize:"0.78em",color:C.muted,textAlign:"center",padding:"12px 0"}}>Click "Refresh competitors" to see how you stack up locally.</div>
+          )}
+        </div>
+        {competitorsError && <div style={{fontSize:"0.76em",color:C.red,marginTop:"10px"}}>{competitorsError}</div>}
+      </div>
+
+      {/* Keyword rankings — checked weekly by the daily cron (see
+          api/cron-daily.js), not on demand, since each check is real
+          SerpApi spend. Position numbers reflect Google Australia results. */}
+      <div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:"12px",padding:"18px 20px",marginBottom:"20px"}}>
+        <div style={{fontWeight:700,fontSize:"0.9em",color:C.text,marginBottom:"4px"}}>Keyword rankings</div>
+        <div style={{fontSize:"0.78em",color:C.muted,marginBottom:"12px"}}>Track up to 5 keywords — we check your Google ranking for each one weekly.</div>
+        <div style={{display:"flex",gap:"8px",marginBottom:"12px"}}>
+          <input
+            value={newKeyword}
+            onChange={e => setNewKeyword(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") trackKeyword(); }}
+            placeholder="e.g. emergency plumber wollongong"
+            style={{...inputSt, flex:1}}
+          />
+          <button onClick={trackKeyword} disabled={trackingKeyword || !newKeyword.trim()} style={{...btnPrimary,padding:"9px 16px",fontSize:"0.82em",opacity:trackingKeyword||!newKeyword.trim()?0.6:1,cursor:trackingKeyword||!newKeyword.trim()?"not-allowed":"pointer"}}>
+            {trackingKeyword ? "Adding…" : "Track"}
+          </button>
+        </div>
+        {keywordError && <div style={{fontSize:"0.76em",color:C.red,marginBottom:"10px"}}>{keywordError}</div>}
+        <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+          {Array.isArray(trackedKeywords) && trackedKeywords.map(k => {
+            const prev = k.history?.length > 1 ? k.history[k.history.length - 2].position : null;
+            const trend = k.latestPosition != null && prev != null
+              ? (k.latestPosition < prev ? "up" : k.latestPosition > prev ? "down" : "same")
+              : null;
+            return (
+              <div key={k.id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 12px",background:C.light,borderRadius:"8px"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:"0.83em",fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k.keyword}</div>
+                  {k.suburb && <div style={{fontSize:"0.7em",color:C.muted}}>{k.suburb}</div>}
+                </div>
+                <div style={{fontSize:"0.82em",fontWeight:700,color:k.latestPosition!=null?C.text:C.muted,flexShrink:0}}>
+                  {k.latestPosition != null ? `#${k.latestPosition}` : "Checking…"}
+                  {trend === "up" && <span style={{color:C.green,marginLeft:"4px"}}>▲</span>}
+                  {trend === "down" && <span style={{color:C.red,marginLeft:"4px"}}>▼</span>}
+                </div>
+                <button onClick={() => untrackKeyword(k.id)} style={{...backBtn,flexShrink:0,fontSize:"0.74em",padding:"6px 10px"}}>Untrack</button>
+              </div>
+            );
+          })}
+          {Array.isArray(trackedKeywords) && trackedKeywords.length === 0 && (
+            <div style={{fontSize:"0.78em",color:C.muted,textAlign:"center",padding:"12px 0"}}>No keywords tracked yet — add one above.</div>
+          )}
+        </div>
       </div>
 
       {/* Progress */}

@@ -1,6 +1,6 @@
 import { getPalette } from './palettes.js';
 import { buildBlogSectionHtml } from './blogTemplates.js';
-import { buildSiteFiles, fetchUserPosts } from './deploySite.js';
+import { buildSiteFiles, fetchUserPosts, fetchLocationPages } from './deploySite.js';
 
 // Shared "rebuild every page + redeploy" step used by publish-blog.js (after
 // inserting a new post), delete-blog-post.js (after removing one), and any
@@ -27,6 +27,7 @@ export async function regenerateAndDeploy(userId) {
   const p = getPalette(profile.site_palette);
   const siteUrl = (profile.live_url || '').replace(/\/$/, '');
   const posts = await fetchUserPosts(SUPABASE_URL, SUPABASE_SERVICE_KEY, userId);
+  const locationPages = await fetchLocationPages(SUPABASE_URL, SUPABASE_SERVICE_KEY, userId).catch(() => []);
 
   // Patch (or remove, if the last post was just deleted) the homepage's
   // blog teaser section from the trusted DB HTML — never a live HTTP fetch
@@ -40,7 +41,7 @@ export async function regenerateAndDeploy(userId) {
     homeHtml = homeHtml.replace('<footer', `${buildBlogSectionHtml({ biz, palette: p, posts })}\n<footer`);
   }
 
-  const files = buildSiteFiles({ homeHtml, siteUrl, biz, palette: p, posts });
+  const files = buildSiteFiles({ homeHtml, siteUrl, biz, palette: p, posts, locationPages });
 
   const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
     method: 'POST',

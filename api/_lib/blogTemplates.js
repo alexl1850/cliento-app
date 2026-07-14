@@ -26,7 +26,7 @@ export function excerptOf(content, len = 120) {
   return content.replace(/#{1,3}\s/g, '').replace(/\n/g, ' ').trim().slice(0, len) + '...';
 }
 
-function sharedHead(p, title, desc, siteUrl, path) {
+export function sharedHead(p, title, desc, siteUrl, path) {
   return `<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
@@ -38,7 +38,7 @@ function sharedHead(p, title, desc, siteUrl, path) {
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">`;
 }
 
-function sharedStyle(p) {
+export function sharedStyle(p) {
   return `*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#fff;color:#111827;line-height:1.6;-webkit-font-smoothing:antialiased}
@@ -68,7 +68,7 @@ footer{background:#111827;padding:56px 24px 32px}
 @media(max-width:640px){ nav .nav-links{display:none} }`;
 }
 
-function navHtml(bizName, activePath) {
+export function navHtml(bizName, activePath) {
   return `<nav>
   <div class="nav-inner">
     <a href="/" class="nav-logo">${bizName}</a>
@@ -83,7 +83,7 @@ function navHtml(bizName, activePath) {
 </nav>`;
 }
 
-function footerHtml(bizName, suburb) {
+export function footerHtml(bizName, suburb) {
   return `<footer>
   <div class="footer-inner">
     <div class="footer-top">

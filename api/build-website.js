@@ -1,7 +1,15 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 import { svgIcon, ICON_VOCAB } from './_lib/siteIcons.js';
 import { getPalette } from './_lib/palettes.js';
-import { buildSiteFiles, fetchUserPosts } from './_lib/deploySite.js';
+import { buildSiteFiles, fetchUserPosts, fetchLocationPages } from './_lib/deploySite.js';
+import { buildLocalBusinessJsonLd, buildServiceJsonLd, buildFaqJsonLd, buildBreadcrumbJsonLd, buildJsonLdGraph } from './_lib/structuredData.js';
+
+// Unsplash's Imgix backend accepts any ?w= value on the same photo id, so a
+// responsive srcset is just re-requesting the same URL at other widths —
+// no separate compression/conversion pipeline needed.
+function srcsetFor(url, widths) {
+  return widths.map(w => `${url.replace(/([?&]w=)\d+/, `$1${w}`)} ${w}w`).join(', ');
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,6 +24,26 @@ export default async function handler(req, res) {
   try {
     const { intake } = req.body;
     const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN;
+    const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+    // Real reviews (api/pull-reviews.js) are the only thing ever allowed to
+    // back the Reviews section / Review-AggregateRating schema — the old
+    // AI-fabricated testimonials must never be marked up as schema.org
+    // Review data, since that's exactly the structured-data manipulation
+    // Google's spam policies penalize. No real reviews yet → honest
+    // "no reviews yet" state, never a fabricated fallback.
+    let realReviews = null;
+    try {
+      const reviewsRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${access.userId}&select=reviews_data`,
+        { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
+      );
+      const reviewsRow = reviewsRes.ok ? (await reviewsRes.json())?.[0]?.reviews_data : null;
+      if (reviewsRow?.reviews?.length) realReviews = reviewsRow;
+    } catch (e) {
+      console.error('Could not load reviews_data (non-fatal):', e.message);
+    }
 
     // ── 1. Detect business type — comprehensive ────────────────────────────
     const bizStr = `${intake.services || ''} ${intake.biz_name || ''} ${intake.difference || ''} ${intake.menu || ''}`.toLowerCase();
@@ -495,10 +523,10 @@ Return this JSON (be vivid and specific, not generic):
   "cta_sub": "One sentence removing hesitation",
   "years_badge": "Est. year or X years serving suburb",
   "review_count": "realistic number like 47 or 124",
-  "testimonials": [
-    {"quote":"A realistic 2-sentence testimonial from a local customer. Specific, warm, mentions something specific about the business.","name":"Realistic Australian first name"},
-    {"quote":"A second, distinct realistic 2-sentence testimonial, different specific detail.","name":"A different realistic Australian first name"},
-    {"quote":"A third, distinct realistic 2-sentence testimonial, another specific detail.","name":"A third different realistic Australian first name"}
+  "faqs": [
+    {"question": "A genuine question a prospective customer would actually search for or ask before booking/visiting", "answer": "2-3 sentence honest, specific answer for this business"},
+    {"question": "...", "answer": "..."},
+    {"question": "...", "answer": "..."}
   ],
   "nav_cta": "${isFood ? 'Visit Us' : isBeauty ? 'Book Now' : isTrade ? 'Get a Quote' : 'Contact Us'}"
 }`
@@ -544,23 +572,26 @@ Return this JSON (be vivid and specific, not generic):
     // reflected correctly regardless of this prediction.
     const predictedLiveUrl = `https://akus-${slug}.vercel.app`;
     const schemaType = isFood ? 'Restaurant' : isBeauty ? 'HealthAndBeautyBusiness' : isTrade ? 'HomeAndConstructionBusiness' : isHealth ? 'MedicalBusiness' : 'LocalBusiness';
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': schemaType,
-      name: intake.biz_name,
-      description: c.meta_desc || c.hero_sub || '',
-      image: heroImageUrl,
-      url: predictedLiveUrl,
-      telephone: intake.phone || undefined,
-      email: intake.email || undefined,
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: intake.address && intake.address !== intake.base_suburb ? intake.address : undefined,
-        addressLocality: intake.base_suburb,
-        addressCountry: 'AU',
-      },
-      areaServed: intake.base_suburb,
-    };
+    const jsonLd = buildJsonLdGraph([
+      buildLocalBusinessJsonLd({
+        schemaType,
+        name: intake.biz_name,
+        description: c.meta_desc || c.hero_sub || '',
+        image: heroImageUrl,
+        url: predictedLiveUrl,
+        telephone: intake.phone,
+        email: intake.email,
+        address: {
+          streetAddress: intake.address && intake.address !== intake.base_suburb ? intake.address : undefined,
+          addressLocality: intake.base_suburb,
+        },
+        areaServed: intake.base_suburb,
+        realReviews,
+      }),
+      ...buildServiceJsonLd(c.services, { bizName: intake.biz_name, areaServed: intake.base_suburb }),
+      buildFaqJsonLd(c.faqs),
+      buildBreadcrumbJsonLd([{ name: 'Home', url: predictedLiveUrl }]),
+    ]);
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -841,7 +872,7 @@ footer{background:#111827;padding:72px 24px 40px}
     </div>
     <div class="hero-stats">
       <div>
-        <div class="hero-stat-num">${svgIcon('starfilled',22)} ${c.review_count || '50'}+</div>
+        <div class="hero-stat-num">${svgIcon('starfilled',22)} ${realReviews?.userRatingCount || c.review_count || '50'}+</div>
         <div class="hero-stat-label">Happy customers</div>
       </div>
       <div>
@@ -954,7 +985,7 @@ ${allPhotos.length > 0 ? `
         : ['{b} in {s}', 'Inside {b}', 'The {b} team', 'A look at {b}', '{b} — serving {s}'];
       return allPhotos.slice(0,5).map((url, i) => {
         const alt = (galleryAlts[i % galleryAlts.length]).replace('{b}', intake.biz_name).replace('{s}', intake.base_suburb);
-        return `<img src="${url}" alt="${alt}" loading="lazy">`;
+        return `<img src="${url}" srcset="${srcsetFor(url,[400,800,1200])}" sizes="(max-width:640px) 50vw, 25vw" alt="${alt}" loading="lazy" width="800" height="${i===0?400:280}">`;
       }).join('');
     })()}
   </div>
@@ -966,9 +997,9 @@ ${allPhotos.length > 0 ? `
     <div class="about-grid">
       <div class="about-image-wrap reveal">
         <div class="about-image">
-          <img src="${allPhotos[1] || heroImageUrl}" alt="${intake.owner_name ? `${intake.owner_name}, owner of ${intake.biz_name}` : `${intake.biz_name} — locally owned and operated in ${intake.base_suburb}`}" loading="lazy">
+          <img src="${allPhotos[1] || heroImageUrl}" srcset="${srcsetFor(allPhotos[1] || heroImageUrl,[400,800,1200])}" sizes="(max-width:900px) 100vw, 50vw" alt="${intake.owner_name ? `${intake.owner_name}, owner of ${intake.biz_name}` : `${intake.biz_name} — locally owned and operated in ${intake.base_suburb}`}" loading="lazy" width="800" height="500">
         </div>
-        <img src="${heroImageUrl}" alt="" class="about-circle-photo" loading="lazy">
+        <img src="${heroImageUrl}" alt="" class="about-circle-photo" loading="lazy" width="110" height="110">
         <div class="about-badge">
           <div class="about-badge-num">${c.years_badge?.match(/\d+/)?.[0] || '5'}+</div>
           <div class="about-badge-label">Years in ${intake.base_suburb}</div>
@@ -1009,29 +1040,44 @@ ${allPhotos.length > 0 ? `
   <div class="reviews-inner">
     <div class="reveal">
       <div class="stars-row">${Array(5).fill(`<span class="star">${svgIcon('starfilled',22)}</span>`).join('')}</div>
-      <p class="reviews-num">Rated 5 stars by ${c.review_count || '50'}+ customers in ${intake.base_suburb}</p>
+      ${realReviews
+        ? `<p class="reviews-num">Rated ${realReviews.rating} stars by ${realReviews.userRatingCount}+ customers on Google</p>`
+        : `<p class="reviews-num">Reviews from ${intake.base_suburb} customers, pulled straight from Google</p>`}
       <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-0.03em;margin-bottom:48px">What our customers say</h2>
     </div>
-    <div class="reviews-grid">
-      ${(Array.isArray(c.testimonials) && c.testimonials.length ? c.testimonials.slice(0,3) : [
-        { quote: `Absolutely love ${intake.biz_name}. ${intake.owner_name} and the team are fantastic.`, name: 'Sarah M.' },
-        { quote: `Best in ${intake.base_suburb} by far. I've been coming here for years and wouldn't go anywhere else.`, name: 'James T.' },
-        { quote: `${intake.biz_name} is everything you want in a local ${isFood ? 'café' : isBeauty ? 'salon' : 'business'}.`, name: 'Michelle K.' },
-      ]).map((r, i) => `
+    ${realReviews ? `<div class="reviews-grid">
+      ${realReviews.reviews.slice(0,3).map((r, i) => `
       <div class="review-card reveal">
-        <img src="${testimonialPhotos[i]}" alt="${r.name}" class="review-photo" loading="lazy">
-        <div class="review-stars">${Array(5).fill(`<span class="review-star">${svgIcon('starfilled',15)}</span>`).join('')}</div>
-        <p class="review-text">"${r.quote}"</p>
+        <img src="${testimonialPhotos[i]}" alt="${r.author}" class="review-photo" loading="lazy" width="56" height="56">
+        <div class="review-stars">${Array(Math.round(r.rating || 5)).fill(`<span class="review-star">${svgIcon('starfilled',15)}</span>`).join('')}</div>
+        <p class="review-text">"${r.text}"</p>
         <div class="review-author">
           <div>
-            <div class="review-name">${r.name}</div>
-            <div class="review-location">${svgIcon('mappin',13)} ${intake.base_suburb}</div>
+            <div class="review-name">${r.author}</div>
+            <div class="review-location">${svgIcon('mappin',13)} ${r.relativeTime || intake.base_suburb}</div>
           </div>
         </div>
       </div>`).join('')}
-    </div>
+    </div>` : `<div class="reveal" style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.95rem">No reviews pulled in yet — connect your Google Business Profile in the dashboard to show real customer reviews here.</div>`}
   </div>
 </section>
+
+${Array.isArray(c.faqs) && c.faqs.length ? `<!-- FAQ -->
+<section id="faq" style="padding:96px 24px;background:#fff">
+  <div class="s-inner" style="max-width:760px">
+    <div class="reveal" style="text-align:center;margin-bottom:48px">
+      <div class="eyebrow">Questions</div>
+      <h2 class="section-h2">Frequently <em>asked questions</em></h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${c.faqs.map(f => `
+      <details class="reveal" style="background:#F9FAFB;border:1px solid #F3F4F6;border-radius:16px;padding:20px 24px">
+        <summary style="font-weight:700;font-size:1rem;color:#111827;cursor:pointer;list-style:none">${f.question}</summary>
+        <p style="margin-top:12px;font-size:0.92rem;color:#6B7280;line-height:1.7">${f.answer}</p>
+      </details>`).join('')}
+    </div>
+  </div>
+</section>` : ''}
 
 <!-- CTA -->
 <section class="cta-section">
@@ -1210,14 +1256,78 @@ async function akusGetEstimate() {
     // silently wipe the customer's blog (a Vercel deployment replaces the
     // whole file set rather than patching it).
     const existingPosts = await fetchUserPosts(
-      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, access.userId
+      SUPABASE_URL, SUPABASE_SERVICE_KEY, access.userId
     ).catch(() => []);
+
+    // ── Location pages — one per suburb in intake.areas_served, generated
+    // via a single extra AI call covering every suburb at once (not one
+    // call per suburb, to stay within the serverless function's time
+    // budget). Upserted on (user_id, slug) so a rebuild refreshes existing
+    // pages instead of duplicating them. Empty/unset areas_served -> zero
+    // location pages, zero behaviour change for existing customers.
+    let locationPages = await fetchLocationPages(SUPABASE_URL, SUPABASE_SERVICE_KEY, access.userId).catch(() => []);
+    const areasServed = Array.isArray(intake.areas_served) ? intake.areas_served.filter(Boolean) : [];
+    if (areasServed.length > 0) {
+      try {
+        const locRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 3000,
+            messages: [{
+              role: 'user',
+              content: `Write local-SEO landing page content for ${intake.biz_name}, a ${intake.services || 'local business'} based in ${intake.base_suburb}, for each of these nearby suburbs it also serves: ${areasServed.join(', ')}.
+For EACH suburb, write genuinely locally-relevant content (not just find/replace on the suburb name).
+Return ONLY a JSON array, one object per suburb, in this exact shape:
+[{"suburb":"<exact suburb name from the list>","headline":"Under 10 words, location-specific","intro":"2-3 sentences about serving this specific suburb","services_blurb":"1-2 sentences on what's offered here","faq":[{"question":"...","answer":"..."},{"question":"...","answer":"..."}]}]`
+            }]
+          })
+        });
+        const locData = await locRes.json();
+        if (locData.error) throw new Error(locData.error.message);
+        const locRaw = locData.content[0].text.replace(/```json|```/g, '').trim();
+        const locContent = JSON.parse(locRaw);
+
+        const freshPages = areasServed.map(suburb => {
+          const match = locContent.find(l => l.suburb === suburb) || {};
+          const slug = suburb.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+          return { suburb, slug, content: { headline: match.headline, intro: match.intro, services_blurb: match.services_blurb, faq: match.faq || [] } };
+        });
+
+        await fetch(`${SUPABASE_URL}/rest/v1/location_pages?on_conflict=user_id,slug`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            Prefer: 'resolution=merge-duplicates,return=minimal',
+          },
+          body: JSON.stringify(freshPages.map(l => ({ user_id: access.userId, suburb: l.suburb, slug: l.slug, content: l.content }))),
+        });
+
+        // Merge freshly generated pages over whatever was already there
+        // (by slug), keeping any older location pages not in this request.
+        const bySlug = new Map(locationPages.map(l => [l.slug, l]));
+        for (const l of freshPages) bySlug.set(l.slug, l);
+        locationPages = Array.from(bySlug.values());
+      } catch (e) {
+        console.error('Location page generation failed (non-fatal, keeping existing pages):', e.message);
+      }
+    }
+
     const files = buildSiteFiles({
       homeHtml: html,
       siteUrl: predictedLiveUrl,
       biz: { name: intake.biz_name, suburb: intake.base_suburb, description: intake.description },
       palette: p,
       posts: existingPosts,
+      homeImages: [heroImageUrl, ...allPhotos.slice(0, 5)],
+      locationPages,
     });
 
     const deployRes = await fetch('https://api.vercel.com/v13/deployments', {

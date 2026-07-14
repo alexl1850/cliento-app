@@ -1742,6 +1742,7 @@ function ToolPanel({toolId,biz,industry,existing,onBack,onSave,profile,onSavePro
               )}
             </div>
           )}
+          {(toolId==="blog"||toolId==="sh_blog") && <BlogAutoPublishSettings profile={profile}/>}
           {(toolId==="blog"||toolId==="sh_blog") && <BlogPostsList/>}
         </div>
       </div>
@@ -2386,6 +2387,11 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
   const [hours,       setHours]       = useState("");
   const [address,     setAddress]     = useState("");
   const [special,     setSpecial]     = useState("");
+  // Comma-separated in the UI, parsed to an array on save/build — drives
+  // per-suburb location page generation in api/build-website.js. Pre-filled
+  // from the profile so re-saving doesn't wipe an existing list.
+  const [areasServedText, setAreasServedText] = useState((profile?.areas_served || []).join(", "));
+  const areasServed = areasServedText.split(",").map(s => s.trim()).filter(Boolean);
 
   const hasCritical = bizName && suburb && description;
 
@@ -2416,6 +2422,7 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
             hours,
             address,
             special_notes: special,
+            areas_served: areasServed,
           }
         })
       });
@@ -2443,6 +2450,7 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
           goal:        biz.goal || "",
           menu:        biz.menu || "",
           website:     biz.website || "",
+          areasServed,
         });
       }
       if (onSave) onSave("website", d.url);
@@ -2525,6 +2533,11 @@ function WebsiteBuilderPanel({ biz, profile, onBack, onSave, onSaveProfile }) {
               <div>
                 <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Anything special customers should know?</label>
                 <input value={special} onChange={e=>setSpecial(e.target.value)} placeholder="Free parking, dog-friendly, 20 years in business, award-winning..." style={inputSt}/>
+              </div>
+              <div>
+                <label style={{display:"block",fontWeight:600,fontSize:"0.8em",color:"#475569",marginBottom:"4px"}}>Other suburbs you serve</label>
+                <input value={areasServedText} onChange={e=>setAreasServedText(e.target.value)} placeholder="e.g. Fairy Meadow, Corrimal, Bulli (comma-separated)" style={inputSt}/>
+                <div style={{fontSize:"0.72em",color:C.muted,marginTop:"4px"}}>Creates a dedicated page for each suburb — a real local-SEO boost beyond just your home suburb.</div>
               </div>
             </div>
           </div>
@@ -2921,6 +2934,61 @@ function BlogPublishButton({ output, biz, extra }) {
   );
 
   return null;
+}
+
+function BlogAutoPublishSettings({ profile }) {
+  const [enabled, setEnabled] = useState(!!profile?.blog_auto_enabled);
+  const [frequency, setFrequency] = useState(profile?.blog_auto_frequency || "weekly");
+  const [saving, setSaving] = useState(false);
+
+  const save = async (nextEnabled, nextFrequency) => {
+    if (!profile?.user_id) return;
+    setSaving(true);
+    try {
+      const payload = { blog_auto_enabled: nextEnabled, blog_auto_frequency: nextFrequency };
+      // Assign a day-of-week once, the first time this is turned on, so the
+      // daily cron spreads customers across the week instead of everyone
+      // firing the same day — never reassigned on later toggles.
+      if (nextEnabled && (profile.blog_auto_day === null || profile.blog_auto_day === undefined)) {
+        payload.blog_auto_day = Math.floor(Math.random() * 7);
+      }
+      await supabase.from("profiles").update(payload).eq("user_id", profile.user_id);
+    } catch { /* best-effort — local toggle state still holds this session */ }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{marginTop:"18px",padding:"14px 16px",borderRadius:"10px",border:`1px solid ${C.border}`,background:"#fff"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
+        <div>
+          <div style={{fontWeight:700,fontSize:"0.85em",color:C.text}}>Auto-publish new posts</div>
+          <div style={{fontSize:"0.75em",color:C.muted,marginTop:"2px"}}>We'll write and publish a new blog post automatically on a schedule — no need to click "Write" yourself.</div>
+        </div>
+        <button
+          onClick={() => { const next = !enabled; setEnabled(next); save(next, frequency); }}
+          disabled={saving}
+          style={{
+            flexShrink:0,width:"42px",height:"24px",borderRadius:"99px",border:"none",cursor:saving?"not-allowed":"pointer",
+            background:enabled?C.green:C.border,position:"relative",transition:"background 0.2s",
+          }}
+        >
+          <span style={{position:"absolute",top:"3px",left:enabled?"21px":"3px",width:"18px",height:"18px",borderRadius:"50%",background:"#fff",transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+        </button>
+      </div>
+      {enabled && (
+        <div style={{marginTop:"12px",display:"flex",alignItems:"center",gap:"8px"}}>
+          <span style={{fontSize:"0.78em",color:C.muted}}>How often:</span>
+          {["weekly","fortnightly","monthly"].map(f => (
+            <button key={f} onClick={() => { setFrequency(f); save(enabled, f); }} disabled={saving} style={{
+              padding:"6px 12px",borderRadius:"99px",border:`1.5px solid ${frequency===f?C.green:C.border}`,
+              background:frequency===f?C.greenLt:"#fff",color:frequency===f?C.green:C.muted,
+              fontSize:"0.78em",fontWeight:frequency===f?700:400,cursor:saving?"not-allowed":"pointer",fontFamily:"inherit",
+            }}>{f}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function BlogPostsList() {

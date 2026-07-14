@@ -1,6 +1,6 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 import { getPalette } from './_lib/palettes.js';
-import { buildSiteFiles, fetchUserPosts } from './_lib/deploySite.js';
+import { buildSiteFiles, fetchUserPosts, fetchLocationPages } from './_lib/deploySite.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -85,12 +85,14 @@ Apply the instruction to this website and return the complete updated HTML.`
     // disappear from the live site on every edit. ─────────────────────────
     const siteUrl = (profile.live_url || currentUrl || '').replace(/\/$/, '');
     const posts = await fetchUserPosts(SUPABASE_URL, SUPABASE_SERVICE_KEY, access.userId);
+    const locationPages = await fetchLocationPages(SUPABASE_URL, SUPABASE_SERVICE_KEY, access.userId).catch(() => []);
     const files = buildSiteFiles({
       homeHtml: updatedHtml,
       siteUrl,
       biz: { name: biz?.name, suburb: biz?.suburb, description: biz?.description },
       palette: getPalette(profile.site_palette),
       posts,
+      locationPages,
     });
 
     const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
