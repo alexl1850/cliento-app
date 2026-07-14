@@ -451,3 +451,19 @@ CREATE POLICY "Users can view own competitors"
 -- who's already on the yearly price and can hide itself for them. Every
 -- pre-existing 'pro' customer predates the yearly price, hence 'month'.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS billing_interval TEXT DEFAULT 'month';
+
+-- ─── WEBSITE CHECKER LEADS ──────────────────────────────────────────
+-- Optional "email me this report" capture on the free public website
+-- checker tool (cliento-website's api/website-checker.js + checker.html).
+-- Same reasoning/RLS pattern as demo_leads above — self-submitted by an
+-- anonymous visitor, never touched from a logged-in Akus session.
+CREATE TABLE IF NOT EXISTS checker_leads (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email        TEXT NOT NULL,
+  checked_url  TEXT,
+  score        INTEGER,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE checker_leads ENABLE ROW LEVEL SECURITY;
+-- Intentionally no policies added: same reasoning as demo_sites above.
