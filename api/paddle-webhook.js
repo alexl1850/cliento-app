@@ -40,7 +40,11 @@ function verifySignature(rawBody, signature, secret) {
   return crypto.timingSafeEqual(computedBuf, hashBuf);
 }
 
-async function updateSupabase(userId, plan, subscriptionId) {
+async function updateSupabase(userId, plan, subscriptionId, billingInterval) {
+  const body = { plan, paddle_subscription_id: subscriptionId, updated_at: new Date().toISOString() };
+  // Only set when this event actually told us — never overwrite a known
+  // interval with a guess (e.g. subscription.canceled carries no price info).
+  if (billingInterval) body.billing_interval = billingInterval;
   const res = await fetch(
     `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`,
     {
@@ -51,10 +55,21 @@ async function updateSupabase(userId, plan, subscriptionId) {
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
         'Prefer': 'return=minimal',
       },
-      body: JSON.stringify({ plan, paddle_subscription_id: subscriptionId, updated_at: new Date().toISOString() }),
+      body: JSON.stringify(body),
     }
   );
   return res.ok;
+}
+
+// Paddle events carry the price actually purchased in data.items[0].price.id
+// — comparing it against the two configured price ids is more robust than
+// trusting data.items[0].price.billing_cycle.interval to always be present.
+function extractBillingInterval(data) {
+  const priceId = data?.items?.[0]?.price?.id;
+  if (!priceId) return null;
+  if (priceId === process.env.PADDLE_PRICE_ID_YEARLY) return 'year';
+  if (priceId === process.env.PADDLE_PRICE_ID) return 'month';
+  return null;
 }
 
 async function getSiteInfo(userId) {
@@ -149,11 +164,13 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true });
   }
 
+  const billingInterval = extractBillingInterval(data);
+
   switch (event_type) {
     case 'subscription.created':
     case 'subscription.activated':
     case 'subscription.trialing':
-      await updateSupabase(userId, 'trial', subscriptionId);
+      await updateSupabase(userId, 'trial', subscriptionId, billingInterval);
       await resumeSite(userId);
       break;
 
@@ -163,7 +180,7 @@ export default async function handler(req, res) {
       // else in the app (supabase-schema.sql's comment, AdminPanel.jsx's
       // plan-badge lookup). 'active' silently fell through to the "Trial"
       // badge in the admin directory since it matched no known key.
-      await updateSupabase(userId, 'pro', subscriptionId);
+      await updateSupabase(userId, 'pro', subscriptionId, billingInterval);
       await resumeSite(userId);
       break;
 

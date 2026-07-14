@@ -18,8 +18,17 @@ export default async function handler(req, res) {
   if (!access.ok) return res.status(access.status).json({ error: access.error });
 
   try {
-    const { email, name } = req.body;
+    const { email, name, interval } = req.body;
     const userId = access.userId;
+
+    // 'year' selects the $500/year price (PADDLE_PRICE_ID_YEARLY); anything
+    // else (including no value, for older clients) falls back to the
+    // existing $50/month price — never trust the client for the actual
+    // amount, only which of the two configured Paddle prices to use.
+    const priceId = interval === 'year'
+      ? process.env.PADDLE_PRICE_ID_YEARLY
+      : process.env.PADDLE_PRICE_ID;
+    if (!priceId) throw new Error(`No Paddle price configured for interval "${interval || 'month'}"`);
 
     // Create the transaction only — no `checkout.url` needed. That field
     // just builds a redirect link (your default-payment-link domain plus
@@ -36,7 +45,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         items: [{
-          price_id: process.env.PADDLE_PRICE_ID,
+          price_id: priceId,
           quantity: 1,
         }],
         customer: { email, name },

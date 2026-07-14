@@ -634,6 +634,8 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
         {/* Content area */}
         <div style={{flex:1,padding:"28px",maxWidth:"900px",width:"100%",margin:"0 auto",boxSizing:"border-box"}}>
 
+          {plan === "pro" && <UpgradeAnnualBanner session={session} biz={biz} profile={profile}/>}
+
           {showTour && (
             <ProductTour
               step={tourStep} setStep={setTourStep}
@@ -2666,6 +2668,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut, onCheckoutCom
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [paddleReady, setPaddleReady] = useState(false);
+  const [interval, setInterval_] = useState("month"); // "month" | "year"
 
   useEffect(() => {
     let cancelled = false;
@@ -2692,6 +2695,7 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut, onCheckoutCom
         body: JSON.stringify({
           email:   session?.user?.email,
           name:    biz?.owner || biz?.name || "Customer",
+          interval,
         }),
       });
       const d = await res.json();
@@ -2766,13 +2770,40 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut, onCheckoutCom
             </>
           )}
 
+          {/* Billing toggle */}
+          <div style={{display:"flex",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"10px",padding:"4px",marginBottom:"16px",gap:"4px"}}>
+            {[
+              {key:"month", label:"Monthly"},
+              {key:"year",  label:"Yearly · save $100"},
+            ].map(opt=>(
+              <button key={opt.key} onClick={()=>setInterval_(opt.key)} style={{
+                flex:1,padding:"9px 8px",borderRadius:"7px",border:"none",cursor:"pointer",
+                fontFamily:"inherit",fontWeight:700,fontSize:"0.78em",letterSpacing:"-0.01em",
+                transition:"all 0.15s",
+                background: interval===opt.key ? "#38BDF8" : "transparent",
+                color: interval===opt.key ? "#03050A" : "rgba(255,255,255,0.5)",
+              }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           {/* Price */}
           <div style={{background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:"12px",padding:"20px",marginBottom:"24px"}}>
-            <div style={{fontSize:"3em",fontWeight:900,color:"#fff",letterSpacing:"-0.05em",lineHeight:1}}>
-              <sup style={{fontSize:"0.35em",verticalAlign:"top",marginTop:"0.5em",color:"rgba(255,255,255,0.5)"}}>$</sup>50
-              <span style={{fontSize:"0.25em",fontWeight:600,color:"rgba(255,255,255,0.4)",letterSpacing:0}}>/month</span>
+            {interval === "year" ? (
+              <div style={{fontSize:"3em",fontWeight:900,color:"#fff",letterSpacing:"-0.05em",lineHeight:1}}>
+                <sup style={{fontSize:"0.35em",verticalAlign:"top",marginTop:"0.5em",color:"rgba(255,255,255,0.5)"}}>$</sup>500
+                <span style={{fontSize:"0.25em",fontWeight:600,color:"rgba(255,255,255,0.4)",letterSpacing:0}}>/year</span>
+              </div>
+            ) : (
+              <div style={{fontSize:"3em",fontWeight:900,color:"#fff",letterSpacing:"-0.05em",lineHeight:1}}>
+                <sup style={{fontSize:"0.35em",verticalAlign:"top",marginTop:"0.5em",color:"rgba(255,255,255,0.5)"}}>$</sup>50
+                <span style={{fontSize:"0.25em",fontWeight:600,color:"rgba(255,255,255,0.4)",letterSpacing:0}}>/month</span>
+              </div>
+            )}
+            <div style={{fontSize:"0.8em",color:"rgba(255,255,255,0.4)",marginTop:"6px"}}>
+              {interval === "year" ? "Equivalent to $41.67/month · No contract · Cancel any time" : "No contract · Cancel any time"}
             </div>
-            <div style={{fontSize:"0.8em",color:"rgba(255,255,255,0.4)",marginTop:"6px"}}>No contract · Cancel any time</div>
           </div>
 
           {/* Features */}
@@ -2797,7 +2828,10 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut, onCheckoutCom
             fontFamily:"inherit",opacity:(loading||!paddleReady)?0.7:1,transition:"all 0.2s",
             letterSpacing:"-0.02em",
           }}>
-            {loading ? "Loading checkout..." : !paddleReady ? "Loading..." : isCancelled||isPastDue ? "Resubscribe → $50/month" : "Subscribe now → $50/month"}
+            {loading ? "Loading checkout..." : !paddleReady ? "Loading..." : (()=>{
+              const price = interval === "year" ? "$500/year" : "$50/month";
+              return (isCancelled||isPastDue ? "Resubscribe → " : "Subscribe now → ") + price;
+            })()}
           </button>
 
           <div style={{fontSize:"0.75em",color:"rgba(255,255,255,0.25)",marginTop:"12px",display:"flex",alignItems:"flex-start",justifyContent:"center",gap:"6px"}}>
@@ -2815,6 +2849,136 @@ function PaywallScreen({ session, biz, plan, trialEnds, onSignOut, onCheckoutCom
           Sign out
         </button>
       </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// UPGRADE TO ANNUAL BANNER — persistent dashboard nudge for monthly customers
+// ═════════════════════════════════════════════════════════════════════════════
+// Same Paddle.Checkout.open({transactionId}) overlay as PaywallScreen, just
+// hardcoded to interval:"year" — the two never render at the same time
+// (PaywallScreen only shows when access is blocked, this only shows once
+// access is already active), so re-calling Paddle.Initialize here is safe.
+// After checkout.completed, polls profiles.billing_interval directly (set
+// by api/paddle-webhook.js from the price actually purchased) rather than
+// reusing App.jsx's pollForPaidPlan, which is keyed off "no longer needs
+// upgrade" — already true for an active monthly customer, so it would
+// resolve instantly without ever waiting for the webhook.
+function UpgradeAnnualBanner({ session, biz, profile }) {
+  const dismissKey = `akus_annual_banner_dismissed_${session?.user?.id || "anon"}`;
+  const [dismissed, setDismissed]   = useState(() => {
+    try { return localStorage.getItem(dismissKey) === "1"; } catch { return false; }
+  });
+  const [paddleReady, setPaddleReady] = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [upgraded, setUpgraded]   = useState(false);
+  const [error, setError]         = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPaddleJs().then(Paddle => {
+      if (cancelled) return;
+      Paddle.Initialize({
+        token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
+        eventCallback: (event) => {
+          if (event.name === "checkout.completed") {
+            setConfirming(true);
+            pollForYearly();
+          }
+        },
+      });
+      setPaddleReady(true);
+    }).catch(() => {});
+    return () => { cancelled = true };
+  }, []);
+
+  const pollForYearly = async () => {
+    let attempts = 0;
+    let interval = null;
+    while (interval !== "year" && attempts < 6) {
+      await new Promise(r => setTimeout(r, 2000));
+      const { data } = await supabase.from("profiles").select("billing_interval").eq("user_id", session.user.id).single();
+      interval = data?.billing_interval;
+      attempts++;
+    }
+    setConfirming(false);
+    if (interval === "year") setUpgraded(true);
+  };
+
+  const startUpgrade = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/paddle-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({
+          email: session?.user?.email,
+          name:  biz?.owner || biz?.name || "Customer",
+          interval: "year",
+        }),
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      window.Paddle.Checkout.open({ transactionId: d.transactionId });
+      setLoading(false);
+    } catch (e) {
+      setError(e.message || "Something went wrong — please try again.");
+      setLoading(false);
+    }
+  };
+
+  const dismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem(dismissKey, "1"); } catch {}
+  };
+
+  const alreadyYearly = (profile?.billing_interval || "month") === "year";
+  if ((alreadyYearly || dismissed) && !upgraded) return null;
+
+  if (upgraded) {
+    return (
+      <div style={{background:"#DCFCE7",border:"1px solid #86EFAC",borderRadius:"10px",padding:"12px 16px",marginBottom:"20px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
+        <div style={{fontSize:"0.86em",color:"#166534",fontWeight:600}}>🎉 You're now on the annual plan — thanks for the support!</div>
+        <button onClick={dismiss} style={{background:"none",border:"none",color:"#166534",cursor:"pointer",fontSize:"1em",padding:"2px 4px",lineHeight:1}}>×</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background:"linear-gradient(135deg,#0D1117 0%,#1A2235 100%)",
+      borderRadius:"10px",padding:"12px 16px",marginBottom:"20px",
+      display:"flex",alignItems:"center",justifyContent:"space-between",gap:"14px",flexWrap:"wrap",
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:"10px",minWidth:0}}>
+        <span style={{fontSize:"1.2em",flexShrink:0}}>💸</span>
+        <div style={{minWidth:0}}>
+          <div style={{color:"#fff",fontWeight:700,fontSize:"0.86em"}}>
+            {confirming ? "Confirming your upgrade..." : "Upgrade to annual and save $100"}
+          </div>
+          {!confirming && (
+            <div style={{color:"rgba(255,255,255,0.5)",fontSize:"0.76em"}}>
+              $500/year instead of $600 — same everything, pay once.
+            </div>
+          )}
+          {error && <div style={{color:"#FCA5A5",fontSize:"0.76em",marginTop:"2px"}}>{error}</div>}
+        </div>
+      </div>
+      {!confirming && (
+        <div style={{display:"flex",alignItems:"center",gap:"8px",flexShrink:0}}>
+          <button onClick={startUpgrade} disabled={loading || !paddleReady} style={{
+            background:"#38BDF8",color:"#03050A",border:"none",borderRadius:"7px",
+            padding:"8px 14px",fontWeight:800,fontSize:"0.8em",cursor:(loading||!paddleReady)?"not-allowed":"pointer",
+            fontFamily:"inherit",opacity:(loading||!paddleReady)?0.6:1,
+          }}>
+            {loading ? "Loading..." : "Upgrade now"}
+          </button>
+          <button onClick={dismiss} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",cursor:"pointer",fontSize:"1em",padding:"2px 4px",lineHeight:1}}>×</button>
+        </div>
+      )}
     </div>
   );
 }

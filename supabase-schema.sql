@@ -444,3 +444,10 @@ ALTER TABLE competitors ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own competitors"
   ON competitors FOR SELECT USING (auth.uid() = user_id);
+
+-- ─── ANNUAL BILLING ─────────────────────────────────────────────────
+-- Set by api/paddle-webhook.js from the price id on each subscription/
+-- transaction event, so the "Upgrade to annual" dashboard banner knows
+-- who's already on the yearly price and can hide itself for them. Every
+-- pre-existing 'pro' customer predates the yearly price, hence 'month'.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS billing_interval TEXT DEFAULT 'month';

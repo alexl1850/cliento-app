@@ -75,11 +75,53 @@ git push -u origin main
 2. Complete business verification (needs your ABN and cliento.com.au URL)
 3. Create product: "Cliento Pro" → $50 AUD/month recurring
 4. Get your **Price ID** (looks like `pri_01abc...`)
-5. Get an **API key** (Developer Tools → Authentication) and your webhook's
+5. On the same product, click **Add price** → Recurring → Yearly →
+   $500 AUD → get this second **Price ID** too (the paywall's "Yearly ·
+   save $100" toggle needs it — it's optional, but the toggle will show a
+   clear error instead of charging anyone if it's left unset)
+6. Get an **API key** (Developer Tools → Authentication) and your webhook's
    **Notification ID** (Developer Tools → Notifications)
-6. Add to Vercel env vars — no `VITE_` prefix on any of these, they're only
+7. Add to Vercel env vars — no `VITE_` prefix on any of these, they're only
    ever read server-side (`api/paddle-checkout.js`, `api/paddle-webhook.js`):
-   `PADDLE_API_KEY`, `PADDLE_PRICE_ID`, `PADDLE_NOTIFICATION_ID`
+   `PADDLE_API_KEY`, `PADDLE_PRICE_ID`, `PADDLE_PRICE_ID_YEARLY`,
+   `PADDLE_NOTIFICATION_ID`
+8. Get a **client-side token** (Developer Tools → Authentication → the
+   token starting with `live_`, separate from the API key above). This one
+   IS `VITE_`-prefixed — it's safe for the browser and loads the Paddle.js
+   checkout overlay on the paywall screen:
+   `VITE_PADDLE_CLIENT_TOKEN`
+
+---
+
+## STEP 6.5 — Set up the SEO features: real reviews, rank tracking, competitor comparison (20 minutes)
+
+These power the "Local SEO" dashboard tab (real Google reviews replacing
+placeholder testimonials, tracked keyword rankings, competitor cards, and
+scheduled blog auto-publishing). All are optional — the app works without
+them, those specific tools just show a "not configured" state.
+
+1. **Google Places API** (reviews + competitor comparison):
+   - Go to **console.cloud.google.com** → create/select a project
+   - Enable the **Places API (New)**
+   - Create an API key, restrict it to the Places API
+   - Add to Vercel: `GOOGLE_PLACES_API_KEY` (server-only, no `VITE_` prefix —
+     used by `api/pull-reviews.js`, `api/find-competitors.js`, and the
+     admin lead-sourcing tool)
+2. **SerpApi** (keyword rank tracking):
+   - Go to **serpapi.com** → sign up (free tier: 250 searches/month)
+   - Copy your API key from the dashboard
+   - Add to Vercel: `SERPAPI_KEY`
+   - Each tracked keyword is checked roughly weekly, capped at 5 keywords
+     per customer, so budget ~4.3 searches/month per tracked keyword
+3. **Cron secret** (authenticates Vercel's daily cron job — blog
+   auto-publish + rank checks run from `api/cron-daily.js` once per day,
+   the Hobby plan's limit):
+   - Generate any random string (e.g. `openssl rand -hex 32`, or just mash
+     the keyboard for 32+ characters)
+   - Add to Vercel: `CRON_SECRET`
+   - Nothing else to do — `vercel.json` already registers the cron job in
+     this repo. Confirm it's live under Vercel → your project →
+     **Settings → Cron Jobs** after your next deploy.
 
 ---
 
@@ -121,9 +163,14 @@ Each user gets their own isolated data thanks to Row Level Security:
 
 | Table | What it stores |
 |---|---|
-| `profiles` | Business name, industry, suburb, plan status, trial end date |
+| `profiles` | Business name, industry, suburb, plan status, trial end date, areas served, cached Google reviews, blog auto-publish settings |
 | `customers` | Their customer list — names, phones, tags, notes |
 | `saved_content` | Every piece of content they've saved |
+| `blog_posts` | Published blog posts, including auto-generated/scheduled ones |
+| `location_pages` | Auto-generated per-suburb landing pages (one per "area served") |
+| `rank_keywords` | Keywords a customer is tracking Google rank for (max 5/customer) |
+| `rank_history` | Weekly rank-check results per tracked keyword (position over time) |
+| `competitors` | Cached nearby competitor businesses (rating, review count, website) |
 
 Users can ONLY see their own data. Even if someone guessed another user's ID, they'd get nothing.
 
