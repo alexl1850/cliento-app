@@ -43,6 +43,8 @@ export default async function handler(req, res) {
     const now = Date.now();
     const customers = profiles.map(p => {
       const trialEnds = p.trial_ends ? new Date(p.trial_ends).getTime() : null;
+      const lastActive = p.last_active_at ? new Date(p.last_active_at).getTime() : null;
+      const daysSinceActive = lastActive ? Math.floor((now - lastActive) / 86400000) : null;
       return {
         userId: p.user_id,
         email: emailById[p.user_id] || null,
@@ -57,6 +59,11 @@ export default async function handler(req, res) {
         daysRemaining: trialEnds ? Math.ceil((trialEnds - now) / 86400000) : null,
         liveUrl: p.live_url || '',
         createdAt: p.created_at,
+        lastActiveAt: p.last_active_at,
+        daysSinceActive,
+        // Only meaningful for paying customers — a quiet trial isn't a
+        // retention risk the way a quiet paying account is.
+        churnRisk: p.plan === 'pro' && daysSinceActive !== null && daysSinceActive >= 30,
       };
     });
 

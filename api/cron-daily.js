@@ -1,5 +1,6 @@
 import { pickDueCustomers, nextTopic, generatePostContent, createAndPublishPost, markAutoPublished } from './_lib/blogAutoPublish.js';
 import { pickDueRankKeywords, checkRank, recordRankCheck } from './_lib/rankTracking.js';
+import { fetchCandidateProfiles, dueStepsFor, dueReengagementFor, sendLifecycleEmail, sendReengagementEmail, markEmailSent } from './_lib/onboardingEmails.js';
 
 // The single consolidated cron entry for the Hobby-plan's once-per-day
 // limit (see vercel.json) — handles both blog auto-publish and the
@@ -16,6 +17,7 @@ export default async function handler(req, res) {
 
   const blog = { processed: 0, succeeded: 0, failed: 0, errors: [] };
   const rank = { processed: 0, succeeded: 0, failed: 0, errors: [] };
+  const lifecycle = { processed: 0, succeeded: 0, failed: 0, errors: [] };
 
   try {
     const dueCustomers = await pickDueCustomers();
@@ -61,5 +63,57 @@ export default async function handler(req, res) {
     rank.errors.push(`rank phase: ${err.message}`);
   }
 
-  return res.status(200).json({ success: true, blog, rank });
+  // One pass over every profile handles both the day-N onboarding sequence
+  // and the last_active_at-based re-engagement emails — cheaper than two
+  // separate full-table fetches, and each profile can only have at most a
+  // couple of due items in normal (non-outage) daily operation anyway.
+  try {
+    const profiles = await fetchCandidateProfiles();
+    for (const profile of profiles) {
+      const dueSteps = dueStepsFor(profile);
+      const dueReengagement = dueReengagementFor(profile);
+      let sentKeys = Array.isArray(profile.onboarding_emails_sent) ? profile.onboarding_emails_sent : [];
+
+      for (const step of dueSteps) {
+        lifecycle.processed++;
+        try {
+          const result = await sendLifecycleEmail(step, profile);
+          if (result.sent) {
+            await markEmailSent(profile.user_id, step.key, sentKeys);
+            sentKeys = [...sentKeys, step.key];
+            lifecycle.succeeded++;
+          } else {
+            lifecycle.errors.push(`${profile.user_id}/${step.key}: ${result.reason || 'not sent'}`);
+          }
+        } catch (e) {
+          lifecycle.failed++;
+          lifecycle.errors.push(`${profile.user_id}/${step.key}: ${e.message}`);
+          console.error('Lifecycle email failed for', profile.user_id, step.key, e.message);
+        }
+      }
+
+      for (const step of dueReengagement) {
+        lifecycle.processed++;
+        try {
+          const result = await sendReengagementEmail(step, profile);
+          if (result.sent) {
+            await markEmailSent(profile.user_id, step.key, sentKeys);
+            sentKeys = [...sentKeys, step.key];
+            lifecycle.succeeded++;
+          } else {
+            lifecycle.errors.push(`${profile.user_id}/${step.key}: ${result.reason || 'not sent'}`);
+          }
+        } catch (e) {
+          lifecycle.failed++;
+          lifecycle.errors.push(`${profile.user_id}/${step.key}: ${e.message}`);
+          console.error('Re-engagement email failed for', profile.user_id, step.key, e.message);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Cron daily (lifecycle phase) error:', err);
+    lifecycle.errors.push(`lifecycle phase: ${err.message}`);
+  }
+
+  return res.status(200).json({ success: true, blog, rank, lifecycle });
 }

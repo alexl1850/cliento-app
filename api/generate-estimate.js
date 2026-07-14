@@ -1,10 +1,5 @@
 import { checkRateLimit } from './_lib/rateLimit.js';
-
-// HTML-escapes visitor-supplied values before they go into an email body —
-// this is a public, unauthenticated endpoint, so without this a malicious
-// jobDetails/name/email could inject HTML into the notification sent to the
-// business owner (or into the visitor's own confirmation email).
-const safe = (str) => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+import { sendEmail, escapeHtml as safe } from './_lib/email.js';
 
 // Public endpoint — called anonymously from a customer's live website by a
 // visitor filling in the "Instant Estimate" widget, so there's no logged-in
@@ -15,24 +10,6 @@ const safe = (str) => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 // Email notifications go through Resend (RESEND_API_KEY) — optional: if it's
 // not set, emails are silently skipped and the estimate/lead capture still
 // works, just without the notification.
-async function sendEmail(to, subject, html) {
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
-  if (!RESEND_API_KEY || !to) return;
-  try {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'Akus <onboarding@resend.dev>',
-        to: [to],
-        subject,
-        html,
-      }),
-    });
-  } catch (err) {
-    console.error('Email send failed (non-fatal):', err.message);
-  }
-}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

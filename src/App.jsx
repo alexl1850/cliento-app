@@ -213,6 +213,10 @@ export default function App() {
       live_url:    journeyData.liveUrl || '',
     })
     setJourneyComplete(true)
+    // Fire-and-forget — the daily cron batch re-checks this as a safety
+    // net, so a failed request here (closed tab, network blip) doesn't
+    // lose the welcome email, just delays it to the next cron run.
+    fetch('/api/onboarding-email', { method: 'POST', headers: await authHeaders() }).catch(() => {})
   }
 
   const signOut = async () => {

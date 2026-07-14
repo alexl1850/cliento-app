@@ -251,6 +251,14 @@ export default function Dashboard({ session, profile, onSaveProfile, onSignOut, 
     })();
   }, [session?.user?.id]);
 
+  // Powers the 14/30-day no-login re-engagement emails (api/cron-daily.js)
+  // and the admin panel's churn-risk view — once per dashboard load is
+  // plenty, no need to keep pinging while the tab stays open.
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("user_id", session.user.id).then(() => {});
+  }, [session?.user?.id]);
+
   const handleFinishSetup = async () => {
     setSavingProfile(true);
     if (onSaveProfile) await onSaveProfile(biz);

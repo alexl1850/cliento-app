@@ -125,13 +125,18 @@ them, those specific tools just show a "not configured" state.
 
 ---
 
-## STEP 7 — Set up email sequences (30 minutes)
+## STEP 7 — Set up email sequences (10 minutes)
 
 1. Go to **resend.com** → Sign up (free — 3,000 emails/month)
-2. Verify `cliento.com.au` domain
-3. Get API key → Add to Vercel: `VITE_RESEND_KEY`
-4. The 7-day onboarding sequence is pre-written in `email-sequences.md`
-   → Copy each into Resend's broadcast or use their API
+2. Verify your sending domain (e.g. `akus.com.au`)
+3. Get an API key → Add to Vercel: `RESEND_API_KEY` — **no `VITE_` prefix**,
+   this is read server-side only (`api/_lib/email.js`, used by the lead-gen
+   estimate notifications and the automated lifecycle email sequence below)
+4. Optionally set `RESEND_FROM_EMAIL` (e.g. `Alex at Akus <alex@akus.com.au>`)
+   — defaults to `Akus <onboarding@resend.dev>` if unset
+5. That's it — the onboarding/lifecycle sequence (`email-sequences.md`'s
+   content, adapted) sends itself automatically from `api/cron-daily.js`
+   once `RESEND_API_KEY` is set. Nothing to copy into Resend manually.
 
 ---
 

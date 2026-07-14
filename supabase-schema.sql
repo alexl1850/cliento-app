@@ -452,6 +452,20 @@ CREATE POLICY "Users can view own competitors"
 -- pre-existing 'pro' customer predates the yearly price, hence 'month'.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS billing_interval TEXT DEFAULT 'month';
 
+-- ─── CUSTOMER SUCCESS AUTOMATION ────────────────────────────────────
+-- Set by api/_lib/onboardingEmails.js's due-date picking logic (run from
+-- api/cron-daily.js) — tracks which lifecycle emails a customer has
+-- already received so the daily batch never resends one, and lets the
+-- sequence stop cleanly once someone converts (see NOTES in
+-- email-sequences.md: "if user converts to paid, stop sending").
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_emails_sent JSONB DEFAULT '[]'::jsonb;
+-- Pinged from the dashboard on load (src/DashboardA.jsx) — powers the
+-- 14/30-day no-login re-engagement emails and the admin panel's
+-- churn-risk view. NULL for anyone who has never opened the dashboard
+-- since this column was added (existing customers), which the due-date
+-- picker treats as "not due yet" rather than "inactive forever".
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ;
+
 -- ─── WEBSITE CHECKER LEADS ──────────────────────────────────────────
 -- Optional "email me this report" capture on the free public website
 -- checker tool (cliento-website's api/website-checker.js + checker.html).

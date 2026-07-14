@@ -1,5 +1,6 @@
 import { requireActiveAccount } from './_lib/checkAccess.js';
 import { searchPlace, getPlaceDetails } from './_lib/placesApi.js';
+import { sendEmail } from './_lib/email.js';
 
 const COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
@@ -18,7 +19,7 @@ export default async function handler(req, res) {
 
   try {
     const profileRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${access.userId}&select=biz_name,suburb,gbp_place_id,reviews_data,reviews_synced_at`,
+      `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${access.userId}&select=owner,biz_name,suburb,email,gbp_place_id,reviews_data,reviews_synced_at`,
       { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
     );
     if (!profileRes.ok) throw new Error('Could not load your business profile');
@@ -75,6 +76,40 @@ export default async function handler(req, res) {
       });
     } catch (saveErr) {
       console.error('Failed to cache pulled reviews (non-fatal):', saveErr.message);
+    }
+
+    // A nice-to-have nudge, not a promise of real-time detection — this
+    // only fires when the customer actually clicks "Pull reviews" (or the
+    // 24h cooldown lets a later click through), since nothing else in the
+    // app polls Google for new reviews automatically.
+    const previousCount = profile.reviews_data?.userRatingCount || 0;
+    if (reviewsData.userRatingCount > previousCount) {
+      try {
+        let ownerEmail = profile.email;
+        if (!ownerEmail) {
+          const acctRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${access.userId}`, {
+            headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+          });
+          if (acctRes.ok) ownerEmail = (await acctRes.json())?.email;
+        }
+        if (ownerEmail) {
+          const gained = reviewsData.userRatingCount - previousCount;
+          const firstName = (profile.owner || profile.biz_name || 'there').split(' ')[0];
+          await sendEmail(
+            ownerEmail,
+            `Nice! You just got ${gained > 1 ? `${gained} new reviews` : 'a new review'} 🎉`,
+            `<div style="font-family:-apple-system,sans-serif;max-width:520px;margin:0 auto;color:#111827;line-height:1.65;font-size:15px">
+              <p>Hi ${firstName},</p>
+              <p>Your Google rating for ${profile.biz_name || 'your business'} just went up — you're now at <strong>${reviewsData.rating ?? '—'} stars</strong> across <strong>${reviewsData.userRatingCount} reviews</strong>.</p>
+              <p>Worth a share — it's already live on your Akus website.</p>
+              <p style="margin-top:24px"><a href="https://app.akus.com.au" style="display:inline-block;padding:13px 24px;border-radius:8px;background:#2563EB;color:#fff;font-weight:700;text-decoration:none">Open my dashboard →</a></p>
+              <p>Alex</p>
+            </div>`
+          );
+        }
+      } catch (emailErr) {
+        console.error('Review-congrats email failed (non-fatal):', emailErr.message);
+      }
     }
 
     return res.status(200).json({ success: true, cached: false, reviews: reviewsData });

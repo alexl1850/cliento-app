@@ -120,8 +120,13 @@ function CustomersTab({ onImpersonate, impersonating }) {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ fontSize: "0.85em", color: C.muted }}>
-          {customers.length} customer{customers.length === 1 ? "" : "s"}
+        <div style={{ fontSize: "0.85em", color: C.muted, display: "flex", alignItems: "center", gap: "10px" }}>
+          <span>{customers.length} customer{customers.length === 1 ? "" : "s"}</span>
+          {customers.some(c => c.churnRisk) && (
+            <span style={{ color: C.red, fontWeight: 700 }}>
+              {customers.filter(c => c.churnRisk).length} at churn risk
+            </span>
+          )}
         </div>
         <div style={{ position: "relative", width: "280px", maxWidth: "100%" }}>
           <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: C.muted }}>
@@ -156,6 +161,11 @@ function CustomersTab({ onImpersonate, impersonating }) {
                     {c.bizName || "(no business name yet)"}
                   </span>
                   {planBadge(c.plan)}
+                  {c.churnRisk && (
+                    <span style={{ background: C.redLt, color: C.red, borderRadius: "99px", padding: "3px 10px", fontSize: "0.75em", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                      <Icon name="alert" size={11} /> {c.daysSinceActive}d inactive — call?
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: "0.82em", color: C.muted, marginTop: "3px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
                   {c.owner && <span>{c.owner}</span>}
@@ -171,7 +181,12 @@ function CustomersTab({ onImpersonate, impersonating }) {
                   </span>
                 )}
                 {c.plan !== "trial" && c.createdAt && (
-                  <span>Joined {new Date(c.createdAt).toLocaleDateString()}</span>
+                  <div>Joined {new Date(c.createdAt).toLocaleDateString()}</div>
+                )}
+                {c.plan === "pro" && (
+                  <div style={{ marginTop: "2px" }}>
+                    {c.daysSinceActive === null ? "No activity recorded yet" : c.daysSinceActive === 0 ? "Active today" : `Active ${c.daysSinceActive}d ago`}
+                  </div>
                 )}
               </div>
 
